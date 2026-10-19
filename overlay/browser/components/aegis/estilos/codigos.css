@@ -1,0 +1,115 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · panelito del autorrelleno de códigos de verificación (autenticador/autenticador.sys.mjs, ofrecer), anclado
+   al campo de la página (DISENO §9, «Autorrelleno de códigos»). Lo carga el propio módulo en la ventana la primera
+   vez que hace falta. Panel de la capa elevada (--aegis-menu, radio 12, borde de línea, sombra suave: los pone el
+   panel de Firefox con los tokens de mapeo-firefox.css), 16 de relleno, título de 13 px 600, una línea de 12 px en
+   --aegis-sub y un botón principal de 34 (radio 8, 600) por cuenta. Solo var(--aegis-*). */
+
+.aegis-codigo-panel {
+  --arrowpanel-padding: 0;
+}
+
+.aegis-codigo-caja {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-4);
+  max-width: 320px;
+  padding: var(--aegis-s-16);
+  font: 13px/1.5 var(--aegis-font);
+}
+
+.aegis-codigo-titulo,
+.aegis-codigo-detalle {
+  margin: 0;
+}
+.aegis-codigo-titulo {
+  font-weight: 600;
+}
+.aegis-codigo-detalle {
+  font-size: 12px;
+}
+
+.aegis-codigo-botones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-8);
+  margin-block-start: var(--aegis-s-8);
+}
+
+.aegis-codigo-rellenar {
+  min-height: 34px;
+  margin: 0;
+  padding: 0 var(--aegis-s-16);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-8);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.28;
+    cursor: default;
+  }
+  &.secundario {
+    font-weight: 400;
+  }
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-codigo-caja {
+    color: var(--aegis-text);
+  }
+  .aegis-codigo-detalle {
+    color: var(--aegis-sub);
+  }
+  .aegis-codigo-rellenar {
+    background-color: var(--aegis-prim);
+    color: var(--aegis-on-prim);
+
+    &:hover:not(:disabled) {
+      background-color: var(--aegis-prim-hover);
+    }
+    &:hover:active:not(:disabled) {
+      background-color: var(--aegis-prim-down);
+    }
+  }
+  /* Varias cuentas en el sitio: botones secundarios (una sola acción principal). */
+  .aegis-codigo-rellenar.secundario {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+
+    &:hover:not(:disabled) {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active:not(:disabled) {
+      background-color: var(--aegis-control-down);
+    }
+  }
+}
+
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .aegis-codigo-rellenar {
+    border-color: currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aegis-codigo-rellenar {
+    transition:
+      background-color var(--aegis-t-hover) var(--aegis-ease),
+      transform var(--aegis-t-press) var(--aegis-ease);
+
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+  }
+}

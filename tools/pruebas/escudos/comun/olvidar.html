@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Olvidar este sitio · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+<script src="/cookies.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · olvidar al cerrar</p>
+<h1 id="titulo">Datos del sitio</h1>
+<p>Con «Olvidar este sitio al cerrar», al cerrar el navegador se borran sus cookies, su localStorage, IndexedDB y su
+caché de la web. Los de los demás sitios se quedan.</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><pre class="mono" id="detalle"></pre><div id="siguiente"></div></div>
+<script>
+"use strict";
+const accion = Banco.q.get("accion") || "leer";
+document.getElementById("titulo").textContent = `${location.host}: ${accion === "poner" ? "guardar datos" : "¿siguen los datos?"}`;
+(async () => {
+  const puesto = accion === "poner" ? await Almacen.poner(true) : {};
+  const datos = { accion, host: location.host, ...puesto, ...(await Almacen.leer(true)) };
+  document.getElementById("detalle").textContent = JSON.stringify(datos, null, 1);
+  await Banco.listo(datos);
+})();
+</script>
+</body>
+</html>

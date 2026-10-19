@@ -1,0 +1,1224 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · Ajustes (about:preferences, about:settings) con la forma del Centro de SecretOS (docs/DISENO.md):
+   barra lateral oscura con la cabecera, el buscador y las categorías agrupadas; a la derecha, título grande, etiquetas
+   de sección en mayúsculas pequeñas y tarjetas con filas. ajustes.sys.mjs monta la cabecera y los grupos; lo que está
+   dentro de los componentes de Firefox (shadow DOM) va en ajustes-sombra.css. Solo var(--aegis-*). */
+
+/* ───────────────────────── Lo que sobra ───────────────────────── */
+
+/* Firefox Labs, controles de IA, «Más de Mozilla» y la ayuda (soporte de Mozilla). Las prefs de 57-ajustes.js ya
+   apagan los dos primeros; esto los quita también si vuelven a aparecer. */
+#category-experimental,
+#category-ai-features,
+#category-more-from-mozilla,
+#helpButton,
+/* Cuenta de Mozilla: con identity.fxaccounts.enabled apagada, Firefox deja la tarjeta «La cuenta no está disponible». */
+setting-group:is([groupid="accountDisabled"], [groupid="account"], [groupid="sync"], [groupid="referrals"]),
+/* «Ayuda de Nightly» en Acerca de: la ayuda y las ideas van a sitios de Mozilla. */
+setting-pane[data-category="paneAbout"] setting-group[groupid="support"],
+/* Recogida de datos para Mozilla: Aegis no envía telemetría (10-telemetria.js) y la build la trae desactivada. */
+setting-group[groupid="dataCollection"] {
+  display: none !important;
+}
+
+/* ───────────────────────── Página ───────────────────────── */
+
+:root {
+  /* Botones y campos con los radios de Aegis (Nova los hace píldora). */
+  --button-border-radius: var(--aegis-r-8) !important;
+  --input-text-border-radius: var(--aegis-r-8) !important;
+}
+/* Los componentes declaran sus variables en su propio :host: se cambian en el elemento, no en :root. */
+moz-box-group,
+moz-box-item,
+moz-box-button,
+moz-box-link {
+  --box-border-radius: var(--aegis-r-12) !important;
+  --box-padding: var(--aegis-s-12) var(--aegis-s-16) !important;
+}
+/* Navegador predeterminado: una fila normal (Firefox le da el alto de la ilustración, que aquí no está). */
+moz-promo {
+  --promo-border-radius: var(--aegis-r-12) !important;
+  --promo-padding: 0px !important;
+  min-height: 0 !important;
+}
+/* Interruptor de 34 × 20 con botón de 16 (DISENO §9). */
+moz-toggle {
+  --toggle-width: 34px !important;
+  --toggle-height: 20px !important;
+  --toggle-border-width: 0px !important;
+  --toggle-dot-margin: 2px !important;
+  --toggle-border-radius: var(--aegis-r-10) !important;
+}
+/* Tarjetas con imagen de Firefox (Sistema, Claro, Oscuro…): la elegida con un borde de 1 px, como las tarjetas de
+   opción de Aegis (Firefox: 3 px; DISENO §5, bordes de 1 px). Los colores, abajo. */
+moz-visual-picker-item {
+  --visual-picker-item-border-width-checked: 1px !important;
+}
+
+#preferences-body {
+  font-size: 14px;
+}
+/* Negritas de los textos de Firefox («3,4 MB»…): 600, nunca Bold (DISENO §3). Las de dentro de los componentes, en
+   ajustes-sombra.css. */
+strong,
+b {
+  font-weight: 600;
+}
+
+/* Contenido: columna centrada de 680 como máximo, a 36 px de arriba (Centro: Pagina.qml). */
+.main-content {
+  padding: 36px 44px 48px !important;
+}
+.pane-container {
+  width: min(100%, 680px) !important;
+  margin-inline: auto !important;
+}
+/* El buscador se va a la barra lateral: aquí solo quedan los avisos (directivas…), si los hay. */
+#search-container {
+  position: static !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+#search-container:not(:has(> :not([hidden]))) {
+  display: none !important;
+}
+
+/* Páginas: título y secciones (Centro: 8 entre el título y el subtítulo; 22 antes de cada sección). */
+setting-pane > section {
+  gap: var(--aegis-s-24) !important;
+}
+
+/* Etiquetas de sección y cabecera: variables que lee ajustes-sombra.css dentro de cada grupo. Una sección es el grupo
+   de primer nivel de una página; los grupos de dentro de una tarjeta conservan su título normal. */
+moz-fieldset {
+  --aegis-aj-leyenda-tam: 14px;
+  --aegis-aj-leyenda-mayus: none;
+  --aegis-aj-leyenda-espacio: normal;
+  --aegis-aj-leyenda-sangria: 0;
+}
+setting-group > moz-card > moz-fieldset,
+setting-group > moz-fieldset {
+  --aegis-aj-leyenda-tam: 11px;
+  --aegis-aj-leyenda-mayus: uppercase;
+  --aegis-aj-leyenda-espacio: 0.8px;
+  --aegis-aj-leyenda-sangria: var(--aegis-s-4);
+}
+
+/* La tarjeta de Firefox envuelve título y controles: aquí desaparece y la tarjeta es solo la de los controles, con
+   la etiqueta de la sección encima (como «MODO» en el Centro). */
+setting-group > moz-card {
+  --card-background-color: transparent !important;
+  --card-border: none !important;
+  --card-box-shadow: none !important;
+  --card-padding: 0 !important;
+  --card-padding-inline: 0 !important;
+  --card-padding-block: 0 !important;
+  --card-gap-article: 0 !important;
+}
+setting-group > moz-card > moz-fieldset::part(inputs) {
+  gap: 0;
+  margin-block-start: var(--aegis-s-8);
+  padding: 0 var(--aegis-s-16);
+  border-radius: var(--aegis-r-12);
+}
+
+/* Filas de la tarjeta: 12 arriba y abajo, separadas por una línea. Los grupos sin tarjeta de Firefox (el estado de
+   la protección, que ya es una tarjeta) se quedan como están. */
+setting-group > moz-card > moz-fieldset > setting-control {
+  display: block;
+  padding-block: var(--aegis-s-12);
+}
+/* Controles ocultos que Firefox deja en pie solo por si muestran un aviso: sin hueco. */
+setting-group > moz-card > moz-fieldset > setting-control[hidden] {
+  padding-block: 0;
+  margin-block-start: 0 !important;
+}
+/* Listas de Firefox (moz-box-*) dentro de la tarjeta: a sangre, sin su propio marco (nada de recuadros dobles). */
+setting-group > moz-card > moz-fieldset > setting-control:has(> :is(moz-box-group, moz-box-item, moz-box-button, moz-box-link)) {
+  padding-block: 0;
+  margin-inline: calc(-1 * var(--aegis-s-16));
+}
+setting-group > moz-card > moz-fieldset setting-control moz-box-group {
+  outline: none !important;
+  border-radius: var(--aegis-r-12);
+}
+setting-group > moz-card > moz-fieldset > setting-control > :is(moz-box-item, moz-box-button, moz-box-link) {
+  --box-border-width: 0px !important;
+}
+/* Más adentro (opciones de un grupo, una opción de radio…), las filas de lista tampoco llevan marco: dentro de una
+   tarjeta serían una tarjeta dentro de otra. */
+setting-group > moz-card > moz-fieldset setting-control setting-control > :is(moz-box-item, moz-box-button, moz-box-link) {
+  --box-border-width: 0px !important;
+}
+setting-group > moz-card > moz-fieldset > setting-control > moz-box-group > setting-control > :is(moz-box-item, moz-box-button, moz-box-link) {
+  --box-border-width: 1px !important;
+}
+
+/* ───────────────────────── Barra lateral ───────────────────────── */
+
+/* Centro: 236–292 de ancho, pegada a la izquierda, a toda altura, con una línea a la derecha. */
+#categories {
+  --page-nav-margin-inline-start: 0px !important;
+  --page-nav-margin-block-start: 0px !important;
+  --page-nav-gap: 0px !important;
+  --page-nav-button-gap: 0px !important;
+  --page-nav-button-padding: var(--aegis-s-8) !important;
+  --page-nav-button-padding-small: var(--aegis-s-8) !important;
+  --page-nav-button-border-radius: var(--aegis-r-7) !important;
+  --page-nav-button-border-radius-focused: var(--aegis-r-7) !important;
+  --page-nav-button-indicator-width: 0px !important;
+  --page-nav-focus-outline-offset: -2px !important;
+  --page-nav-focus-padding: 0px !important;
+  width: 256px !important;
+  box-sizing: border-box;
+  margin: 0 !important;
+  padding: var(--aegis-s-16) var(--aegis-s-12) var(--aegis-s-12) !important;
+  border-inline-end: 1px solid transparent !important;
+  font-size: 13px;
+}
+
+.aegis-ajustes-cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-12);
+  padding-block-end: var(--aegis-s-4);
+}
+.aegis-ajustes-marca {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  min-height: 20px;
+  padding-inline: var(--aegis-s-8);
+}
+.aegis-ajustes-icono {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.aegis-ajustes-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* Buscador: campo de 32 con radio 8 y la lupa en gris. */
+#categories #searchInput {
+  --input-text-min-height: 32px !important;
+  --input-text-border-radius: var(--aegis-r-8) !important;
+  --input-search-border-radius: var(--aegis-r-8) !important;
+  --input-text-icon-size: 14px;
+  --input-search-icon-size: 14px;
+  width: 100%;
+  font-size: 13px;
+}
+
+/* Títulos de grupo: pequeños y en gris apagado (Centro: CabeceraLateral). */
+.aegis-ajustes-grupo {
+  padding: var(--aegis-s-16) var(--aegis-s-8) var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  user-select: none;
+}
+.aegis-ajustes-grupo:first-of-type {
+  padding-block-start: var(--aegis-s-8);
+}
+
+/* ───────────────────────── Icono de la app ───────────────────────── */
+
+/* Apariencia › «Icono de la app» (ajustes.sys.mjs, iconoDeLaApp): etiqueta de sección y descripción como las de
+   Firefox, y una tarjeta con las dos opciones (miniatura de 64 y nombre). La elegida, con el borde en el color del
+   texto (blanco en oscuro), como las tarjetas de opción de SecretOS. */
+.aegis-icono-seccion {
+  margin: 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.aegis-icono-tarjeta {
+  margin-block-start: var(--aegis-s-8);
+  padding: var(--aegis-s-16);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+}
+.aegis-icono-ayuda {
+  margin: var(--aegis-s-4) 0 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 13px;
+}
+.aegis-icono-opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aegis-s-12);
+}
+.aegis-icono-opcion {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  width: 112px;
+  box-sizing: border-box;
+  padding: var(--aegis-s-12) var(--aegis-s-8) var(--aegis-s-8);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-10);
+  font-size: 13px;
+  transition:
+    border-color var(--aegis-t-hover) var(--aegis-ease),
+    background-color var(--aegis-t-hover) var(--aegis-ease);
+}
+.aegis-icono-opcion:has(> input:checked) {
+  border-color: currentColor;
+}
+.aegis-icono-opcion:has(> input:focus-visible) {
+  outline: 2px solid;
+  outline-offset: 2px;
+}
+/* El botón de radio no se ve (la opción entera es el control), pero sigue ahí para el teclado y los lectores. */
+.aegis-icono-opcion > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+}
+.aegis-icono-opcion > img {
+  width: 64px;
+  height: 64px;
+}
+
+/* ───────────────────────── Colores ───────────────────────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  :root {
+    /* Sin violeta: el énfasis de Aegis (monocromo de serie) en enlaces, casillas, foco y selección. */
+    --color-accent-primary: var(--aegis-accent) !important;
+    --color-accent-primary-hover: var(--aegis-accent-hover) !important;
+    --color-accent-primary-active: var(--aegis-accent-down) !important;
+    --color-accent-primary-selected: var(--aegis-accent) !important;
+    --text-color-accent-primary-selected: var(--aegis-on-accent) !important;
+    --icon-color-accent-primary-desaturated: var(--aegis-sub) !important;
+    --link-color: var(--aegis-text) !important;
+    --link-color-hover: var(--aegis-text) !important;
+    --link-color-active: var(--aegis-sub) !important;
+    --link-color-visited: var(--aegis-text) !important;
+    --icon-color: var(--aegis-text) !important;
+    /* Avisos informativos en gris: el color queda para los estados de verdad (DISENO §2). */
+    --icon-color-information: var(--aegis-text) !important;
+    --background-color-information: var(--aegis-control) !important;
+    --background-color-box-info: transparent !important;
+    --card-background-color: var(--aegis-surface) !important;
+  }
+  moz-box-group,
+  moz-box-item,
+  moz-box-button,
+  moz-box-link {
+    --box-border-color: var(--aegis-line) !important;
+    --box-button-background-color: transparent !important;
+    --box-button-background-color-hover: var(--aegis-hover) !important;
+    --box-button-background-color-active: var(--aegis-control) !important;
+    --box-button-text-color: var(--aegis-text) !important;
+    --box-button-text-color-hover: var(--aegis-text) !important;
+    --box-button-text-color-active: var(--aegis-text) !important;
+    --box-icon-fill: var(--aegis-sub) !important;
+  }
+  /* Sin elegir, la línea; la elegida, el color del texto (como el icono de la app y el énfasis). */
+  moz-visual-picker-item {
+    --visual-picker-item-border-color: var(--aegis-line) !important;
+    --border-color-selected: var(--aegis-text) !important;
+  }
+  moz-promo {
+    --promo-background-color: transparent !important;
+    --promo-border-color: transparent !important;
+    --promo-message-text-color: var(--aegis-text) !important;
+  }
+  /* Interruptor: pista gris; encendido, el énfasis con el botón del color que va encima. */
+  moz-toggle {
+    --toggle-background-color: var(--aegis-track) !important;
+    --toggle-background-color-hover: var(--aegis-track) !important;
+    --toggle-background-color-active: var(--aegis-track) !important;
+    --toggle-background-color-pressed: var(--aegis-accent) !important;
+    --toggle-background-color-pressed-hover: var(--aegis-accent) !important;
+    --toggle-background-color-pressed-active: var(--aegis-accent) !important;
+    --toggle-dot-background-color: var(--aegis-sub) !important;
+    --toggle-dot-background-color-hover: var(--aegis-text) !important;
+    --toggle-dot-background-color-active: var(--aegis-text) !important;
+    --toggle-dot-background-color-on-pressed: var(--aegis-on-accent) !important;
+  }
+
+  #preferences-body,
+  .main-content {
+    background-color: var(--aegis-bg);
+  }
+
+  #categories {
+    --page-nav-button-background-color: transparent !important;
+    --page-nav-button-background-color-hover: var(--aegis-hover) !important;
+    --page-nav-button-background-color-active: var(--aegis-sel) !important;
+    --page-nav-button-background-color-selected: var(--aegis-sel) !important;
+    --page-nav-button-border-color: transparent !important;
+    --page-nav-button-text-color: var(--aegis-text) !important;
+    --page-nav-button-text-color-hover: var(--aegis-text) !important;
+    --page-nav-button-text-color-active: var(--aegis-text) !important;
+    --page-nav-button-text-color-selected: var(--aegis-text) !important;
+    --page-nav-hr-background-color: var(--aegis-line) !important;
+    --focus-outline-color: var(--aegis-focus) !important;
+    background-color: var(--aegis-sidebar);
+    border-inline-end-color: var(--aegis-line) !important;
+    color: var(--aegis-text);
+  }
+  #categories #searchInput {
+    --input-text-background-color: var(--aegis-surface) !important;
+    --input-text-border-color: var(--aegis-field-border) !important;
+    --input-text-color: var(--aegis-text) !important;
+  }
+  .aegis-ajustes-grupo {
+    color: var(--aegis-muted);
+  }
+  moz-fieldset {
+    --aegis-aj-leyenda-color: var(--aegis-text);
+  }
+  setting-group > moz-card > moz-fieldset,
+  setting-group > moz-fieldset {
+    --aegis-aj-leyenda-color: var(--aegis-muted);
+  }
+
+  /* Tarjetas: superficie, línea de 1 px y radio 12. */
+  setting-group > moz-card > moz-fieldset::part(inputs) {
+    background-color: var(--aegis-surface);
+    border: 1px solid var(--aegis-line);
+  }
+  setting-group > moz-card > moz-fieldset > setting-control:not([hidden]) ~ setting-control:not([hidden]) {
+    border-block-start: 1px solid var(--aegis-line);
+  }
+
+  /* Icono de la app. */
+  .aegis-icono-seccion {
+    color: var(--aegis-muted);
+  }
+  .aegis-icono-tarjeta {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+  .aegis-icono-ayuda {
+    color: var(--aegis-sub);
+  }
+  .aegis-icono-opcion {
+    border-color: var(--aegis-line);
+    color: var(--aegis-text);
+  }
+  .aegis-icono-opcion:hover {
+    background-color: var(--aegis-hover);
+  }
+  .aegis-icono-opcion:has(> input:checked) {
+    background-color: var(--aegis-sel);
+    border-color: var(--aegis-text);
+  }
+  .aegis-icono-opcion:has(> input:focus-visible) {
+    outline-color: var(--aegis-focus);
+  }
+
+  /* Enlaces: en el color del texto, con un subrayado discreto. */
+  a:link,
+  a:visited,
+  .text-link {
+    color: var(--aegis-text);
+    text-decoration-color: var(--aegis-sub);
+    text-underline-offset: 2px;
+  }
+  a:link:hover,
+  .text-link:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* ───────────────────────── Controles: desplegables y botones ───────────────────────── */
+
+/* «Apoya a Aegis»: en Firefox son los atajos y las historias patrocinados de la nueva pestaña; en Aegis no hay
+   patrocinios (20-nueva-pestana.js), así que el interruptor y su aviso sobran. */
+setting-control:has(> :is(#supportFirefox, #supportFirefoxPromo)),
+/* «Deja que la IA lea el principio de la página»: Aegis no trae IA (50-interfaz.js). */
+setting-control:has(> #linkPreviewKeyPoints),
+/* «Recomendar extensiones y funciones»: son recomendaciones de Mozilla (y ya van apagadas en las prefs). */
+setting-group[groupid="recommendations"] {
+  display: none !important;
+}
+
+/* Desplegable: radio 8, peso normal, relleno de control y sin borde (DISENO §9, «Campo»). Va a la derecha de su
+   fila (ajustes.sys.mjs). */
+moz-select {
+  --select-border-radius: var(--aegis-r-8) !important;
+  --select-font-weight: 400 !important;
+  --select-min-height: 32px !important;
+  --select-margin-block: 0px !important;
+  --select-margin-inline: 0px !important;
+}
+moz-select[inputlayout="inline-end"] {
+  --select-max-width: 50%;
+}
+
+/* Botones: el secundario es un control gris sin borde y en peso normal; el principal, en peso 600 (ajustes-sombra.css). */
+:root,
+moz-button {
+  --button-font-weight: 400 !important;
+  --button-border-color: transparent !important;
+  --button-border-color-hover: transparent !important;
+  --button-border-color-active: transparent !important;
+  --button-border-color-disabled: transparent !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  moz-select {
+    --select-background-color: var(--aegis-control) !important;
+    --select-background-color-hover: var(--aegis-control-hover) !important;
+    --select-background-color-disabled: var(--aegis-control) !important;
+    --select-border-color: transparent !important;
+    --select-border-color-hover: transparent !important;
+    --select-border-color-disabled: transparent !important;
+    --select-text-color: var(--aegis-text) !important;
+    --select-text-color-hover: var(--aegis-text) !important;
+    --select-icon-fill: var(--aegis-sub) !important;
+  }
+  :root,
+  moz-button {
+    --button-background-color: var(--aegis-control) !important;
+    --button-background-color-hover: var(--aegis-control-hover) !important;
+    --button-background-color-active: var(--aegis-control-down) !important;
+    --button-text-color: var(--aegis-text) !important;
+  }
+}
+
+/* ───────────────────────── Énfasis (Apariencia; enfasis.sys.mjs, DISENO §2) ───────────────────────── */
+
+/* Como la sección del icono de la app: etiqueta en versalitas, descripción y tarjeta. */
+.aegis-enfasis-seccion {
+  margin: 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.aegis-enfasis-ayuda {
+  margin: var(--aegis-s-4) 0 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 13px;
+}
+.aegis-enfasis-tarjeta {
+  margin-block-start: var(--aegis-s-8);
+  padding: var(--aegis-s-16);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+}
+.aegis-enfasis-opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: var(--aegis-s-8);
+}
+/* Cada opción: muestra redonda de 28 y el nombre debajo; la elegida, con borde y relleno de fila elegida. */
+.aegis-enfasis-opcion {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  box-sizing: border-box;
+  padding: var(--aegis-s-12) var(--aegis-s-4) var(--aegis-s-8);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-10);
+  font-size: 12px;
+  text-align: center;
+  transition:
+    border-color var(--aegis-t-hover) var(--aegis-ease),
+    background-color var(--aegis-t-hover) var(--aegis-ease);
+}
+.aegis-enfasis-opcion:has(> input:checked) {
+  border-color: currentColor;
+}
+.aegis-enfasis-opcion:has(> input:focus-visible) {
+  outline: 2px solid;
+  outline-offset: 2px;
+}
+/* El botón de radio no se ve (la opción entera es el control), pero sigue ahí para el teclado y los lectores. */
+.aegis-enfasis-opcion > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+}
+.aegis-enfasis-opcion > .aegis-enfasis-circulo {
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 50%;
+}
+.aegis-enfasis-nota {
+  margin: var(--aegis-s-12) 0 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 12px;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-enfasis-seccion {
+    color: var(--aegis-muted);
+  }
+  .aegis-enfasis-tarjeta {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+  .aegis-enfasis-ayuda,
+  .aegis-enfasis-nota {
+    color: var(--aegis-sub);
+  }
+  .aegis-enfasis-opcion {
+    color: var(--aegis-text);
+  }
+  .aegis-enfasis-opcion:hover {
+    background-color: var(--aegis-hover);
+  }
+  .aegis-enfasis-opcion:has(> input:checked) {
+    background-color: var(--aegis-sel);
+    border-color: var(--aegis-text);
+  }
+  .aegis-enfasis-opcion:has(> input:focus-visible) {
+    outline-color: var(--aegis-focus);
+  }
+  .aegis-enfasis-circulo {
+    background-color: var(--aegis-accent);
+    border-color: var(--aegis-line-strong);
+  }
+}
+
+/* ───────────────────────── Webs en oscuro (Apariencia; webs-oscuro/, DISENO §2 y §9) ───────────────────────── */
+
+/* Etiqueta de sección, la descripción con su línea de honestidad y una tarjeta con tres segmentos que se reparten el
+   ancho (si no caben, bajan de línea): contenedor de radio 10 con las opciones de radio 8 a 2 px, 30 de alto en total
+   (DISENO §9, como los de «Personalizar» en la nueva pestaña). El elegido, la cápsula del énfasis. */
+.aegis-oscuro-seccion {
+  margin: 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.aegis-oscuro-ayuda {
+  margin: var(--aegis-s-4) 0 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 13px;
+}
+.aegis-oscuro-tarjeta {
+  margin-block-start: var(--aegis-s-8);
+  padding: var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+}
+.aegis-oscuro-segmentos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aegis-s-4);
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-10);
+}
+.aegis-oscuro-segmento {
+  position: relative;
+  flex: 1 1 0;
+  min-width: max-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  box-sizing: border-box;
+  /* Ajustes da a los label un margen vertical (casi 2 px) que descuadraría el contenedor de 30. */
+  margin: 0;
+  padding-inline: var(--aegis-s-12);
+  border-radius: var(--aegis-r-8);
+  font-size: 13px;
+  transition:
+    background-color var(--aegis-t-hover) var(--aegis-ease),
+    color var(--aegis-t-hover) var(--aegis-ease),
+    transform var(--aegis-t-press) var(--aegis-ease);
+}
+.aegis-oscuro-segmento:active {
+  transform: scale(0.97);
+}
+.aegis-oscuro-segmento:has(> input:checked) {
+  font-weight: 600;
+}
+.aegis-oscuro-segmento:has(> input:focus-visible) {
+  outline: 2px solid;
+  outline-offset: 1px;
+}
+/* El botón de radio no se ve (el segmento entero es el control), pero sigue ahí para el teclado y los lectores. */
+.aegis-oscuro-segmento > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-oscuro-seccion {
+    color: var(--aegis-muted);
+  }
+  .aegis-oscuro-ayuda {
+    color: var(--aegis-sub);
+  }
+  .aegis-oscuro-tarjeta {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+  .aegis-oscuro-segmentos {
+    border-color: var(--aegis-field-border);
+  }
+  /* Sin elegir, el relleno de control (5 %; DISENO §2, «Campos»), más claro al pasar el ratón. */
+  .aegis-oscuro-segmento {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+  }
+  .aegis-oscuro-segmento:hover {
+    background-color: var(--aegis-control-hover);
+  }
+  /* La cápsula elegida lleva el énfasis (en Monocromo, --aegis-prim; DISENO §2 y §9). */
+  .aegis-oscuro-segmento:has(> input:checked) {
+    background-color: var(--aegis-accent);
+    color: var(--aegis-on-accent);
+  }
+  .aegis-oscuro-segmento:has(> input:focus-visible) {
+    outline-color: var(--aegis-focus);
+  }
+}
+
+/* ───────────────────── Ayuda de los Escudos (about:escudos; ajustes.sys.mjs, enlacesDeAyuda) ───────────────────── */
+
+/* «Más información» debajo de un grupo de Firefox con opciones de los Escudos: a 8 px de su tarjeta (la sección separa
+   los grupos 24) y con la sangría de las etiquetas de sección. El color es el de los enlaces de Ajustes. */
+.aegis-ayuda {
+  margin: calc(var(--aegis-s-8) - var(--aegis-s-24)) 0 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 13px;
+}
+setting-group[hidden] + .aegis-ayuda {
+  display: none;
+}
+
+/* ───────────────────────── Conexiones (Privacidad; conexiones.sys.mjs, ajustes.sys.mjs) ───────────────────────── */
+
+/* Etiqueta de sección, una línea con lo que se conecta ahora y el enlace a about:conexiones: como «Webs en oscuro», sin
+   tarjeta (los interruptores están en la página). */
+.aegis-conexiones-seccion {
+  margin: 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.aegis-conexiones-ayuda {
+  margin: var(--aegis-s-4) 0 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 13px;
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-conexiones-seccion {
+    color: var(--aegis-muted);
+  }
+  .aegis-conexiones-ayuda {
+    color: var(--aegis-sub);
+  }
+}
+
+/* ───────────────────────── Huella digital (Privacidad; huella.sys.mjs, DISENO §9) ───────────────────────── */
+
+/* Etiqueta de sección y descripción como las de Firefox; una tarjeta con los cuatro niveles como tarjetas de opción
+   (nombre y una línea de descripción; Caja fuerte, con el uróboros a la derecha) y la nota de honestidad; otra con los
+   sitios con permiso en Caja fuerte (filas de 44 con «Quitar»). La opción elegida, como las del icono de la app. */
+.aegis-huella-seccion {
+  margin: 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.aegis-huella-ayuda {
+  margin: var(--aegis-s-4) 0 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 13px;
+}
+.aegis-huella-tarjeta {
+  margin-block-start: var(--aegis-s-8);
+  padding: var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+}
+.aegis-huella-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-8);
+}
+.aegis-huella-opcion {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-12);
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: var(--aegis-s-8) var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-8);
+  transition:
+    border-color var(--aegis-t-hover) var(--aegis-ease),
+    background-color var(--aegis-t-hover) var(--aegis-ease);
+}
+.aegis-huella-opcion:has(> input:checked) {
+  border-color: currentColor;
+}
+.aegis-huella-opcion:has(> input:focus-visible) {
+  outline: 2px solid;
+  outline-offset: 2px;
+}
+/* El botón de radio no se ve (la tarjeta entera es el control), pero sigue ahí para el teclado y los lectores. */
+.aegis-huella-opcion > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+}
+.aegis-huella-opcion-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.aegis-huella-opcion-nombre {
+  font-size: 13px;
+  font-weight: 600;
+}
+.aegis-huella-opcion-descripcion {
+  font-size: 12px;
+}
+.aegis-huella-glifo {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+.aegis-huella-nota {
+  margin: var(--aegis-s-12) 0 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 12px;
+}
+.aegis-huella-subtitulo {
+  margin: 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 13px;
+  font-weight: 600;
+}
+.aegis-huella-lista {
+  margin: var(--aegis-s-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.aegis-huella-sitio {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-12);
+  min-height: 44px;
+  padding-inline: var(--aegis-s-4);
+  border-block-start: 1px solid transparent;
+
+  &:first-child {
+    border-block-start: 0;
+  }
+}
+.aegis-huella-sitio-nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+/* Botón secundario compacto (30 de alto, como los segmentos) para que quepa en la fila de 44. */
+.aegis-huella-quitar {
+  flex-shrink: 0;
+  min-height: 30px;
+  margin: 0;
+  padding-inline: var(--aegis-s-12);
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  font-size: 13px;
+  transition:
+    background-color var(--aegis-t-hover) var(--aegis-ease),
+    transform var(--aegis-t-press) var(--aegis-ease);
+
+  &:active {
+    transform: scale(0.97);
+  }
+  &:focus-visible {
+    outline: 2px solid;
+    outline-offset: 2px;
+  }
+}
+.aegis-huella-vacio {
+  padding: var(--aegis-s-8) var(--aegis-s-4) var(--aegis-s-4);
+  font-size: 13px;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-huella-seccion {
+    color: var(--aegis-muted);
+  }
+  .aegis-huella-ayuda {
+    color: var(--aegis-sub);
+  }
+  .aegis-huella-tarjeta {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+  .aegis-huella-opcion {
+    border-color: var(--aegis-line);
+    color: var(--aegis-text);
+  }
+  .aegis-huella-opcion:hover {
+    background-color: var(--aegis-hover);
+  }
+  .aegis-huella-opcion:has(> input:checked) {
+    background-color: var(--aegis-sel);
+    border-color: var(--aegis-text);
+  }
+  .aegis-huella-opcion:has(> input:focus-visible) {
+    outline-color: var(--aegis-focus);
+  }
+  /* Sobre una fila con hover o elegida, el secundario va en --aegis-sub (regla del apagado). */
+  .aegis-huella-opcion-descripcion,
+  .aegis-huella-nota,
+  .aegis-huella-vacio {
+    color: var(--aegis-sub);
+  }
+  .aegis-huella-subtitulo,
+  .aegis-huella-sitio-nombre {
+    color: var(--aegis-text);
+  }
+  .aegis-huella-sitio {
+    border-block-start-color: var(--aegis-line);
+  }
+  .aegis-huella-quitar {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+
+    &:hover {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active {
+      background-color: var(--aegis-control-down);
+    }
+    &:focus-visible {
+      outline-color: var(--aegis-focus);
+    }
+  }
+}
+
+/* ───────────────────────── Tor (Privacidad; tor/tor.sys.mjs, DISENO §9) ───────────────────────── */
+
+/* Mismo esqueleto que «Huella digital» (etiqueta de sección, descripción, tarjeta, notas y botón secundario compacto)
+   y los segmentos de «Webs en oscuro» para los puentes. Lo propio: filas de 44 con dos líneas de texto y el botón a la
+   derecha, y la barra de progreso de la descarga (4 de alto, radio 2: DISENO §5). */
+.aegis-tor-fila {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-12);
+  min-height: 44px;
+  padding-inline: var(--aegis-s-4);
+
+  & ~ & {
+    border-block-start: 1px solid transparent;
+  }
+}
+.aegis-tor-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  /* En Google es un label, y Ajustes les da un margen vertical. */
+  margin: 0;
+}
+.aegis-tor-nombre {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.aegis-tor-detalle {
+  font-size: 12px;
+
+  &:empty {
+    display: none;
+  }
+}
+.aegis-tor-acciones {
+  display: flex;
+  gap: var(--aegis-s-8);
+  flex-shrink: 0;
+}
+.aegis-tor-boton:disabled {
+  opacity: 0.28;
+}
+.aegis-tor-barra {
+  height: 4px;
+  margin: var(--aegis-s-4) var(--aegis-s-4) var(--aegis-s-8);
+  border-radius: var(--aegis-r-2);
+  overflow: hidden;
+
+  &[hidden] {
+    display: none;
+  }
+}
+.aegis-tor-barra-relleno {
+  height: 100%;
+  width: 0;
+  border-radius: var(--aegis-r-2);
+}
+.aegis-tor-subtitulo {
+  margin-block-start: var(--aegis-s-12);
+}
+.aegis-tor-puentes-ayuda {
+  margin-block: var(--aegis-s-4) var(--aegis-s-8);
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-tor-fila ~ .aegis-tor-fila {
+    border-block-start-color: var(--aegis-line);
+  }
+  .aegis-tor-nombre {
+    color: var(--aegis-text);
+  }
+  .aegis-tor-detalle {
+    color: var(--aegis-sub);
+  }
+  /* Un error de verdad: el texto en el color de error (siempre con su explicación al lado). */
+  .aegis-tor-textos[aegis-tor-error] > .aegis-tor-detalle {
+    color: var(--aegis-err);
+  }
+  .aegis-tor-barra {
+    background-color: var(--aegis-track);
+  }
+  .aegis-tor-barra-relleno {
+    background-color: var(--aegis-accent);
+  }
+}
+
+/* ───────────────────────── Google (Privacidad; google.sys.mjs, DISENO §9) ───────────────────────── */
+
+/* La tarjeta y las filas de Tor; a la derecha de cada fila, el interruptor de 34 × 20 con botón de 16, el mismo que
+   llevan las casillas de Firefox en Ajustes (ajustes-sombra.css), aquí en una casilla nuestra con role="switch". */
+.aegis-interruptor-ajustes {
+  appearance: none;
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: var(--aegis-r-10);
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+  background-position: 0 0;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid;
+    outline-offset: 2px;
+  }
+  &:checked {
+    background-position: 14px 0;
+  }
+}
+/* Sin Google limpio, «Solo resultados web» no actúa: la fila entera, desactivada. */
+.aegis-tor-fila:has(> .aegis-interruptor-ajustes:disabled) {
+  opacity: 0.4;
+
+  & > .aegis-interruptor-ajustes {
+    cursor: default;
+  }
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-interruptor-ajustes {
+    background-color: var(--aegis-track);
+    background-image: radial-gradient(circle closest-side, var(--aegis-sub) 7.5px, transparent 8px);
+
+    &:hover:not(:disabled, :checked) {
+      background-image: radial-gradient(circle closest-side, var(--aegis-text) 7.5px, transparent 8px);
+    }
+    &:checked {
+      background-color: var(--aegis-accent);
+      background-image: radial-gradient(circle closest-side, var(--aegis-on-accent) 7.5px, transparent 8px);
+    }
+    &:focus-visible {
+      outline-color: var(--aegis-focus);
+    }
+  }
+}
+/* Con contraste alto, el interruptor del sistema (una casilla): sin forma propia que dependa de colores fijos. */
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .aegis-interruptor-ajustes {
+    appearance: auto;
+    width: auto;
+    height: auto;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aegis-interruptor-ajustes {
+    transition:
+      background-color var(--aegis-t-hover) var(--aegis-ease),
+      background-position var(--aegis-t-hover) var(--aegis-ease);
+  }
+}
+
+/* ───────────────────────── Escudos (categoría propia; escudos/ajustes.sys.mjs, DISENO §9) ───────────────────────── */
+
+/* Una categoría como las de Firefox: la cabecera de página y las secciones separadas 24. Cada sección usa las piezas de
+   «Huella digital» y de Tor (etiqueta, descripción, tarjeta, tarjetas de nivel, filas de 44 con interruptor, segmentos,
+   notas y el botón compacto); aquí solo va lo propio. */
+#aegis-escudos-ajustes > section {
+  gap: var(--aegis-s-24) !important;
+}
+/* Segmentos dentro de una tarjeta: a sangre de su relleno. */
+.aegis-escudos-aj-segmentos {
+  margin-block: var(--aegis-s-4) 0;
+}
+/* Intervalo de las listas: rótulo y detalle encima, segmentos debajo. Desactivado (sin actualización automática): solo
+   se atenúan los segmentos; el motivo está en la fila de encima, a contraste completo. */
+.aegis-escudos-aj-intervalo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-8);
+  padding: var(--aegis-s-12) var(--aegis-s-4);
+  border-block-start: 1px solid transparent;
+
+  &[aegis-desactivada] > .aegis-escudos-aj-segmentos {
+    opacity: 0.4;
+  }
+}
+/* Fila heredada (un grupo apagado en general, «Permitir todo», o sin permiso de Conexiones): el interruptor se ve
+   desactivado y el texto con el motivo se lee entero (no se atenúa la fila). */
+.aegis-tor-fila[aegis-heredada]:has(> .aegis-interruptor-ajustes:disabled) {
+  opacity: 1;
+
+  & > .aegis-interruptor-ajustes {
+    opacity: 0.4;
+  }
+}
+.aegis-escudos-aj-dependencia {
+  margin-block: 0 var(--aegis-s-8);
+}
+.aegis-escudos-aj-pie {
+  display: flex;
+  padding: var(--aegis-s-8) var(--aegis-s-4) var(--aegis-s-4);
+}
+.aegis-escudos-aj-lista {
+  padding-block: var(--aegis-s-4);
+}
+
+/* Excepciones: añadir un sitio (campo de 34 y el botón compacto a su altura) y la lista de sitios, cada uno con su
+   editor debajo cuando está abierto. */
+.aegis-escudos-aj-anadir {
+  display: flex;
+  gap: var(--aegis-s-8);
+  margin-block-start: var(--aegis-s-8);
+  padding-inline: var(--aegis-s-4);
+
+  & > .aegis-huella-quitar {
+    min-height: 34px;
+  }
+}
+.aegis-escudos-aj-campo {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  box-sizing: border-box;
+  margin: 0;
+  padding-inline: var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-7);
+  font: inherit;
+  font-size: 13px;
+  transition:
+    background-color var(--aegis-t-hover) var(--aegis-ease),
+    border-color var(--aegis-t-hover) var(--aegis-ease);
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+.aegis-escudos-aj-error {
+  margin: var(--aegis-s-4) 0 0;
+  padding-inline: var(--aegis-s-4);
+  font-size: 12px;
+
+  &[hidden] {
+    display: none;
+  }
+}
+.aegis-escudos-aj-sitios {
+  margin-block-start: var(--aegis-s-12);
+}
+.aegis-escudos-aj-sitio {
+  border-block-start: 1px solid transparent;
+}
+.aegis-escudos-aj-sitio-nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* El editor de un sitio: sus filas con 12 de sangría, separadas por la línea. */
+.aegis-escudos-aj-editor {
+  margin-inline-start: var(--aegis-s-12);
+  padding-block-end: var(--aegis-s-8);
+}
+.aegis-escudos-aj-que {
+  margin-block: var(--aegis-s-8) var(--aegis-s-4);
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-escudos-aj-intervalo,
+  .aegis-escudos-aj-sitio {
+    border-block-start-color: var(--aegis-line);
+  }
+  /* Campo (DISENO §2 y §9): relleno al 4 % (7 % con foco), borde al 10 % y el del foco con foco. */
+  .aegis-escudos-aj-campo {
+    background-color: var(--aegis-hover);
+    border-color: var(--aegis-field-border);
+    color: var(--aegis-text);
+
+    &::placeholder {
+      color: var(--aegis-sub);
+      opacity: 1;
+    }
+    &:focus {
+      background-color: var(--aegis-control);
+      border-color: var(--aegis-focus);
+    }
+  }
+  .aegis-escudos-aj-error {
+    color: var(--aegis-err);
+  }
+}

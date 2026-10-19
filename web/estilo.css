@@ -1,0 +1,465 @@
+/* Aegis · web de privacidad y aviso legal. Lenguaje visual de docs/DISENO.md: monocromo, Inter, tokens de SecretOS.
+   Los colores, radios y espacios están solo en los tokens de abajo (los mismos valores que
+   overlay/browser/components/aegis/estilos/tokens.css); el resto usa var(--*). Sin nada de terceros: Inter se sirve
+   desde esta misma web (fuentes/, SIL Open Font License 1.1). Claro u oscuro según el sistema. Nada se mueve. */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fuentes/InterVariable.woff2") format("woff2");
+}
+
+/* ── Tokens ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: dark light;
+
+  /* Oscuro (referencia) */
+  --bg: #0a0a0b;
+  --surface: #151517;
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --text: #f4f4f5;
+  --sub: #a1a1aa;
+  --muted: #85858e;
+  --focus: rgb(244 244 245 / 0.55);
+  --control: rgb(255 255 255 / 0.07);
+  --hover: rgb(255 255 255 / 0.04);
+
+  --r-5: 5px;
+  --r-7: 7px;
+  --r-12: 12px;
+  --r-14: 14px;
+  --s-4: 4px;
+  --s-8: 8px;
+  --s-12: 12px;
+  --s-16: 16px;
+  --s-24: 24px;
+  --s-32: 32px;
+  --s-48: 48px;
+  --s-64: 64px;
+
+  --font: "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --ancho: 704px;            /* columna de lectura: unos 70 caracteres por línea a 17 px */
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --line: rgb(0 0 0 / 0.08);
+    --line-strong: rgb(0 0 0 / 0.16);
+    --text: #0a0a0b;
+    --sub: #5f5f67;
+    --muted: #5f5f67;
+    --focus: rgb(10 10 11 / 0.55);
+    --control: rgb(0 0 0 / 0.05);
+    --hover: rgb(0 0 0 / 0.035);
+  }
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1.0625rem;      /* 17 px con el tamaño de serie; respeta el del sistema */
+  font-weight: 400;
+  line-height: 1.65;
+  overflow-wrap: break-word;
+}
+
+.contenedor {
+  max-width: calc(var(--ancho) + 2 * var(--s-16));
+  margin: 0 auto;
+  padding-left: var(--s-16);
+  padding-right: var(--s-16);
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--r-5);
+}
+
+strong {
+  font-weight: 600;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 1px 5px;
+  border-radius: var(--r-5);
+  background: var(--control);
+  overflow-wrap: anywhere;
+}
+
+/* Saltar al contenido: invisible hasta que llega el foco del teclado. */
+.saltar {
+  position: absolute;
+  left: var(--s-16);
+  top: -100px;
+  padding: var(--s-8) var(--s-12);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-7);
+  font-size: 0.9375rem;
+}
+
+.saltar:focus {
+  top: var(--s-8);
+}
+
+/* ── Cabecera ───────────────────────────────────────────────────────────────────────────────────────────────── */
+
+.cabecera {
+  border-bottom: 1px solid var(--line);
+}
+
+.cabecera .contenedor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8) var(--s-24);
+  min-height: 64px;
+  padding-top: var(--s-12);
+  padding-bottom: var(--s-12);
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-12);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  letter-spacing: -0.2px;
+  text-decoration: none;
+}
+
+.marca img {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+
+.navegacion ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  margin: 0 calc(-1 * var(--s-8));     /* el texto de los enlaces, alineado con la columna */
+  padding: 0;
+  list-style: none;
+}
+
+.navegacion li + li {
+  margin-top: 0;
+}
+
+.navegacion a {
+  display: inline-block;
+  min-height: 32px;
+  padding: var(--s-4) var(--s-8);
+  border-radius: var(--r-7);
+  color: var(--sub);
+  font-size: 0.9375rem;
+  line-height: 24px;
+  text-decoration: none;
+}
+
+.navegacion a:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.navegacion a[aria-current="page"] {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── Contenido ──────────────────────────────────────────────────────────────────────────────────────────────── */
+
+main {
+  padding-top: var(--s-48);
+  padding-bottom: var(--s-64);
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+h1 {
+  margin: 0 0 var(--s-16);
+  font-size: 1.875rem;       /* 30 px */
+  letter-spacing: -0.4px;
+}
+
+h2 {
+  margin: var(--s-48) 0 var(--s-16);
+  font-size: 1.3125rem;      /* 21 px */
+  letter-spacing: -0.2px;
+  scroll-margin-top: var(--s-24);
+}
+
+h3 {
+  margin: var(--s-32) 0 var(--s-8);
+  font-size: 1.0625rem;
+}
+
+p,
+ul,
+ol,
+dl {
+  margin: 0 0 var(--s-16);
+}
+
+ul,
+ol {
+  padding-left: 1.4em;
+}
+
+li + li {
+  margin-top: var(--s-8);
+}
+
+.entradilla {
+  margin-bottom: var(--s-24);
+  color: var(--sub);
+  font-size: 1.1875rem;      /* 19 px */
+  line-height: 1.55;
+}
+
+.vigencia {
+  margin-bottom: var(--s-32);
+  color: var(--sub);
+  font-size: 0.9375rem;
+}
+
+/* Etiqueta de sección: único uso de mayúsculas (DISENO §3). */
+.etiqueta {
+  margin: 0 0 var(--s-12);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.nota {
+  color: var(--sub);
+  font-size: 0.9375rem;
+}
+
+/* Tarjeta: superficie, borde de línea, radio 14 (sub-tarjeta de las páginas, DISENO §5). */
+.tarjeta {
+  margin: 0 0 var(--s-24);
+  padding: var(--s-16) var(--s-24);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-14);
+}
+
+.tarjeta > :last-child {
+  margin-bottom: 0;
+}
+
+.tarjeta h3:first-child,
+.tarjeta h2:first-child {
+  margin-top: 0;
+}
+
+/* Resumen de la política: puntos con el título en 600. */
+.resumen {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.resumen li {
+  padding: var(--s-12) 0;
+  border-top: 1px solid var(--line);
+}
+
+.resumen li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.resumen li:last-child {
+  padding-bottom: 0;
+}
+
+.resumen li + li {
+  margin-top: 0;
+}
+
+.resumen strong {
+  display: block;
+}
+
+/* Índice de la página. */
+.indice ol {
+  margin: 0;
+  padding-left: 1.6em;
+  font-size: 0.9375rem;
+}
+
+.indice li + li {
+  margin-top: var(--s-4);
+}
+
+/* Ficha de una conexión: qué recibe, cuándo y cómo se apaga. */
+.ficha {
+  display: grid;
+  grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr);
+  gap: var(--s-8) var(--s-16);
+  margin: var(--s-12) 0 0;
+}
+
+.ficha dt {
+  color: var(--sub);
+  font-size: 0.9375rem;
+  line-height: 1.75;          /* alinea con el cuerpo de 17 px */
+}
+
+.ficha dd {
+  margin: 0;
+}
+
+/* Enlaces de la portada a cada documento. */
+.documentos {
+  display: grid;
+  gap: var(--s-12);
+  margin: var(--s-32) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.documentos li + li {
+  margin-top: 0;
+}
+
+.documentos a {
+  display: block;
+  padding: var(--s-16) var(--s-24);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-14);
+  text-decoration: none;
+}
+
+.documentos a:hover {
+  border-color: var(--line-strong);
+}
+
+.documentos .titulo {
+  display: block;
+  font-weight: 600;
+}
+
+.documentos .detalle {
+  display: block;
+  color: var(--sub);
+  font-size: 0.9375rem;
+}
+
+/* ── Pie ────────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+.pie {
+  border-top: 1px solid var(--line);
+  color: var(--sub);
+  font-size: 0.9375rem;
+}
+
+.pie .contenedor {
+  padding-top: var(--s-24);
+  padding-bottom: var(--s-48);
+}
+
+.pie p {
+  margin: 0 0 var(--s-8);
+}
+
+/* ── Pantallas estrechas ────────────────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  main {
+    padding-top: var(--s-32);
+  }
+
+  h1 {
+    font-size: 1.625rem;     /* 26 px */
+  }
+
+  h2 {
+    margin-top: var(--s-32);
+  }
+
+  .tarjeta,
+  .documentos a {
+    padding: var(--s-16);
+  }
+
+  .ficha {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .ficha dd {
+    margin-bottom: var(--s-8);
+  }
+}
+
+/* ── Impresión: los textos legales se imprimen en negro sobre blanco ───────────────────────────────────────── */
+
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --text: #000000;
+    --sub: #333333;
+    --muted: #333333;
+    --line: #cccccc;
+  }
+
+  .saltar,
+  .navegacion {
+    display: none;
+  }
+
+  main {
+    padding-top: var(--s-16);
+  }
+}

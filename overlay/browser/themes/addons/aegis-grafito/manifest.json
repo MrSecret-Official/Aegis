@@ -1,0 +1,74 @@
+{
+  "manifest_version": 2,
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "aegis-grafito@aegis"
+    }
+  },
+  "name": "__MSG_nombre__",
+  "description": "__MSG_descripcion__",
+  "author": "Aegis",
+  "version": "1.0.0",
+  "default_locale": "en_US",
+  "theme": {
+    "images": {
+      "additional_backgrounds": [
+        {
+          "linear-gradient": "to bottom, #26262a 0%, #18181b 100%"
+        }
+      ]
+    },
+    "properties": {
+      "additional_backgrounds_alignment": [
+        "left top"
+      ],
+      "additional_backgrounds_tiling": [
+        "repeat-x"
+      ],
+      "additional_backgrounds_size": [
+        "auto 100%"
+      ],
+      "color_scheme": "dark"
+    },
+    "colors": {
+      "frame": "#18181b",
+      "frame_inactive": "#18181b",
+      "tab_background_text": "#a1a1aa",
+      "tab_text": "#f4f4f5",
+      "tab_selected": "#26262a",
+      "tab_line": "rgba(255, 255, 255, 0.07)",
+      "tab_loading": "#f4f4f5",
+      "toolbar": "#18181b",
+      "toolbar_text": "#f4f4f5",
+      "toolbar_top_separator": "transparent",
+      "toolbar_bottom_separator": "rgba(255, 255, 255, 0.07)",
+      "toolbar_vertical_separator": "rgba(255, 255, 255, 0.07)",
+      "toolbar_field": "#222226",
+      "toolbar_field_text": "#f4f4f5",
+      "toolbar_field_border": "rgba(255, 255, 255, 0.07)",
+      "toolbar_field_focus": "#222226",
+      "toolbar_field_text_focus": "#f4f4f5",
+      "toolbar_field_border_focus": "rgba(244, 244, 245, 0.55)",
+      "toolbar_field_highlight": "rgba(255, 255, 255, 0.22)",
+      "toolbar_field_highlight_text": "#ffffff",
+      "icons": "#f4f4f5",
+      "icons_attention": "#f4f4f5",
+      "button_background_hover": "rgba(255, 255, 255, 0.06)",
+      "button_background_active": "rgba(255, 255, 255, 0.12)",
+      "bookmark_text": "#f4f4f5",
+      "popup": "#1f1f23",
+      "popup_text": "#f4f4f5",
+      "popup_border": "rgba(255, 255, 255, 0.07)",
+      "popup_highlight": "rgba(255, 255, 255, 0.08)",
+      "popup_highlight_text": "#f4f4f5",
+      "sidebar": "#141417",
+      "sidebar_text": "#f4f4f5",
+      "sidebar_border": "rgba(255, 255, 255, 0.07)",
+      "sidebar_highlight": "rgba(255, 255, 255, 0.08)",
+      "sidebar_highlight_text": "#f4f4f5",
+      "ntp_background": "#141417",
+      "ntp_card_background": "#1f1f23",
+      "ntp_text": "#f4f4f5"
+    }
+  }
+}

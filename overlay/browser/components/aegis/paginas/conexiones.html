@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- Aegis · about:conexiones (conexiones.sys.mjs): qué se conecta por su cuenta y el permiso del usuario. Se abre en la
+     primera ventana mientras no se haya decidido. Sin scripts: los interruptores y los botones los atiende el módulo
+     desde el proceso padre; los textos, Fluent (locales/<idioma>/conexiones.ftl); las hojas, AegisArranque (tokens.css,
+     comun.css y paginas/conexiones.css). La CSP solo deja cargar archivos del propio navegador: ninguna conexión.
+     Cada casilla lleva data-grupo con el nombre del grupo de conexiones.sys.mjs (aegis.conexiones.<grupo>). -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src resource: chrome:; font-src resource: chrome:; img-src resource: chrome:; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title data-l10n-id="conexiones-pestana"></title>
+    <link rel="icon" href="chrome://branding/content/icon32.png" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="conexiones.ftl" />
+  </head>
+  <body>
+    <main class="conexiones">
+      <header class="conexiones-cabecera">
+        <h1 data-l10n-id="conexiones-titulo"></h1>
+        <p class="conexiones-entradilla" data-l10n-id="conexiones-entradilla"></p>
+      </header>
+
+      <section class="conexiones-tarjeta" aria-labelledby="conexiones-lista-titulo">
+        <h2 class="conexiones-etiqueta" id="conexiones-lista-titulo" data-l10n-id="conexiones-lista-titulo"></h2>
+
+        <div class="conexiones-fila">
+          <div class="conexiones-texto">
+            <h3 id="conexiones-actualizaciones-nombre" data-l10n-id="conexiones-actualizaciones-nombre"></h3>
+            <p id="conexiones-actualizaciones-que" data-l10n-id="conexiones-actualizaciones-que"></p>
+          </div>
+          <input type="checkbox" role="switch" class="conexiones-interruptor" data-grupo="actualizaciones"
+                 aria-labelledby="conexiones-actualizaciones-nombre"
+                 aria-describedby="conexiones-actualizaciones-que" />
+        </div>
+
+        <div class="conexiones-fila">
+          <div class="conexiones-texto">
+            <h3 id="conexiones-seguridad-nombre" data-l10n-id="conexiones-seguridad-nombre"></h3>
+            <p id="conexiones-seguridad-que" data-l10n-id="conexiones-seguridad-que"></p>
+          </div>
+          <input type="checkbox" role="switch" class="conexiones-interruptor" data-grupo="seguridad"
+                 aria-labelledby="conexiones-seguridad-nombre" aria-describedby="conexiones-seguridad-que" />
+        </div>
+
+        <div class="conexiones-fila">
+          <div class="conexiones-texto">
+            <h3 id="conexiones-listas-nombre" data-l10n-id="conexiones-listas-nombre"></h3>
+            <p id="conexiones-listas-que" data-l10n-id="conexiones-listas-que"></p>
+          </div>
+          <input type="checkbox" role="switch" class="conexiones-interruptor" data-grupo="listas"
+                 aria-labelledby="conexiones-listas-nombre" aria-describedby="conexiones-listas-que" />
+        </div>
+
+        <div class="conexiones-fila">
+          <div class="conexiones-texto">
+            <h3 id="conexiones-codecs-nombre" data-l10n-id="conexiones-codecs-nombre"></h3>
+            <p id="conexiones-codecs-que" data-l10n-id="conexiones-codecs-que"></p>
+          </div>
+          <input type="checkbox" role="switch" class="conexiones-interruptor" data-grupo="codecs"
+                 aria-labelledby="conexiones-codecs-nombre" aria-describedby="conexiones-codecs-que" />
+        </div>
+
+        <div class="conexiones-fila">
+          <div class="conexiones-texto">
+            <h3 id="conexiones-traduccion-nombre" data-l10n-id="conexiones-traduccion-nombre"></h3>
+            <p id="conexiones-traduccion-que" data-l10n-id="conexiones-traduccion-que"></p>
+          </div>
+          <input type="checkbox" role="switch" class="conexiones-interruptor" data-grupo="traduccion"
+                 aria-labelledby="conexiones-traduccion-nombre" aria-describedby="conexiones-traduccion-que" />
+        </div>
+
+        <div class="conexiones-fila">
+          <div class="conexiones-texto">
+            <h3 id="conexiones-safebrowsing-nombre" data-l10n-id="conexiones-safebrowsing-nombre"></h3>
+            <p id="conexiones-safebrowsing-que" data-l10n-id="conexiones-safebrowsing-que"></p>
+            <p id="conexiones-safebrowsing-sin-clave" class="conexiones-nota"
+               data-l10n-id="conexiones-safebrowsing-sin-clave" hidden=""></p>
+          </div>
+          <input type="checkbox" role="switch" class="conexiones-interruptor" data-grupo="safebrowsing"
+                 aria-labelledby="conexiones-safebrowsing-nombre"
+                 aria-describedby="conexiones-safebrowsing-que conexiones-safebrowsing-sin-clave" />
+        </div>
+
+        <div class="conexiones-fila">
+          <div class="conexiones-texto">
+            <h3 id="conexiones-push-nombre" data-l10n-id="conexiones-push-nombre"></h3>
+            <p id="conexiones-push-que" data-l10n-id="conexiones-push-que"></p>
+          </div>
+          <input type="checkbox" role="switch" class="conexiones-interruptor" data-grupo="push"
+                 aria-labelledby="conexiones-push-nombre" aria-describedby="conexiones-push-que" />
+        </div>
+      </section>
+
+      <p class="conexiones-pie" data-l10n-id="conexiones-navegar"></p>
+      <p class="conexiones-pie" data-l10n-id="conexiones-cambiar"></p>
+
+      <footer class="conexiones-acciones">
+        <button id="conexiones-ahora-no" class="conexiones-secundario" data-l10n-id="conexiones-ahora-no"></button>
+        <button id="conexiones-aceptar" class="conexiones-principal" data-l10n-id="conexiones-aceptar"></button>
+      </footer>
+      <p id="conexiones-estado" class="conexiones-estado" role="status" hidden=""></p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,127 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · diálogo de los códigos de verificación (autenticador.xhtml; DISENO §9, «Diálogo de los códigos de
+   verificación»). Lo común (cuerpo de 440, cabecera, campos de 34, botón de mostrar, aviso, pie) está en dialogo.css;
+   aquí, el glifo del cronómetro, el desplegable de la cuenta (un campo de 34 con el chevron de 16), los dos botones
+   compactos para leer el QR (30 de alto, radio 7, 13 px) y «Quitar el código» a la izquierda del pie. Solo
+   var(--aegis-*); los colores, fuera de alto contraste. */
+
+.icono {
+  background-image: url("autenticador-icono.svg");
+}
+
+/* Con :not([size], [multiple]): la hoja común de Firefox (in-content/common.css, que SubDialog añade después) usa
+   ese mismo selector para poner los desplegables en negrita; así esta pesa más. */
+.campo > select:not([size], [multiple]) {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--aegis-h-field);
+  margin: 0;
+  padding-block: 0;
+  padding-inline: 10px 32px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-7);
+  font: inherit;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  appearance: none;
+  background: url("autenticador-desplegar.svg") right 10px center / 16px no-repeat;
+  -moz-context-properties: fill;
+
+  &:dir(rtl) {
+    background-position: left 10px center;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+  /* Fijo en una cuenta (desde about:logins o el panel): sin chevron, porque no se abre. */
+  &:disabled {
+    opacity: 1;
+    background-image: none;
+  }
+}
+
+.qr {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aegis-s-8);
+  margin-block-start: var(--aegis-s-8);
+}
+
+/* Compacto (DISENO §9, «Quitar» compacto): 30 de alto, radio 7, 13 px 400, 12 de relleno lateral. */
+.compacto {
+  min-height: 30px;
+  margin: 0;
+  padding: 0 var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-7);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  appearance: none;
+  min-width: 0;
+
+  &:disabled {
+    opacity: 0.28;
+    cursor: default;
+  }
+}
+
+/* «Quitar el código», a la izquierda: no es la acción del diálogo. */
+.acciones .quitar {
+  margin-inline-end: auto;
+}
+
+/* Mismo selector que arriba: si no, su «background» y su «border» abreviados pisarían estos colores. */
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .campo > select:not([size], [multiple]) {
+    background-color: var(--aegis-hover);
+    border-color: var(--aegis-field-border);
+    color: var(--aegis-text);
+    fill: var(--aegis-sub);
+
+    &:focus {
+      background-color: var(--aegis-control);
+      border-color: var(--aegis-focus);
+    }
+  }
+  .compacto {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+
+    &:hover:not(:disabled) {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active:not(:disabled) {
+      background-color: var(--aegis-control-down);
+    }
+  }
+}
+
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .campo > select:not([size], [multiple]),
+  .compacto {
+    border-color: currentColor;
+    fill: currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .campo > select {
+    transition:
+      background-color var(--aegis-t-hover) var(--aegis-ease),
+      border-color var(--aegis-t-hover) var(--aegis-ease);
+  }
+  .compacto {
+    transition:
+      background-color var(--aegis-t-hover) var(--aegis-ease),
+      transform var(--aegis-t-press) var(--aegis-ease);
+
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+  }
+}

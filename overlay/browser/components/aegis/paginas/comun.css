@@ -1,0 +1,129 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · páginas propias del navegador (nueva pestaña, bienvenida, navegación privada): los tokens del design system
+   de Firefox 157 (tokens-shared.css y tokens-brand.css, también su capa «Nova», que es violeta) redefinidos con los
+   de Aegis, igual que estilos/mapeo-firefox.css hace en la interfaz. Así botones, enlaces, foco, superficies y
+   diálogos de estas páginas pasan al blanco y negro de docs/DISENO.md sin tocar el CSS de Firefox.
+   !important porque Firefox los define en capas y en selectores más concretos (:root[lwt-newtab-brighttext]…).
+   Con alto contraste de Windows (forced-colors) o «más contraste», mandan los valores de Firefox: no se aplica. */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+
+:root {
+  /* Acento: el violeta de Nova (y el cian de antes) pasa al énfasis de Aegis (DISENO §2: monocromo de serie, el
+     blanco/negro de la acción principal; o el elegido en Ajustes, que enfasis.sys.mjs pone en la raíz). Los botones
+     principales van aparte, siempre con --aegis-prim. */
+  --color-accent-primary: var(--aegis-accent) !important;
+  --color-accent-primary-hover: var(--aegis-accent-hover) !important;
+  --color-accent-primary-active: var(--aegis-accent-down) !important;
+  --color-accent-primary-selected: var(--aegis-accent) !important;
+  --text-color-accent-primary-selected: var(--aegis-on-accent) !important;
+  --icon-color: var(--aegis-text) !important;
+  --icon-color-information: var(--aegis-text) !important;
+  --icon-color-accent-primary-desaturated: var(--aegis-sub) !important;
+
+  /* Texto y superficies */
+  --text-color: var(--aegis-text) !important;
+  --text-color-deemphasized: var(--aegis-sub) !important;
+  --background-color-canvas: var(--aegis-bg) !important;
+  --background-color-box: var(--aegis-surface) !important;
+  --background-color-box-info: var(--aegis-surface) !important;
+  --background-color-information: var(--aegis-surface) !important;
+  --background-color-list-item-hover: var(--aegis-hover) !important;
+  --card-background-color: var(--aegis-surface) !important;
+  --card-box-shadow: none !important;
+  --card-header-background-color: transparent !important;
+  --info-bar-border-color: var(--aegis-line) !important;
+  --table-header-background-color: var(--aegis-control) !important;
+  --table-header-text-color: var(--aegis-text) !important;
+  --table-row-background-color: var(--aegis-bg) !important;
+  --table-row-background-color-alternate: var(--aegis-surface) !important;
+
+  /* Bordes y foco (DISENO §2: el foco es --aegis-focus, que con un énfasis de color es el énfasis; nunca el de
+     Firefox) */
+  --border-color: var(--aegis-line) !important;
+  --border-color-deemphasized: var(--aegis-line) !important;
+  --border-color-selected: var(--aegis-accent) !important;
+  --border-color-interactive: var(--aegis-check-border) !important;
+  --border-color-interactive-hover: var(--aegis-focus) !important;
+  --border-color-interactive-active: var(--aegis-focus) !important;
+  --input-border-color: var(--aegis-field-border) !important;
+  --input-text-background-color: var(--aegis-control) !important;
+  --focus-outline-color: var(--aegis-focus) !important;
+
+  /* Enlaces: del color del texto (se distinguen por el subrayado de Firefox), no del acento. */
+  --link-color: var(--aegis-text) !important;
+  --link-color-hover: var(--aegis-text) !important;
+  --link-color-active: var(--aegis-sub) !important;
+  --link-color-visited: var(--aegis-text) !important;
+
+  /* Botones: el principal es la acción destacada de Aegis; el resto, controles grises con borde de línea. */
+  --button-background-color: var(--aegis-control) !important;
+  --button-background-color-hover: var(--aegis-control-hover) !important;
+  --button-background-color-active: var(--aegis-control-down) !important;
+  --button-background-color-disabled: var(--aegis-control) !important;
+  --button-text-color: var(--aegis-text) !important;
+  --button-border-color: var(--aegis-line) !important;
+  --button-background-color-primary: var(--aegis-prim) !important;
+  --button-background-color-primary-hover: var(--aegis-prim-hover) !important;
+  --button-background-color-primary-active: var(--aegis-prim-down) !important;
+  --button-background-color-primary-disabled: var(--aegis-prim) !important;
+  --button-text-color-primary: var(--aegis-on-prim) !important;
+  --button-text-color-primary-hover: var(--aegis-on-prim) !important;
+  --button-text-color-primary-active: var(--aegis-on-prim) !important;
+  --button-background-color-ghost: transparent !important;
+  --button-background-color-ghost-hover: var(--aegis-hover) !important;
+  --button-background-color-ghost-active: var(--aegis-control) !important;
+  --button-text-color-ghost: var(--aegis-text) !important;
+  --button-border-color-ghost-hover: var(--aegis-line-strong) !important;
+  --button-border-color-ghost-active: var(--aegis-line-strong) !important;
+  --button-background-color-muted: var(--aegis-control) !important;
+  --button-background-color-muted-hover: var(--aegis-control-hover) !important;
+  --button-background-color-muted-active: var(--aegis-control-down) !important;
+  /* DISENO §5: botones de radio 8 (Nova los hace píldora, 24). */
+  --button-border-radius: var(--aegis-r-8) !important;
+  /* DISENO §9: el secundario en peso normal; el principal, en 600 (abajo). Como mapeo-firefox.css en la ventana. */
+  --button-font-weight: 400 !important;
+
+  /* Paneles y menús emergentes (radio 12, filas de radio 7) */
+  --popup-background-color: var(--aegis-menu) !important;
+  --popup-border-color: var(--aegis-line) !important;
+  --popup-border-radius: var(--aegis-r-12) !important;
+  --panel-background-color: var(--aegis-menu) !important;
+  --panel-border-color: var(--aegis-line) !important;
+  --panel-border-radius: var(--aegis-r-12) !important;
+  --panel-menuitem-border-radius: var(--aegis-r-7) !important;
+  --panel-text-color: var(--aegis-text) !important;
+
+  /* Radios y pesos de la escala de Aegis (Nova: 4, 8, 12, 24 y círculo en los buscadores). */
+  --border-radius-xsmall: var(--aegis-r-2) !important;
+  --border-radius-small: var(--aegis-r-5) !important;
+  --border-radius-medium: var(--aegis-r-8) !important;
+  --border-radius-large: var(--aegis-r-12) !important;
+  --border-radius-xlarge: var(--aegis-r-20) !important;
+  --input-search-border-radius: var(--aegis-r-8) !important;
+  --font-weight-bold: 600 !important;
+  --font-weight-semibold: 600 !important;
+  --font-weight-heading: 600 !important;
+
+  accent-color: var(--aegis-accent);
+}
+
+moz-button[type~="primary"],
+button.primary {
+  --button-font-weight: 600 !important;
+}
+
+::selection {
+  background-color: var(--aegis-accent);
+  color: var(--aegis-on-accent);
+}
+}
+
+/* Tipografía de la interfaz (DISENO §3): Inter, cargada desde el propio navegador. :root delante para ganar a los
+   «body { font-family: system-ui }» de las páginas de Firefox. */
+:root body {
+  font-family: var(--aegis-font);
+}

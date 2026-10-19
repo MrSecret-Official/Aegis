@@ -1,0 +1,362 @@
+// Aegis Setup · miniaturas de las tarjetas: el navegador en pequeño, en modo Estándar (pestañas arriba, barra de
+// favoritos discreta) o Workflow (pestañas verticales, esenciales y espacios), y en oscuro, claro o automático; y los
+// Escudos en pequeño (peticiones tachadas y el contador), uno por nivel.
+// Solo rectángulos: nada de imágenes, se dibujan nítidas a cualquier escala. Sus radios (1,5, 2,5, 3, 4,5, 5 y 8)
+// son la escala de DISENO §5 reducida al tamaño del navegador dibujado, no radios de la interfaz.
+
+import { T } from "tokens.slint";
+
+component Raya inherits Rectangle {
+    height: 3px;
+    border-radius: 1.5px;
+}
+
+export component MiniNavegador inherits Rectangle {
+    in property <bool> vertical;
+    // 0: sigue al tema del instalador; 1: oscuro; 2: claro.
+    in property <int> tono;
+    property <bool> osc: root.tono == 0 ? T.oscuro : root.tono == 1;
+    property <color> hoja: root.tono == 0 ? T.fg(0.05) : root.osc ? T.surface-oscuro : T.surface-claro;
+    pure function f(a: float) -> color {
+        return root.osc ? rgba(255, 255, 255, a) : rgba(0, 0, 0, a);
+    }
+
+    border-radius: 8px;
+    background: root.tono == 0 ? T.fg(0.025) : root.osc ? T.bg-oscuro : T.bg-claro;
+    border-width: 1px;
+    border-color: root.f(0.12);
+
+    // ---- Estándar: pestañas arriba, barra de direcciones y favoritos.
+    if !root.vertical: Rectangle {
+        Rectangle {
+            x: 6px;
+            y: 5px;
+            width: root.width * 0.24;
+            height: 9px;
+            border-radius: 3px;
+            background: root.f(0.12);
+            Raya {
+                x: 4px;
+                width: parent.width * 0.55;
+                background: root.f(0.38);
+            }
+        }
+
+        for i in 2: Rectangle {
+            x: 9px + root.width * (0.24 + i * 0.19);
+            y: 5px;
+            width: root.width * 0.17;
+            height: 9px;
+            border-radius: 3px;
+            background: root.f(0.05);
+            Raya {
+                x: 4px;
+                width: parent.width * 0.5;
+                background: root.f(0.20);
+            }
+        }
+
+        for i in 3: Rectangle {
+            x: 6px + i * 8px;
+            y: 19px;
+            width: 5px;
+            height: 5px;
+            border-radius: 2.5px;
+            background: root.f(0.28);
+        }
+        Rectangle {
+            x: 32px;
+            y: 17px;
+            width: root.width - 52px;
+            height: 9px;
+            border-radius: 4.5px;
+            background: root.f(0.07);
+            border-width: 1px;
+            border-color: root.f(0.10);
+            Raya {
+                x: 6px;
+                width: parent.width * 0.4;
+                background: root.f(0.28);
+            }
+        }
+
+        Rectangle {
+            x: root.width - 15px;
+            y: 17px;
+            width: 9px;
+            height: 9px;
+            border-radius: 2.5px;
+            background: root.f(0.28);
+        }
+
+        HorizontalLayout {
+            x: 8px;
+            y: 30px;
+            width: root.width - 16px;
+            height: 3px;
+            spacing: 6px;
+            alignment: start;
+            for w in [16px, 20px, 12px, 18px]: Raya {
+                width: w;
+                background: root.f(0.16);
+            }
+        }
+
+        Rectangle {
+            x: 4px;
+            y: 38px;
+            width: root.width - 8px;
+            height: root.height - 42px;
+            border-radius: 5px;
+            background: root.hoja;
+            border-width: 1px;
+            border-color: root.f(0.10);
+            clip: true;
+            Raya {
+                x: 10px;
+                y: 9px;
+                width: parent.width * 0.38;
+                height: 5px;
+                border-radius: 2px;
+                background: root.f(0.30);
+            }
+
+            for k[i] in [0.72, 0.58, 0.66, 0.5]: Raya {
+                x: 10px;
+                y: 20px + i * 7px;
+                width: parent.width * k;
+                background: root.f(0.14);
+            }
+        }
+    }
+
+    // ---- Workflow: barra lateral con pestañas verticales, esenciales y espacios.
+    if root.vertical: lat := Rectangle {
+        property <length> lado: root.width * 0.3;
+        Rectangle {
+            x: 5px;
+            y: 5px;
+            width: lat.lado - 10px;
+            height: 9px;
+            border-radius: 4.5px;
+            background: root.f(0.07);
+            border-width: 1px;
+            border-color: root.f(0.10);
+            Raya {
+                x: 5px;
+                width: parent.width * 0.45;
+                background: root.f(0.28);
+            }
+        }
+
+        for i in 3: Rectangle {
+            x: 5px + i * ((lat.lado - 18px) / 3 + 4px);
+            y: 19px;
+            width: (lat.lado - 18px) / 3;
+            height: 9px;
+            border-radius: 3px;
+            background: root.f(0.08);
+        }
+        for i in 5: Rectangle {
+            x: 4px;
+            y: 34px + i * 11px;
+            width: lat.lado - 8px;
+            height: 9px;
+            border-radius: 3px;
+            background: i == 0 ? root.f(0.10) : transparent;
+            Rectangle {
+                x: 4px;
+                width: 4px;
+                height: 4px;
+                border-radius: 1px;
+                background: root.f(0.30);
+            }
+
+            Raya {
+                x: 11px;
+                width: (parent.width - 16px) * (i == 0 ? 0.8 : i == 2 ? 0.5 : 0.68);
+                background: i == 0 ? root.f(0.42) : root.f(0.20);
+            }
+        }
+
+        for i in 3: Rectangle {
+            x: lat.lado / 2 - 11.5px + i * 9px;
+            y: root.height - 11px;
+            width: 5px;
+            height: 5px;
+            border-radius: 2.5px;
+            background: i == 0 ? root.f(0.45) : root.f(0.18);
+        }
+        Rectangle {
+            x: lat.lado;
+            y: 4px;
+            width: root.width - lat.lado - 4px;
+            height: root.height - 8px;
+            border-radius: 5px;
+            background: root.hoja;
+            border-width: 1px;
+            border-color: root.f(0.10);
+            clip: true;
+            Raya {
+                x: 10px;
+                y: 10px;
+                width: parent.width * 0.42;
+                height: 5px;
+                border-radius: 2px;
+                background: root.f(0.30);
+            }
+
+            for k[i] in [0.74, 0.6, 0.68, 0.52, 0.64, 0.46]: Raya {
+                x: 10px;
+                y: 21px + i * 7px;
+                width: parent.width * k;
+                background: root.f(0.14);
+            }
+        }
+    }
+}
+
+// Apariencia: 1 oscuro, 2 claro, 3 automático (mitad y mitad).
+export component MiniApariencia inherits Rectangle {
+    in property <int> tono;
+    if root.tono != 3: MiniNavegador {
+        tono: root.tono;
+    }
+    if root.tono == 3: Rectangle {
+        Rectangle {
+            x: 0px;
+            width: root.width / 2;
+            clip: true;
+            MiniNavegador {
+                x: 0px;
+                width: root.width;
+                height: root.height;
+                tono: 1;
+            }
+        }
+
+        Rectangle {
+            x: root.width / 2;
+            width: root.width / 2;
+            clip: true;
+            MiniNavegador {
+                x: -root.width / 2;
+                width: root.width;
+                height: root.height;
+                tono: 2;
+            }
+        }
+    }
+}
+
+// Escudos: una página en pequeño. Arriba, la barra de direcciones con el botón de los Escudos (el anillo, como en la
+// barra de Aegis) y su contador; debajo, las peticiones de la página, tachadas las bloqueadas. Cada nivel tacha más y
+// el contador sube: 0 Normal, 1 Estricto, 2 Estricto+. Quieta: nada se mueve.
+export component MiniEscudos inherits Rectangle {
+    in property <int> nivel;
+    // La fila 0 es la propia página: nunca se bloquea.
+    pure function bloqueada(i: int) -> bool {
+        if (i == 0) {
+            return false;
+        }
+        if (root.nivel == 0) {
+            return i == 1 || i == 3;
+        }
+        if (root.nivel == 1) {
+            return i != 4;
+        }
+        return true;
+    }
+
+    border-radius: 8px;
+    background: T.fg(0.025);
+    border-width: 1px;
+    border-color: T.fg(0.12);
+
+    // Barra de direcciones.
+    Rectangle {
+        x: 6px;
+        y: 6px;
+        width: root.width - 38px;
+        height: 9px;
+        border-radius: 4.5px;
+        background: T.fg(0.07);
+        border-width: 1px;
+        border-color: T.fg(0.10);
+        Raya {
+            x: 6px;
+            width: parent.width * 0.4;
+            background: T.fg(0.28);
+        }
+    }
+
+    // Botón de los Escudos: el anillo y, encima de su esquina, el contador (DISENO §4: pastilla en --aegis-prim).
+    Rectangle {
+        x: root.width - 26px;
+        y: 5px;
+        width: 11px;
+        height: 11px;
+        border-radius: 5.5px;
+        border-width: 1.5px;
+        border-color: T.fg(0.55);
+    }
+
+    Rectangle {
+        x: root.width - 19px;
+        y: 3px;
+        width: max(10px, cifra.preferred-width + 5px);
+        height: 10px;
+        border-radius: 3px;
+        background: T.prim;
+        cifra := Text {
+            text: root.nivel == 0 ? "8" : root.nivel == 1 ? "15" : "23";
+            color: T.on-prim;
+            font-size: 8px;
+            font-weight: 600;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+
+    // La página y sus peticiones.
+    Rectangle {
+        x: 4px;
+        y: 21px;
+        width: root.width - 8px;
+        height: root.height - 25px;
+        border-radius: 5px;
+        background: T.fg(0.05);
+        border-width: 1px;
+        border-color: T.fg(0.10);
+        clip: true;
+        for k[i] in [0.46, 0.7, 0.56, 0.78, 0.62]: fila := Rectangle {
+            property <bool> tachada: root.bloqueada(i);
+            x: 0px;
+            y: 7px + i * 9px;
+            width: parent.width;
+            height: 3px;
+            Rectangle {
+                x: 9px;
+                width: 3px;
+                height: 3px;
+                border-radius: 1.5px;
+                background: i == 0 ? T.fg(0.40) : fila.tachada ? T.fg(0.12) : T.fg(0.30);
+            }
+
+            Raya {
+                x: 17px;
+                width: (parent.width - 30px) * k;
+                background: i == 0 ? T.fg(0.34) : fila.tachada ? T.fg(0.12) : T.fg(0.22);
+            }
+
+            // Tachada: una línea de 1 sobre la petición, que sobresale 3 por cada lado (no toca el punto).
+            if fila.tachada: Rectangle {
+                x: 14px;
+                y: 1px;
+                width: (parent.width - 30px) * k + 6px;
+                height: 1px;
+                background: T.fg(0.55);
+            }
+        }
+    }
+}

@@ -1,0 +1,661 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · Contraseñas (about:logins) por dentro de sus componentes (shadow DOM). Hoja de USUARIO, la única que
+   entra ahí (la pone AegisPaginasChild solo en about:logins): por eso todo va con !important, y los selectores usan
+   clases que solo existen dentro de esos componentes. Solo var(--aegis-*); los colores, fuera de alto contraste.
+   La página de fuera está en contrasenas.css. */
+
+/* ───────── Lista (login-list): barra lateral ───────── */
+
+/* Buscador y «+» en una fila, a 16 del borde. */
+.listHeader {
+  align-items: center !important;
+  gap: var(--aegis-s-8) !important;
+  padding: var(--aegis-s-16) var(--aegis-s-16) var(--aegis-s-8) !important;
+}
+.listHeader > login-filter {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* Buscador de la barra lateral (DISENO §9): alto 32, radio 8, superficie y borde de campo; con foco, el borde. */
+input.filter[type="text"] {
+  min-height: 32px !important;
+  padding-block: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--aegis-r-8) !important;
+  font-size: 13px !important;
+  background-position: 10px center !important;
+  transition: border-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+input.filter[type="text"]:focus-visible {
+  outline: none !important;
+}
+
+/* «Añadir contraseña»: botón de icono de 28, radio 7, sin fondo ni borde (DISENO §9). */
+button.icon-button {
+  width: var(--aegis-h-icon) !important;
+  min-width: var(--aegis-h-icon) !important;
+  height: var(--aegis-h-icon) !important;
+  min-height: var(--aegis-h-icon) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-7) !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+button.icon-button > img {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Orden y recuento: una línea discreta de 12, sin la píldora ni la raya de Firefox. */
+.meta {
+  padding: 0 var(--aegis-s-16) var(--aegis-s-8) !important;
+  border-block-end: 0 !important;
+  font-size: 12px !important;
+}
+#login-sort {
+  min-height: 24px !important;
+  margin: 0 !important;
+  padding-block: 0 !important;
+  padding-inline: var(--aegis-s-4) 20px !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-5) !important;
+  font-size: 12px !important;
+  background-position: right 4px center !important;
+}
+#login-sort:dir(rtl) {
+  padding-inline: var(--aegis-s-4) 20px !important;
+  background-position: left 4px center !important;
+}
+.meta > .count {
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* Filas de 44 con resalte de radio 7 a 8 del borde; la elegida, --aegis-sel (sin la raya de Firefox). Cada fila es un
+   login-list-item (Lit) con su <li class="list-item"> dentro. */
+ol[role="listbox"] {
+  padding: 0 var(--aegis-s-8) var(--aegis-s-8) !important;
+}
+li.list-item {
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+  margin-block: 1px !important;
+  padding-block: var(--aegis-s-4) !important;
+  padding-inline: var(--aegis-s-8) !important;
+  border-inline-start: 0 !important;
+  border-radius: var(--aegis-r-7) !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+li.list-item .labels {
+  min-height: 36px !important;
+}
+li.list-item .title {
+  font-size: 13px !important;
+}
+li.list-item.selected .title {
+  font-weight: 600 !important;
+}
+li.list-item .subtitle {
+  font-size: 12px !important;
+}
+li.list-item > img.icon {
+  margin-inline-end: var(--aegis-s-12) !important;
+}
+login-list-item.keyboard-selected {
+  border-radius: var(--aegis-r-7) !important;
+}
+/* Grupos de la lista: etiqueta de sección de 11 en mayúsculas (DISENO §3). */
+.login-list-header {
+  margin: 0 !important;
+  padding: var(--aegis-s-12) var(--aegis-s-8) var(--aegis-s-4) !important;
+  border: 0 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+}
+
+/* Lista vacía: el aviso de la derecha basta (sin repetirlo aquí). Sin resultados: una frase, sin la raya. */
+.container > .intro {
+  display: none !important;
+}
+.empty-search-message {
+  padding: var(--aegis-s-24) var(--aegis-s-16) !important;
+  border: 0 !important;
+  font-size: 13px !important;
+}
+.empty-search-message > p {
+  margin-block: 0 var(--aegis-s-4) !important;
+  font-weight: 600 !important;
+}
+.empty-search-message > span {
+  font-size: 12px !important;
+}
+
+/* ───────── Menú «⋯» (menu-button) ───────── */
+
+button.menu-button {
+  width: var(--aegis-h-icon) !important;
+  min-width: var(--aegis-h-icon) !important;
+  height: var(--aegis-h-icon) !important;
+  min-height: var(--aegis-h-icon) !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-7) !important;
+}
+/* Panel de radio 12 con filas de 32 y resalte de radio 7 a 4 del borde (DISENO §9, «Menú y panel»). */
+ul.menu[role="menu"] {
+  padding: var(--aegis-s-4) !important;
+  border-radius: var(--aegis-r-12) !important;
+  font-size: 13px !important;
+}
+button.menuitem-button {
+  min-height: 32px !important;
+  padding-inline-end: var(--aegis-s-12) !important;
+  border-radius: var(--aegis-r-7) !important;
+}
+.menuitem-separator {
+  margin-block: var(--aegis-s-4) !important;
+  border-width: 1px 0 0 !important;
+  border-style: solid !important;
+}
+/* «Ayuda» abre support.mozilla.org: fuera, como los demás enlaces a la ayuda de Mozilla. */
+button.menuitem-help {
+  display: none !important;
+}
+
+/* ───────── Contraseña elegida (login-item): tarjetas ───────── */
+
+/* Columna centrada de 680 como mucho, como los Ajustes. */
+.column:has(> form) {
+  max-width: 680px !important;
+}
+.column:has(> form) {
+  margin-inline: auto !important;
+}
+.container:has(> .column > form) {
+  padding: var(--aegis-s-8) var(--aegis-s-24) var(--aegis-s-24) !important;
+}
+
+/* Título de la página: el sitio, en 20 y 600, con su icono de 24 y las acciones discretas a la derecha. */
+form > .header {
+  gap: var(--aegis-s-12) !important;
+  margin: 0 0 var(--aegis-s-24) !important;
+}
+.login-item-favicon {
+  width: 24px !important;
+  height: 24px !important;
+  margin-inline-end: 0 !important;
+}
+form > .header > .title {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.2px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.action-buttons {
+  align-items: center !important;
+  column-gap: var(--aegis-s-4) !important;
+}
+
+/* Tarjeta: dirección arriba, usuario y contraseña debajo; filas de 12 arriba y abajo separadas por una línea, en
+   una superficie de radio 12 con borde de línea (como las tarjetas de los Ajustes). */
+form > .detail-row {
+  margin: 0 !important;
+  padding: var(--aegis-s-12) var(--aegis-s-16) !important;
+  border-width: 1px 1px 0 !important;
+  border-style: solid !important;
+  border-radius: var(--aegis-r-12) var(--aegis-r-12) 0 0 !important;
+}
+.detail-grid {
+  display: block !important;
+  margin: 0 0 var(--aegis-s-24) !important;
+  padding: 0 var(--aegis-s-16) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-radius: 0 0 var(--aegis-r-12) var(--aegis-r-12) !important;
+}
+.detail-grid > .detail-row:not([hidden]) {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--aegis-s-12) !important;
+  margin: 0 !important;
+  padding-block: var(--aegis-s-12) !important;
+  border-block-start-width: 1px !important;
+  border-block-start-style: solid !important;
+}
+/* La primera fila ya tiene encima el borde de la tarjeta. */
+.detail-grid > .detail-row:not([hidden]):first-child {
+  border-block-start-width: 0 !important;
+}
+.detail-grid > .detail-row > :is(.copy-button, .copied-button) {
+  align-self: center !important;
+  margin: 0 !important;
+}
+.field-label {
+  margin-block-end: var(--aegis-s-4) !important;
+  font-size: 12px !important;
+}
+.detail-cell input:read-only:not([type="checkbox"]) {
+  font-size: 14px !important;
+}
+input.password-display,
+input[name="password"] {
+  font-family: var(--aegis-font-mono) !important;
+}
+a.origin-input {
+  font-size: 14px !important;
+}
+
+/* Editar o añadir: campos de Aegis (alto 34, radio 7, relleno suave, borde de 1 px; con foco, el borde). */
+.detail-cell input:read-write:not([type="checkbox"]) {
+  min-height: var(--aegis-h-field) !important;
+  box-sizing: border-box !important;
+  padding-block: 0 !important;
+  padding-inline: var(--aegis-s-12) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--aegis-r-7) !important;
+  font-size: 13px !important;
+}
+.detail-cell input:read-write:not([type="checkbox"]):focus-visible {
+  outline: none !important;
+}
+
+/* Botones de las acciones (Editar, Quitar, Copiar): radio 7 y 28 de alto, en 13; copiar, en 12. */
+button.ghost-button:has(> img) {
+  min-height: var(--aegis-h-icon) !important;
+  padding-block: 0 !important;
+  padding-inline: var(--aegis-s-8) !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-7) !important;
+  font-size: 13px !important;
+}
+button.ghost-button:has(> img) > img {
+  width: 16px !important;
+  height: 16px !important;
+}
+button.text-button {
+  min-width: 0 !important;
+  min-height: var(--aegis-h-icon) !important;
+  padding-block: 0 !important;
+  padding-inline: var(--aegis-s-12) !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-7) !important;
+  font-size: 12px !important;
+}
+
+/* Historial de la contraseña (creada, cambiada, usada): 12 y gris. Dentro de la sombra de login-timeline, que da a
+   sus filas su propio tamaño (en el anfitrión no basta: quedaban en 10). */
+login-timeline {
+  font-size: 12px !important;
+}
+.timeline .action,
+.timeline .date {
+  font-size: 12px !important;
+}
+
+/* ───────── Estado vacío (login-intro) ───────── */
+
+/* Lo de Firefox fuera: el zorro con el cofre, el título, las filtraciones de Mozilla Monitor, los pasos de Sync y la
+   ayuda de Mozilla. En su lugar, el de contrasenas.sys.mjs: glifo de 32, una frase y «Importar contraseñas». */
+img.illustration,
+h1.heading,
+h1.heading + section {
+  display: none !important;
+}
+.aegis-vacio {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: var(--aegis-s-12) !important;
+  max-width: 360px !important;
+  text-align: center !important;
+}
+.aegis-vacio-glifo {
+  width: 32px !important;
+  height: 32px !important;
+}
+.aegis-vacio-frase {
+  margin: 0 0 var(--aegis-s-4) !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+/* Botón principal (DISENO §9): alto 38, radio 8, 14 y 600, al menos 112 de ancho; escala 0,97 al pulsar. */
+button.aegis-vacio-importar {
+  min-width: 112px !important;
+  min-height: 38px !important;
+  margin: 0 !important;
+  padding-block: 0 !important;
+  padding-inline: var(--aegis-s-16) !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-8) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease), scale var(--aegis-t-press) var(--aegis-ease) !important;
+}
+button.aegis-vacio-importar:hover:active {
+  scale: 0.97 !important;
+}
+
+/* ───────── Diálogos (confirmar, quitar todas, importar) ───────── */
+
+.overlay > .container[role="dialog"] {
+  border-radius: var(--aegis-r-12) !important;
+}
+/* «Más información» del error de importación lleva a la ayuda de Mozilla. */
+a.error-learn-more-link {
+  display: none !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* Lista */
+  .listHeader,
+  .meta,
+  .login-list-header {
+    background-color: var(--aegis-sidebar) !important;
+  }
+  input.filter[type="text"] {
+    background-color: var(--aegis-surface) !important;
+    border-color: var(--aegis-field-border) !important;
+    color: var(--aegis-text) !important;
+    fill: var(--aegis-sub) !important;
+    fill-opacity: 1 !important;
+  }
+  input.filter[type="text"]:focus-visible {
+    border-color: var(--aegis-focus) !important;
+  }
+  input.filter[type="text"]::placeholder {
+    color: var(--aegis-muted) !important;
+    opacity: 1 !important;
+  }
+  button.icon-button {
+    background-color: transparent !important;
+    color: var(--aegis-text) !important;
+    fill: var(--aegis-text) !important;
+  }
+  button.icon-button:hover:not(:disabled) {
+    background-color: var(--aegis-hover) !important;
+  }
+  button.icon-button:hover:active:not(:disabled) {
+    background-color: var(--aegis-control) !important;
+  }
+  .meta,
+  .meta > label > span,
+  .meta > .count {
+    color: var(--aegis-muted) !important;
+  }
+  #login-sort {
+    background-color: transparent !important;
+    color: var(--aegis-sub) !important;
+    fill: var(--aegis-sub) !important;
+  }
+  #login-sort:hover {
+    background-color: var(--aegis-hover) !important;
+    color: var(--aegis-text) !important;
+  }
+  #login-sort > option {
+    background-color: var(--aegis-menu) !important;
+    color: var(--aegis-text) !important;
+  }
+  li.list-item {
+    color: var(--aegis-text) !important;
+  }
+  li.list-item .subtitle {
+    color: var(--aegis-sub) !important;
+  }
+  li.list-item:not(.selected):hover,
+  li.list-item:not(.selected):hover:active {
+    background-color: var(--aegis-hover) !important;
+    color: var(--aegis-text) !important;
+  }
+  li.list-item.selected {
+    background-color: var(--aegis-sel) !important;
+  }
+  login-list-item.keyboard-selected {
+    outline: 1px solid var(--aegis-focus) !important;
+    outline-offset: -1px !important;
+  }
+  li.list-item > img.icon {
+    fill: var(--aegis-sub) !important;
+    fill-opacity: 1 !important;
+  }
+  .login-list-header {
+    color: var(--aegis-muted) !important;
+  }
+  .empty-search-message > p {
+    color: var(--aegis-text) !important;
+  }
+  .empty-search-message > span {
+    color: var(--aegis-sub) !important;
+  }
+
+  /* Menú */
+  button.menu-button {
+    background-color: transparent !important;
+    fill: var(--aegis-text) !important;
+  }
+  button.menu-button:hover {
+    background-color: var(--aegis-hover) !important;
+  }
+  button.menu-button:hover:active,
+  button.menu-button[aria-expanded="true"] {
+    background-color: var(--aegis-control) !important;
+  }
+  ul.menu[role="menu"] {
+    background-color: var(--aegis-menu) !important;
+    border-color: var(--aegis-line) !important;
+    box-shadow: var(--aegis-shadow) !important;
+    color: var(--aegis-text) !important;
+  }
+  button.menuitem-button {
+    background-color: transparent !important;
+    color: var(--aegis-text) !important;
+    fill: var(--aegis-sub) !important;
+  }
+  button.menuitem-button:hover {
+    background-color: var(--aegis-hover) !important;
+  }
+  button.menuitem-button:hover:active {
+    background-color: var(--aegis-control) !important;
+  }
+  .menuitem-separator {
+    border-color: var(--aegis-line) !important;
+  }
+
+  /* Contraseña elegida */
+  form > .header > .title {
+    color: var(--aegis-text) !important;
+  }
+  .login-item-favicon {
+    fill: var(--aegis-sub) !important;
+    fill-opacity: 1 !important;
+  }
+  form > .detail-row,
+  .detail-grid {
+    background-color: var(--aegis-surface) !important;
+    border-color: var(--aegis-line) !important;
+  }
+  .detail-grid > .detail-row:not([hidden]) {
+    border-block-start-color: var(--aegis-line) !important;
+  }
+  .field-label {
+    color: var(--aegis-sub) !important;
+  }
+  .detail-cell input:read-only:not([type="checkbox"]),
+  a.origin-input {
+    color: var(--aegis-text) !important;
+  }
+  .detail-cell input:read-write:not([type="checkbox"]) {
+    background-color: var(--aegis-hover) !important;
+    border-color: var(--aegis-field-border) !important;
+    color: var(--aegis-text) !important;
+  }
+  .detail-cell input:read-write:not([type="checkbox"]):focus-visible {
+    background-color: var(--aegis-control) !important;
+    border-color: var(--aegis-focus) !important;
+  }
+  button.ghost-button:has(> img) {
+    background-color: transparent !important;
+    color: var(--aegis-text) !important;
+    fill: var(--aegis-sub) !important;
+  }
+  button.ghost-button:has(> img):hover:not(:disabled) {
+    background-color: var(--aegis-hover) !important;
+  }
+  button.ghost-button:has(> img):hover:active:not(:disabled) {
+    background-color: var(--aegis-control) !important;
+  }
+  button.text-button {
+    background-color: var(--aegis-control) !important;
+    color: var(--aegis-text) !important;
+  }
+  button.text-button:hover:not(:disabled) {
+    background-color: var(--aegis-control-hover) !important;
+  }
+  button.text-button:hover:active:not(:disabled) {
+    background-color: var(--aegis-control-down) !important;
+  }
+  login-timeline {
+    color: var(--aegis-muted) !important;
+  }
+
+  /* Estado vacío */
+  .aegis-vacio-glifo {
+    color: var(--aegis-sub) !important;
+  }
+  .aegis-vacio-frase {
+    color: var(--aegis-sub) !important;
+  }
+  button.aegis-vacio-importar {
+    background-color: var(--aegis-prim) !important;
+    color: var(--aegis-on-prim) !important;
+  }
+  button.aegis-vacio-importar:hover {
+    background-color: var(--aegis-prim-hover) !important;
+  }
+  button.aegis-vacio-importar:hover:active {
+    background-color: var(--aegis-prim-down) !important;
+  }
+
+  /* Diálogos */
+  .overlay > .container[role="dialog"] {
+    background-color: var(--aegis-dialog) !important;
+    border-color: var(--aegis-line) !important;
+    box-shadow: var(--aegis-shadow) !important;
+  }
+}
+
+/* ───────── Código de verificación de la contraseña elegida (contrasenas.sys.mjs) ───────── */
+
+/* DISENO §9, «Código de verificación en about:logins»: una fila más de la tarjeta, como usuario y contraseña. La
+   etiqueta de 12 px; el código en JetBrains Mono de 15 px 600 tabular («••• •••» oculto) con los segundos que le
+   quedan en 12 px; sin código, la frase en 14 px --aegis-sub. A la derecha, botones compactos (30 de alto, radio 7,
+   13 px 400). El aviso de copiado, 12 px --aegis-sub. Nada se mueve en reposo. */
+.aegis-codigo-celda {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+.aegis-codigo-linea {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: var(--aegis-s-8) !important;
+}
+.aegis-codigo-valor {
+  font-family: var(--aegis-font-mono) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: 0.5px !important;
+}
+.aegis-codigo-valor.aegis-codigo-sin {
+  font-family: var(--aegis-font) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+.aegis-codigo-restante,
+.aegis-codigo-aviso {
+  font-size: 12px !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.aegis-codigo-restante[hidden],
+.aegis-codigo-aviso[hidden],
+.aegis-codigo-boton[hidden] {
+  display: none !important;
+}
+.aegis-codigo-aviso {
+  margin: var(--aegis-s-4) 0 0 !important;
+}
+.aegis-codigo-acciones {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  gap: var(--aegis-s-8) !important;
+}
+.aegis-codigo-boton {
+  appearance: none !important;
+  min-height: 30px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 var(--aegis-s-12) !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-7) !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  cursor: pointer !important;
+}
+.aegis-codigo-boton:focus-visible {
+  outline: 2px solid var(--aegis-focus) !important;
+  outline-offset: 2px !important;
+}
+.aegis-codigo-boton:disabled {
+  opacity: 0.28 !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-codigo-valor {
+    color: var(--aegis-text) !important;
+  }
+  .aegis-codigo-valor.aegis-codigo-sin,
+  .aegis-codigo-restante,
+  .aegis-codigo-aviso {
+    color: var(--aegis-sub) !important;
+  }
+  .aegis-codigo-boton {
+    background-color: var(--aegis-control) !important;
+    color: var(--aegis-text) !important;
+  }
+  .aegis-codigo-boton:hover:not(:disabled) {
+    background-color: var(--aegis-control-hover) !important;
+  }
+  .aegis-codigo-boton:hover:active:not(:disabled) {
+    background-color: var(--aegis-control-down) !important;
+  }
+}
+
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .aegis-codigo-boton {
+    border: 1px solid currentColor !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aegis-codigo-boton {
+    transition:
+      background-color var(--aegis-t-hover) var(--aegis-ease),
+      transform var(--aegis-t-press) var(--aegis-ease) !important;
+  }
+  .aegis-codigo-boton:active:not(:disabled) {
+    transform: scale(0.97) !important;
+  }
+}

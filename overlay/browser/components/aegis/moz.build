@@ -1,0 +1,233 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Código de Aegis: se instala en resource:///modules/aegis/ (lo empaqueta «@RESPATH@/browser/modules/*» de
+# package-manifest.in) y lo llama BrowserComponents.manifest (parche 0500-ui/0001). Las rutas entre estos
+# archivos son relativas, igual que en el modo desarrollo (resource://aegis/ apuntando al repo).
+
+EXTRA_JS_MODULES.aegis += [
+    "AegisArranque.sys.mjs",
+    "ajustes.sys.mjs",
+    "barra-lateral.sys.mjs",
+    "buscador.sys.mjs",
+    "complementos.sys.mjs",
+    "conexiones.sys.mjs",
+    "contrasenas-panel.sys.mjs",
+    "contrasenas.sys.mjs",
+    "enfasis.sys.mjs",
+    "escudos-ayuda.sys.mjs",
+    "escudos.sys.mjs",
+    "google.sys.mjs",
+    "huella.sys.mjs",
+    "icono.sys.mjs",
+    "instalador.sys.mjs",
+    "logos.sys.mjs",
+    "marcadores.sys.mjs",
+    "modos.sys.mjs",
+]
+
+EXTRA_JS_MODULES.aegis.estilos += [
+    "estilos/ajustes-sombra.css",
+    "estilos/ajustes.css",
+    "estilos/barra-lateral.css",
+    "estilos/barra-marcadores.css",
+    "estilos/codigos.css",
+    "estilos/complementos-sombra.css",
+    "estilos/complementos.css",
+    "estilos/contrasenas-panel.css",
+    "estilos/escudos.css",
+    "estilos/extensiones.css",
+    "estilos/fuentes.css",
+    "estilos/interfaz.css",
+    "estilos/lanzador.css",
+    "estilos/mapeo-firefox.css",
+    "estilos/marcadores.css",
+    "estilos/tokens.css",
+    "estilos/tor.css",
+]
+
+# Códigos de verificación (TOTP): el cálculo, el almacén cifrado y el autorrelleno (sus actores se registran solo
+# mientras haya códigos guardados). El diálogo para añadirlos va en el manifiesto chrome (dialogos/, aegis-temas.inc.mn).
+EXTRA_JS_MODULES.aegis.autenticador += [
+    "autenticador/AegisCodigosChild.sys.mjs",
+    "autenticador/AegisCodigosParent.sys.mjs",
+    "autenticador/autenticador.sys.mjs",
+    "autenticador/panel.sys.mjs",
+    "autenticador/totp.sys.mjs",
+]
+
+# Pasar las contraseñas a otro Aegis con el código de 6 palabras: el formato y el cifrado (formato.sys.mjs, sin Gecko),
+# la lista de palabras del EFF (CC BY 3.0, con su aviso) y el lado del navegador. Los diálogos van en el manifiesto
+# chrome (dialogos/, aegis-temas.inc.mn).
+EXTRA_JS_MODULES.aegis.contrasenas.transferencia += [
+    "contrasenas/transferencia/eff-wordlist-LICENSE.txt",
+    "contrasenas/transferencia/formato.sys.mjs",
+    "contrasenas/transferencia/palabras.sys.mjs",
+    "contrasenas/transferencia/transferencia.sys.mjs",
+]
+
+# Importar de Firefox y de otro perfil de Aegis (migradores que registra MIGRATOR_MODULES, parche 0900-migracion/0001)
+# y las contraseñas por el CSV en el asistente (Brave, Edge, Firefox; otro perfil de Aegis, con su explicación). El
+# icono del origen «Firefox» va en el manifiesto chrome (aegis-temas.inc.mn).
+EXTRA_JS_MODULES.aegis.migracion += [
+    "migracion/asistente.sys.mjs",
+    "migracion/fusion.sys.mjs",
+    "migracion/migradores.sys.mjs",
+]
+
+# Icono alternativo que se elige en Ajustes › Apariencia (lo genera tools/iconos.py en la marca).
+EXTRA_JS_MODULES.aegis["iconos-app"] += [
+    "/browser/branding/aegis/alternos/uroboros-64.png",
+    "/browser/branding/aegis/alternos/uroboros.ico",
+]
+
+# Escudos: el bloqueador propio. Motor (adblock-rust en gkrust tras un servicio XPCOM, escudos/motor-nativo/; aquí,
+# su módulo y el worker que prepara las listas), catálogo de listas, recursos neutros y scriptlets (`aegis.py recursos-escudos`), el cosmético de las páginas (cosmetico.sys.mjs
+# y su actor) y la instantánea de las listas de serie de sus autores (filtros/ del repo, `aegis.py filtros`; la copia al
+# árbol `aegis.py overlay`), con sus licencias y la atribución (AVISO.txt).
+EXTRA_JS_MODULES.aegis.escudos += [
+    "escudos/AegisEscudosChild.sys.mjs",
+    "escudos/ajustes.sys.mjs",
+    "escudos/catalogo.json",
+    "escudos/cosmetico.sys.mjs",
+    "escudos/etp.sys.mjs",
+    "escudos/excepciones.sys.mjs",
+    "escudos/listas.sys.mjs",
+    "escudos/motor-worker.js",
+    "escudos/motor.sys.mjs",
+    "escudos/procedural.sys.mjs",
+    "escudos/recursos.json",
+    "escudos/red.sys.mjs",
+]
+
+# El motor de Escudos: interfaz y registro del servicio (el código Rust lo enlaza gkrust, parche 0600-escudos/0001).
+DIRS += ["escudos/motor-nativo"]
+
+EXTRA_JS_MODULES.aegis.escudos.filtros += [
+    "escudos/filtros/adguard-banners-apps.txt",
+    "escudos/filtros/adguard-base.txt",
+    "escudos/filtros/adguard-cookies.txt",
+    "escudos/filtros/adguard-es-pt.txt",
+    "escudos/filtros/adguard-fr.txt",
+    "escudos/filtros/adguard-otras-molestias.txt",
+    "escudos/filtros/adguard-rastreo.txt",
+    "escudos/filtros/adguard-ventanas.txt",
+    "escudos/filtros/adguard-widgets.txt",
+    "escudos/filtros/AVISO.txt",
+    "escudos/filtros/brave-desbloqueo.txt",
+    "escudos/filtros/brave-especificas.txt",
+    "escudos/filtros/easylist-antiadblock.txt",
+    "escudos/filtros/easylist-de.txt",
+    "escudos/filtros/easylist-es.txt",
+    "escudos/filtros/easylist-it.txt",
+    "escudos/filtros/easylist.txt",
+    "escudos/filtros/easyprivacy.txt",
+    "escudos/filtros/filtros.json",
+    "escudos/filtros/ubo-arreglos.txt",
+    "escudos/filtros/ubo-badware.txt",
+    "escudos/filtros/ubo-cookies.txt",
+    "escudos/filtros/ubo-desbloqueo.txt",
+    "escudos/filtros/ubo-filtros.txt",
+    "escudos/filtros/ubo-molestias.txt",
+    "escudos/filtros/ubo-privacidad.txt",
+]
+
+EXTRA_JS_MODULES.aegis.escudos.filtros.licencias += [
+    "escudos/filtros/licencias/CC-BY-SA-3.0.txt",
+    "escudos/filtros/licencias/GPL-3.0.txt",
+    "escudos/filtros/licencias/MPL-2.0.txt",
+]
+
+# Webs en oscuro: motor de Dark Reader (MIT) con su configuración de arreglos, dentro del navegador.
+EXTRA_JS_MODULES.aegis["webs-oscuro"] += [
+    "webs-oscuro/AegisWebsOscuroChild.sys.mjs",
+    "webs-oscuro/arreglos.sys.mjs",
+    "webs-oscuro/dark-sites.config",
+    "webs-oscuro/darkreader-LICENSE.txt",
+    "webs-oscuro/darkreader.js",
+    "webs-oscuro/detector-hints.config",
+    "webs-oscuro/dynamic-theme-fixes.config",
+    "webs-oscuro/webs-oscuro.sys.mjs",
+]
+
+# Tor (descarga aparte y opcional, ventana privada con Tor en una instancia aparte). tor.json lo escribe
+# `aegis.py tor-fijar`: versión, URL, tamaño y sha256 del Tor Expert Bundle que se ofrece descargar.
+EXTRA_JS_MODULES.aegis.tor += [
+    "tor/aislamiento.sys.mjs",
+    "tor/descarga.sys.mjs",
+    "tor/proceso.sys.mjs",
+    "tor/tor.json",
+    "tor/tor.sys.mjs",
+]
+
+EXTRA_JS_MODULES.aegis.paginas += [
+    "paginas/AegisPaginasChild.sys.mjs",
+    "paginas/AegisPaginasParent.sys.mjs",
+    "paginas/busqueda-sombra.css",
+    "paginas/comun.css",
+    "paginas/conexiones.css",
+    "paginas/conexiones.html",
+    "paginas/contrasenas-sombra.css",
+    "paginas/contrasenas.css",
+    "paginas/contrasenas.sys.mjs",
+    "paginas/escudos-ayuda.css",
+    "paginas/escudos-ayuda.html",
+    "paginas/logos.sys.mjs",
+    "paginas/nueva-pestana.css",
+    "paginas/personalizar.sys.mjs",
+    "paginas/privada.css",
+    "paginas/privada.sys.mjs",
+]
+
+EXTRA_JS_MODULES.aegis.estilos.iconos += [
+    "estilos/iconos/acerca.svg",
+    "estilos/iconos/aegis-pequeno.svg",
+    "estilos/iconos/automatizado.svg",
+    "estilos/iconos/copiar.svg",
+    "estilos/iconos/editar.svg",
+    "estilos/iconos/escudo-ajustes.svg",
+    "estilos/iconos/escudo-antiadblock.svg",
+    "estilos/iconos/escudo-atras.svg",
+    "estilos/iconos/escudo-aviso-cookies.svg",
+    "estilos/iconos/escudo-bajado.svg",
+    "estilos/iconos/escudo-chevron.svg",
+    "estilos/iconos/escudo-cookies.svg",
+    "estilos/iconos/escudo-desplegar.svg",
+    "estilos/iconos/escudo-excepciones.svg",
+    "estilos/iconos/escudo-https-tachado.svg",
+    "estilos/iconos/escudo-https.svg",
+    "estilos/iconos/escudo-huella.svg",
+    "estilos/iconos/escudo-lista.svg",
+    "estilos/iconos/escudo-olvidar.svg",
+    "estilos/iconos/escudo-oscuro.svg",
+    "estilos/iconos/escudo-rastreadores.svg",
+    "estilos/iconos/escudo-scripts.svg",
+    "estilos/iconos/escudo-ventanas.svg",
+    "estilos/iconos/escudo.svg",
+    "estilos/iconos/extensiones.svg",
+    "estilos/iconos/fijar.svg",
+    "estilos/iconos/historial.svg",
+    "estilos/iconos/llave.svg",
+    "estilos/iconos/modo.svg",
+    "estilos/iconos/passkey.svg",
+    "estilos/iconos/predeterminado.svg",
+    "estilos/iconos/privado.svg",
+    "estilos/iconos/tor.svg",
+    "estilos/iconos/vista.svg",
+]
+
+for idioma in ["en-US", "es-ES", "pt-BR", "fr", "de", "it"]:
+    EXTRA_JS_MODULES.aegis.locales[idioma] += [
+        "locales/%s/aegis.ftl" % idioma,
+        "locales/%s/conexiones.ftl" % idioma,
+        "locales/%s/escudos-ayuda.ftl" % idioma,
+    ]
+
+EXTRA_JS_MODULES.aegis.fuentes += [
+    "fuentes/Inter-LICENSE.txt",
+    "fuentes/InterVariable.woff2",
+]
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "General")

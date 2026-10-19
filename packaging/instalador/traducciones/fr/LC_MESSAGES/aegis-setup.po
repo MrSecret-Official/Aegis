@@ -1,0 +1,250 @@
+# Aegis Setup · Français. Origen: los textos en inglés de ui/*.slint (@tr).
+# Glosario: overlay/browser/components/aegis/locales/GLOSARIO.md. Lo revisa el agente «traductor».
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "A clean bar with the tabs on top and a discreet bookmarks bar."
+msgstr "Une barre épurée, avec les onglets en haut et une barre personnelle discrète."
+
+msgid "A private browser, clean and fast"
+msgstr "Un navigateur privé, épuré et rapide"
+
+msgid "Aegis Setup"
+msgstr "Installer Aegis"
+
+msgid "Aegis couldn't be installed"
+msgstr "Impossible d’installer Aegis"
+
+msgid "Aegis couldn't be uninstalled"
+msgstr "Impossible de désinstaller Aegis"
+
+msgid "Aegis has been uninstalled"
+msgstr "Aegis a été désinstallé"
+
+msgid "Aegis is installed just for you, without asking for administrator permission."
+msgstr "Aegis s’installe pour vous seul, sans demander de droits d’administrateur."
+
+msgid "Aegis is open and can't be replaced. Close it and try again."
+msgstr "Aegis est ouvert et ne peut pas être remplacé. Fermez-le et réessayez."
+
+msgid "Aegis is ready"
+msgstr "Aegis est prêt"
+
+msgid "Aegis stays black and white: the color comes from the web."
+msgstr "Aegis reste en noir et blanc : la couleur vient du Web."
+
+msgid "Also blocks social buttons and videos that track you. Some sites may look incomplete."
+msgstr "Bloque aussi les boutons sociaux et les vidéos qui pistent. Certains sites peuvent paraître incomplets."
+
+msgid "Appearance"
+msgstr "Apparence"
+
+msgid "Automatic"
+msgstr "Automatique"
+
+msgid "Back"
+msgstr "Retour"
+
+msgid "Black and grays"
+msgstr "Noir et gris"
+
+msgid "Blocks known trackers and ads. Almost no site breaks."
+msgstr "Bloque les traqueurs connus et les publicités. Presque aucun site ne casse."
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Choose a look"
+msgstr "Choisissez l’apparence"
+
+msgid "Choose a mode. You can change it whenever you like in Settings."
+msgstr "Choisissez un mode. Vous pourrez le changer quand vous voulez dans les Paramètres."
+
+msgid "Close"
+msgstr "Fermer"
+
+msgid "Continue"
+msgstr "Continuer"
+
+msgid "Copying files"
+msgstr "Copie des fichiers"
+
+msgid "Creating shortcuts"
+msgstr "Création des raccourcis"
+
+msgid "Customize"
+msgstr "Personnaliser"
+
+msgid "Dark"
+msgstr "Sombre"
+
+msgid "Demo mode: nothing has been installed."
+msgstr "Mode démonstration : rien n’a été installé."
+
+msgid "Demo mode: nothing is being installed."
+msgstr "Mode démonstration : rien n’est installé."
+
+msgid "Doesn't keep what you search for."
+msgstr "Ne conserve pas vos recherches."
+
+msgid "Everything in Strict plus a broader tracking list. Uses a little more memory."
+msgstr "Tout ce que fait Strict, plus une liste de pistage plus large. Utilise un peu plus de mémoire."
+
+msgid "Everything is in place. You can start browsing."
+msgstr "Tout est en place. Vous pouvez commencer à naviguer."
+
+msgid "Final details"
+msgstr "Derniers détails"
+
+msgid "Finishing"
+msgstr "Finalisation"
+
+msgid "Folder"
+msgstr "Dossier"
+
+msgid "Follows Windows"
+msgstr "Comme Windows"
+
+msgid "Google results without Google knowing who you are."
+msgstr "Les résultats de Google sans que Google sache qui vous êtes."
+
+msgid "How do you want to browse?"
+msgstr "Comment voulez-vous naviguer ?"
+
+msgid "How much do you want to block?"
+msgstr "Quel niveau de blocage voulez-vous ?"
+
+msgid "Install"
+msgstr "Installer"
+
+msgid "Installing Aegis"
+msgstr "Installation d’Aegis"
+
+msgid "It goes in {0}. It needs about {1} MB of free space."
+msgstr "S’installe dans {0}. Nécessite environ {1} Mo d’espace libre."
+
+msgid "It takes less than a minute."
+msgstr "Cela prend moins d’une minute."
+
+msgid "Its own independent index, with no profiles."
+msgstr "Son propre index indépendant, sans profilage."
+
+msgid "Just for you, with no administrator permission. It takes up about {0} MB."
+msgstr "Pour vous seul, sans droits d’administrateur. Occupe environ {0} Mo."
+
+msgid "Light"
+msgstr "Clair"
+
+msgid "Make Aegis your default browser"
+msgstr "Faire d’Aegis votre navigateur par défaut"
+
+msgid "Mode"
+msgstr "Mode"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Open Aegis"
+msgstr "Ouvrir Aegis"
+
+msgid "Preparing"
+msgstr "Préparation"
+
+msgid "RECOMMENDED"
+msgstr "RECOMMANDÉ"
+
+msgid "Search engine"
+msgstr "Moteur de recherche"
+
+msgid "Shields"
+msgstr "Boucliers"
+
+msgid "Shields block ads and trackers from the very first minute."
+msgstr "Les Boucliers bloquent les publicités et les traqueurs dès la première minute."
+
+msgid "Shortcut in the Start menu"
+msgstr "Raccourci dans le menu Démarrer"
+
+msgid "Shortcut on the desktop"
+msgstr "Raccourci sur le bureau"
+
+msgid "Standard"
+msgstr "Standard"
+
+msgid "Step {0} of {1}"
+msgstr "Étape {0} sur {1}"
+
+msgid "Strict"
+msgstr "Strict"
+
+msgid "Strict+"
+msgstr "Strict+"
+
+msgid "Strict+ (recommended)"
+msgstr "Strict+ (recommandé)"
+
+msgid "Tabs on the side and spaces to keep work and leisure apart."
+msgstr "Les onglets sur le côté et des espaces pour séparer travail et loisirs."
+
+msgid "Tabs on top, as always"
+msgstr "Les onglets en haut, comme toujours"
+
+msgid "That folder already has other files. Choose an empty one and try again."
+msgstr "Ce dossier contient déjà d’autres fichiers. Choisissez-en un vide et réessayez."
+
+msgid "The files couldn't be copied to that folder. Choose another one and try again."
+msgstr "Impossible de copier les fichiers dans ce dossier. Choisissez-en un autre et réessayez."
+
+msgid "The installer is damaged. Download it again from the official page."
+msgstr "Le programme d’installation est endommagé. Téléchargez-le à nouveau depuis la page officielle."
+
+msgid "The search engine for the address bar. You can change it whenever you like in Settings."
+msgstr "Le moteur de recherche de la barre d’adresse. Vous pourrez le changer quand vous voulez dans les Paramètres."
+
+msgid "The usual results. Google keeps what you search for."
+msgstr "Les résultats habituels. Google conserve vos recherches."
+
+msgid "There isn't enough space on the disk. Free up {0} MB and try again."
+msgstr "Il n’y a pas assez d’espace sur le disque. Libérez {0} Mo et réessayez."
+
+msgid "This only takes a moment."
+msgstr "Cela ne prend qu’un instant."
+
+msgid "Try again"
+msgstr "Réessayer"
+
+msgid "Uninstall"
+msgstr "Désinstaller"
+
+msgid "Uninstall Aegis"
+msgstr "Désinstaller Aegis"
+
+msgid "Uninstalling Aegis"
+msgstr "Désinstallation d’Aegis"
+
+msgid "Vertical tabs and spaces"
+msgstr "Onglets verticaux et espaces"
+
+msgid "WHAT WILL BE INSTALLED"
+msgstr "CE QUI SERA INSTALLÉ"
+
+msgid "Where do you want to search?"
+msgstr "Où voulez-vous chercher ?"
+
+msgid "White and grays"
+msgstr "Blanc et gris"
+
+msgid "Windows will ask you to confirm it."
+msgstr "Windows vous demandera de confirmer."
+
+msgid "You can change it whenever you like in Settings › Appearance."
+msgstr "Vous pourrez le changer quand vous voulez dans Paramètres › Apparence."
+
+msgid "You can change it whenever you like in Settings › Shields."
+msgstr "Vous pourrez le changer quand vous voulez dans Paramètres › Boucliers."
+
+msgid "Your bookmarks, passwords and history stay on this computer."
+msgstr "Vos marque-pages, mots de passe et historique restent sur cet ordinateur."

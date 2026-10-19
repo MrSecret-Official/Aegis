@@ -1,0 +1,82 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Aegis · Escudos: respuesta de un trabajo del motor hecho fuera del hilo principal (cargar, compilar). Se llama en el
+ * hilo principal.
+ */
+[scriptable, function, uuid(cc6b50bf-c7b0-4533-a4f9-b40d07037cb9)]
+interface nsIAegisEscudosHecho : nsISupports
+{
+  /**
+   * @param resultado NS_OK si ha ido bien.
+   * @param detalle   con NS_OK, un JSON con lo medido; si no, el error en texto.
+   */
+  void hecho(in nsresult resultado, in AUTF8String detalle);
+};
+
+/**
+ * Aegis · Escudos: el motor del bloqueador (adblock-rust 0.12.1 de Brave, en su fork etp_engine, el que Firefox ya
+ * compila en gkrust). Solo proceso padre e hilo principal. Lo usa resource:///modules/aegis/escudos/motor.sys.mjs,
+ * que da la API al resto de Escudos.
+ *
+ * Capas: un motor por grupo de listas (0 anuncios y rastreo, y toda regla de red; 1 avisos de cookies; 2 ventanas y
+ * banners; 3 avisos anti-bloqueador), para permitir un grupo en un sitio sin recompilar. La red solo mira la capa 0.
+ * El .dat es un contenedor con el Engine::serialize() de cada capa.
+ */
+[scriptable, uuid(f3956747-18a3-4966-ba05-de1930593ceb)]
+interface nsIAegisEscudosMotor : nsISupports
+{
+  /** Hay un motor cargado (con la capa 0). */
+  readonly attribute boolean listo;
+
+  /** Capas cargadas (bit c = capa c). */
+  readonly attribute unsigned long capas;
+
+  /** Versión del contenedor .dat que entiende este motor. */
+  readonly attribute unsigned long versionContenedor;
+
+  /**
+   * Carga un .dat y los recursos neutros y scriptlets (JSON con un array de Resource de adblock-rust; vacío, sin
+   * recursos) en un hilo de fondo; en el hilo principal solo se cambia el motor en uso. Si falla, sigue el que había.
+   * `hecho` recibe {deserializarMs, recursos} o el error.
+   */
+  void cargar(in Array<octet> dat, in Array<octet> recursos, in nsIAegisEscudosHecho hecho);
+
+  /** Suelta el motor (las peticiones pasan). */
+  void descargar();
+
+  /**
+   * Compila listas ya preprocesadas a un .dat en un hilo de fondo y lo escribe en `ruta`. `textos` son todas las
+   * listas en UTF-8, una detrás de otra; `largos`, `permisos` (máscara de adblock-rust: bit 0, scriptlets de
+   * confianza) y `capas` van uno por lista. `hecho` recibe {bytes, ms} o el error.
+   */
+  void compilar(in Array<octet> textos, in Array<unsigned long> largos, in Array<unsigned long> permisos,
+                in Array<unsigned long> capas, in AString ruta, in nsIAegisEscudosHecho hecho);
+
+  /**
+   * Decide una petición (capa 0). `origen`: la dirección del documento que la pide; `tipo`: el de adblock-rust
+   * («script», «image»…). 0 pasa, 1 bloquear, 2 redirigir (el recurso data: en `salida`), 3 reescribir (la URL nueva
+   * en `salida`), -1 sin motor o petición que no se entiende.
+   */
+  long red(in AUTF8String url, in AUTF8String origen, in AUTF8String tipo);
+
+  /** El recurso o la URL nueva de la última llamada a red() que devolvió 2 o 3. */
+  readonly attribute AUTF8String salida;
+
+  /**
+   * Cosmético y scriptlets de un documento juntando las capas de `mascara`: JSON {especificos, capas, filtrados,
+   * procedurales, excepciones, script, generichide, elemhide} (ver motor.sys.mjs). Vacío sin motor.
+   */
+  AUTF8String cosmetico(in AUTF8String url, in unsigned long mascara);
+
+  /** Selectores genéricos de clase e id (hidden_class_id_selectors) de las capas de `mascara`: JSON con un array. */
+  AUTF8String genericos(in Array<AUTF8String> clases, in Array<AUTF8String> ids,
+                        in Array<AUTF8String> excepciones, in unsigned long mascara);
+
+  /** La hoja genérica de una capa (lo que da una dirección sin reglas propias): JSON con un array ordenado. */
+  AUTF8String genericosCapa(in unsigned long capa);
+};

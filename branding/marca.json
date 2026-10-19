@@ -1,0 +1,17 @@
+{
+  "nombre": "Aegis",
+  "publicacion": {
+    "github": "MrSecret-Official/Aegis"
+  },
+  "actualizaciones": {
+    "canal": "release",
+    "mar_canal": "aegis-release"
+  },
+  "tienda": {
+    "_ayuda": "Microsoft Store (docs/TIENDA.md). Copia los valores de Partner Center › tu app › Identidad del producto. Mientras alguno diga PENDIENTE, `aegis.py msix` solo hace paquetes de prueba.",
+    "Package/Identity/Name": "SecretStudios.AegisBrowser",
+    "Package/Identity/Publisher": "CN=850CF2F6-76A0-4CF6-96F8-9BAD7CA6069F",
+    "Package/Properties/PublisherDisplayName": "Secret Studios",
+    "Package/Properties/DisplayName": "Aegis Browser"
+  }
+}

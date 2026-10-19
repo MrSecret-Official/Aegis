@@ -1,0 +1,34 @@
+{
+  "firefox": {
+    "version": "158.0",
+    "canal": "release",
+    "url": "https://archive.mozilla.org/pub/firefox/releases/158.0/source/firefox-158.0.source.tar.xz",
+    "sha256": "fc77f7801d7580a600af683cc367e261eb1ec74647e84a91b4a1e3c1dd5aa2bb",
+    "tamano": 814889676,
+    "sumas_url": "https://archive.mozilla.org/pub/firefox/releases/158.0/SHA256SUMS",
+    "firma_url": "https://archive.mozilla.org/pub/firefox/releases/158.0/SHA256SUMS.asc",
+    "clave_url": "https://archive.mozilla.org/pub/firefox/releases/158.0/KEY",
+    "clave_huella": "14F26682D0916CDD81E37B6D61B7B526D98F0353"
+  },
+  "aegis": {
+    "revision": 1
+  },
+  "escudos": {
+    "motor": "etp_engine",
+    "comentario_motor": "Motor de Escudos: \"etp_engine\" (de serie: el fork de adblock-rust que trae Firefox) o \"propio\" (plan B: la copia de adblock-rust 0.12.1 de overlay/…/escudos/motor-nativo/adblock). Se cambia aquí y con `aegis.py prepare` (docs/GUIA.md, «Versión de Firefox»).",
+    "comentario": "Fuentes de los recursos neutros y scriptlets de Escudos (aegis.py recursos-escudos). Se descargan solo al construir y se comprueban con su sha256; el navegador nunca los descarga. Se revisan con cada versión de Aegis.",
+    "ublock": {
+      "version": "1.75.0",
+      "commit": "21f0e686506bb21b514b451c8c6cb9bf8c82d232",
+      "url": "https://codeload.github.com/gorhill/uBlock/tar.gz/refs/tags/1.75.0",
+      "sha256": "a518c7d6e6b3f81d1a738befeb617abba59f93bd6b1e626da079a1003e9db52b",
+      "licencia": "GPL-3.0"
+    },
+    "brave": {
+      "commit": "6da9b247c3368baa8b4f24cd02046e18702a6527",
+      "url": "https://codeload.github.com/brave/adblock-resources/tar.gz/6da9b247c3368baa8b4f24cd02046e18702a6527",
+      "sha256": "acdef71cf77b1beb292208389c06e3adcdce2fc940c0386a4fa33b8298ff56b5",
+      "licencia": "MPL-2.0"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+# Windows x86_64 compilado en cruzado desde Linux (WSL) con clang-cl, como en el CI de Mozilla.
+# No hace falta Visual Studio en Windows: con --enable-bootstrap (mozconfigs/common) y sin WINSYSROOT,
+# configure prepara el kit de MSVC y el SDK de Windows («vs»): los descarga de los servidores de Microsoft
+# con los sha256 que fija Mozilla en build/vs/vs2026.yaml. Y wine, de los artefactos de Mozilla, para las
+# herramientas que lo necesitan (build/moz.configure/windows-toolchain.configure y toolkit/moz.configure).
+ac_add_options --target=x86_64-pc-windows-msvc
+
+# Incluir en el paquete el runtime de Visual C++ (vcruntime140.dll, vcruntime140_1.dll, msvcp140.dll), como
+# Firefox oficial: sin él, Aegis no arranca en un Windows que no lo tenga instalado. Sin ruta, configure lo
+# busca en el kit de MSVC (VC/Redist/MSVC/<versión>/x64/*.CRT). La licencia de Microsoft permite redistribuirlo.
+ac_add_options --with-redist
+
+# Opciones que solo existen para Windows (target_is_windows en build/moz.configure/update-programs.configure):
+# sin agente de navegador predeterminado (informa a Mozilla), sin servicio de mantenimiento
+# (necesita firma Authenticode, que todavía no hay) y sin agente de actualización (una tarea
+# programada que despierta en segundo plano: va contra los principios 1 y 4 de docs/GUIA.md).
+ac_add_options --disable-default-browser-agent
+ac_add_options --disable-maintenance-service
+ac_add_options --disable-update-agent

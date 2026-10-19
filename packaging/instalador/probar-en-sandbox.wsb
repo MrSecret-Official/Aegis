@@ -1,0 +1,21 @@
+<!-- Aegis Setup · prueba en el Espacio aislado de Windows (Windows Sandbox).
+     Abre un Windows limpio y desechable con la carpeta dist/ del instalador montada en solo lectura en el escritorio
+     y lanza «Aegis Setup.exe». Dentro del espacio aislado no actúa el Control inteligente de aplicaciones, así que se
+     puede probar el instalador sin firmar. Al cerrar la ventana no queda nada.
+     Requisito (una vez, con permisos de administrador): «Activar o desactivar las características de Windows» →
+     «Espacio aislado de Windows», y reiniciar. Después, doble clic en este archivo.
+     Nota: la ruta del repo es la de este equipo; si el repo está en otro sitio, cambia HostFolder. -->
+<Configuration>
+  <VGpu>Enable</VGpu>
+  <Networking>Enable</Networking>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>C:\RUTA\DEL\REPO\Aegis\packaging\instalador\dist</HostFolder>
+      <SandboxFolder>C:\Users\WDAGUtilityAccount\Desktop\Aegis</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>explorer.exe C:\Users\WDAGUtilityAccount\Desktop\Aegis</Command>
+  </LogonCommand>
+</Configuration>

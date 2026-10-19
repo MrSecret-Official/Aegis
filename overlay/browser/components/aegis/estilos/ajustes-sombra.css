@@ -1,0 +1,211 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · Ajustes, por dentro de los componentes de Firefox (shadow DOM). Hoja de USUARIO, que es la única que entra
+   en el shadow DOM (la pone ajustes.sys.mjs en about:preferences y about:settings): por eso todo va con !important,
+   y los selectores usan clases que solo existen dentro de esos componentes. Los valores que cambian según el sitio
+   (sección o grupo interior) llegan como variables --aegis-aj-* desde ajustes.css. Solo var(--aegis-*). */
+
+/* ───────── Barra lateral (moz-page-nav) ───────── */
+
+/* Cabecera de Firefox («Ajustes» grande con el logotipo de la marca): la sustituye la de Aegis (ajustes.sys.mjs).
+   El título sigue existiendo para los lectores de pantalla (da nombre a la lista de categorías). */
+.page-nav-heading-wrapper {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+.page-nav-heading-wrapper > .logo {
+  display: none !important;
+}
+
+/* Filas de 32 (16 + 8 + 8): icono a la izquierda, texto de 13. */
+.page-nav-icon {
+  width: 16px !important;
+  height: 16px !important;
+}
+.primary-nav-group ~ hr {
+  margin-block: var(--aegis-s-8) !important;
+}
+
+/* ───────── Cabecera de cada página (moz-page-header) ───────── */
+
+/* Título grande sin icono (Centro: Titulo.qml, 24 y 600). */
+.page-header-container .heading > .icon {
+  display: none !important;
+}
+.page-header-container .heading > :is(h1, h2, h3) {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.4px !important;
+  line-height: 1.25 !important;
+}
+.page-header-container > .description {
+  font-size: 13px !important;
+}
+
+/* ───────── Secciones y grupos (moz-fieldset) ───────── */
+
+/* Leyenda: en una sección, etiqueta de 11 en mayúsculas y gris apagado; dentro de una tarjeta, título normal.
+   Sin iconos (en el Centro las secciones no los llevan; Firefox pone aquí, entre otros, el logotipo de Mozilla). */
+fieldset > legend > .icon {
+  display: none !important;
+}
+fieldset > legend {
+  padding-inline-start: var(--aegis-aj-leyenda-sangria, 0) !important;
+}
+fieldset > legend > :is(h1, h2, h3, h4, h5, h6) {
+  font-size: var(--aegis-aj-leyenda-tam, 14px) !important;
+  font-weight: 600 !important;
+  letter-spacing: var(--aegis-aj-leyenda-espacio, normal) !important;
+  text-transform: var(--aegis-aj-leyenda-mayus, none) !important;
+}
+fieldset > .description {
+  padding-inline-start: var(--aegis-aj-leyenda-sangria, 0) !important;
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+}
+
+/* ───────── Navegador predeterminado (moz-promo) ───────── */
+
+/* Sin la ilustración del zorro: una fila con la frase a la izquierda y el botón a la derecha. */
+.container > .image-container {
+  display: none !important;
+}
+.container:has(> .text-container) {
+  border: none !important;
+  background: none !important;
+}
+.container > .text-container {
+  padding: 0 !important;
+}
+.text-container > .message {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: var(--aegis-s-12) !important;
+  margin: 0 !important;
+}
+
+/* ───────── Estado de la protección (security-privacy-card) ───────── */
+
+/* El escudo de colores sobra: el estado ya lo dice el texto. */
+.status-image {
+  display: none !important;
+}
+
+/* ───────── Insignias («Nuevo», «Beta») ───────── */
+
+/* Piden atención sin aportar (DISENO §11). */
+moz-badge {
+  display: none !important;
+}
+
+/* ───────── Enlaces a la ayuda de Mozilla ───────── */
+
+/* «Más información» lleva a support.mozilla.org: fuera. */
+a[is="moz-support-link"] {
+  display: none !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* Iconos de la barra lateral en gris; el de la categoría elegida, en el color del texto. */
+  .page-nav-icon {
+    fill: var(--aegis-sub) !important;
+  }
+  button[selected] > .page-nav-icon,
+  button:hover > .page-nav-icon {
+    fill: var(--aegis-text) !important;
+  }
+
+  .page-header-container .heading > :is(h1, h2, h3) {
+    color: var(--aegis-text) !important;
+  }
+  .page-header-container > .description,
+  fieldset > .description {
+    color: var(--aegis-sub) !important;
+  }
+  fieldset > legend > :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--aegis-aj-leyenda-color, var(--aegis-text)) !important;
+  }
+}
+
+/* ───────── Controles como filas del Centro (moz-checkbox, moz-select, moz-button) ───────── */
+
+/* Letras de acceso: siguen funcionando (Alt + letra), pero sin subrayar, como en la Biblioteca. */
+/* Negritas dentro de los componentes (avisos…): 600, nunca Bold (DISENO §3). */
+strong,
+b {
+  font-weight: 600 !important;
+}
+
+.accesskey {
+  text-decoration: none !important;
+}
+
+/* Casillas y desplegables con el control a la derecha (ajustes.sys.mjs les pone inputlayout="inline-end"): texto de
+   la fila en peso normal y el control centrado en vertical. */
+.content-wrapper > #input[type="checkbox"],
+.content-wrapper > .select-wrapper {
+  align-self: center !important;
+  flex-shrink: 0 !important;
+}
+.select-wrapper > select,
+.select-wrapper > .panel-trigger {
+  font-weight: 400 !important;
+}
+
+/* Botones: el secundario en peso normal (DISENO §9); el principal, 600. */
+.button-background[type~="primary"] {
+  font-weight: 600 !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* Casilla con forma de interruptor (34 × 20, botón de 16), como en SecretOS. Sigue siendo una casilla: el lector
+     de pantalla dice «casilla marcada / sin marcar». El botón es un círculo dibujado con radial-gradient (una
+     <input> no admite ::before); pista gris y, encendido, el énfasis. */
+  .content-wrapper > #input[type="checkbox"] {
+    appearance: none !important;
+    -moz-theme: none !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: var(--aegis-r-10) !important;
+    background-color: var(--aegis-track) !important;
+    background-image: radial-gradient(circle closest-side, var(--aegis-sub) 7.5px, transparent 8px) !important;
+    background-size: 20px 20px !important;
+    background-repeat: no-repeat !important;
+    background-position: 0 0 !important;
+    cursor: pointer;
+  }
+  .content-wrapper > #input[type="checkbox"]:hover:not(:disabled, :checked) {
+    background-image: radial-gradient(circle closest-side, var(--aegis-text) 7.5px, transparent 8px) !important;
+  }
+  .content-wrapper > #input[type="checkbox"]:checked {
+    background-color: var(--aegis-accent) !important;
+    background-image: radial-gradient(circle closest-side, var(--aegis-on-accent) 7.5px, transparent 8px) !important;
+    background-position: 14px 0 !important;
+  }
+  .content-wrapper > #input[type="checkbox"]:disabled {
+    opacity: 0.4 !important;
+    cursor: default;
+  }
+  .content-wrapper > #input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--aegis-focus) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .content-wrapper > #input[type="checkbox"] {
+    transition: background-color var(--aegis-t-hover) var(--aegis-ease), background-position var(--aegis-t-hover) var(--aegis-ease) !important;
+  }
+}

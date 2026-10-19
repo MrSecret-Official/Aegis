@@ -1,0 +1,173 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · about:escudos, «Cómo funcionan los Escudos» (escudos-ayuda.sys.mjs). La pone AegisArranque junto a
+   tokens.css y comun.css. Página de lectura con las medidas de DISENO §3–§5: índice a la izquierda (arriba en
+   pantallas estrechas) y una sub-tarjeta de radio 14 por sección. Monocromo y sin nada que se mueva: el índice se
+   queda fijo al desplazarse (sticky), sin animación. Solo var(--aegis-*); los colores, fuera de alto contraste. */
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  font: 14px/1.55 var(--aegis-font);
+}
+
+.ayuda {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 680px);
+  justify-content: center;
+  column-gap: calc(var(--aegis-s-24) * 2);
+  padding: calc(var(--aegis-s-24) * 2) var(--aegis-s-24);
+}
+
+/* Índice */
+.ayuda-indice {
+  position: sticky;
+  top: var(--aegis-s-24);
+  align-self: start;
+  max-height: calc(100vh - var(--aegis-s-24) * 2);
+  overflow: auto;
+
+  & ol {
+    margin: var(--aegis-s-8) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  & a {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 32px;
+    padding: var(--aegis-s-4) var(--aegis-s-8);
+    border-radius: var(--aegis-r-7);
+    font-size: 13px;
+    line-height: 1.3;
+    text-decoration: none;
+    transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+  }
+}
+
+/* Etiqueta de sección (DISENO §3): el único uso de mayúsculas. */
+.ayuda-etiqueta {
+  margin: 0;
+  padding-inline: var(--aegis-s-8);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+/* Cabecera */
+.ayuda-cabecera {
+  margin-block-end: var(--aegis-s-24);
+
+  & h1 {
+    margin: 0 0 var(--aegis-s-8);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+    line-height: 1.2;
+  }
+}
+.ayuda-entradilla {
+  margin: 0;
+}
+
+/* Secciones: sub-tarjetas (radio 14, borde de 1 px), separadas 12. */
+.ayuda-seccion {
+  margin-block-start: var(--aegis-s-12);
+  padding: var(--aegis-s-16) var(--aegis-s-24) var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-14);
+  /* Al saltar a un ancla, que no quede pegada al borde. */
+  scroll-margin-top: var(--aegis-s-24);
+
+  & h2 {
+    margin: 0 0 var(--aegis-s-8);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  & h3 {
+    margin: var(--aegis-s-16) 0 var(--aegis-s-4);
+    font-size: 14px;
+    font-weight: 600;
+    scroll-margin-top: var(--aegis-s-24);
+  }
+  & p,
+  & ul {
+    margin: 0 0 var(--aegis-s-8);
+  }
+  & ul {
+    padding-inline-start: var(--aegis-s-24);
+  }
+  & li + li {
+    margin-block-start: var(--aegis-s-8);
+  }
+  & strong {
+    font-weight: 600;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: 2px;
+}
+
+/* Pantallas estrechas: el índice arriba, sin fijar. */
+@media (max-width: 920px) {
+  .ayuda {
+    grid-template-columns: minmax(0, 680px);
+    padding-block-start: var(--aegis-s-24);
+  }
+  .ayuda-indice {
+    position: static;
+    max-height: none;
+    margin-block-end: var(--aegis-s-24);
+
+    & ol {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--aegis-s-4);
+    }
+  }
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  body {
+    background-color: var(--aegis-bg);
+    color: var(--aegis-text);
+  }
+  .ayuda-etiqueta {
+    color: var(--aegis-muted);
+  }
+  .ayuda-entradilla {
+    color: var(--aegis-sub);
+  }
+  .ayuda-indice a {
+    color: var(--aegis-sub);
+
+    &:hover {
+      background-color: var(--aegis-hover);
+      color: var(--aegis-text);
+    }
+    &:hover:active {
+      background-color: var(--aegis-control);
+    }
+  }
+  .ayuda-seccion {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+}
+
+/* Alto contraste: colores del sistema y bordes visibles. */
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .ayuda-seccion {
+    border-color: currentColor;
+  }
+}

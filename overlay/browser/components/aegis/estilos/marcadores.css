@@ -1,0 +1,285 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · marcadores (docs/DISENO.md): el panel lateral de marcadores, como el de Chrome o Brave, y la ventana
+   Biblioteca, limpia por si se abre. Solo var(--aegis-*); los colores, fuera de alto contraste.
+
+   Se carga como hoja de autor en chrome://browser/content/places/* y chrome://browser/content/sidebar/*
+   (AegisArranque) y, en el panel nuevo de marcadores (sidebar-bookmarks.html), también como hoja de usuario
+   (marcadores.sys.mjs): es la única forma de llegar dentro de sus componentes (shadow DOM) sin parches. Por eso las
+   reglas de dentro de los componentes llevan !important: una hoja de usuario sin él pierde frente a las de Firefox. */
+
+/* ─── Panel de marcadores (sidebar-bookmarks.html) ─────────────────────────────────────────────────────────── */
+
+/* Variables que heredan los componentes del panel. Forma de Aegis en vez de las píldoras de Firefox: filas y
+   botones de icono de radio 7 y 28 px, botones de texto y buscador de radio 8, campo de 34. */
+sidebar-bookmarks {
+  --border-radius-circle: var(--aegis-r-7);
+  --button-border-radius: var(--aegis-r-8);
+  --button-size-icon: var(--aegis-h-icon);
+  --button-min-height: var(--aegis-h-icon);
+  --input-search-border-radius: var(--aegis-r-8);
+  --input-text-min-height: var(--aegis-h-field);
+}
+/* Vista compacta: filas de 28 (la zona clicable mínima), como la densidad compacta de Firefox. */
+:root[aegis-compacta] {
+  --sidebar-panel-list-item-height: var(--aegis-h-icon) !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  sidebar-bookmarks {
+    /* Botones sin fondo en reposo (Firefox les pone uno); al pasar, --aegis-hover; pulsados, --aegis-control. */
+    --button-background-color-ghost: transparent;
+    --button-background-color-ghost-hover: var(--aegis-hover);
+    --button-background-color-ghost-active: var(--aegis-control);
+    --button-background-color-ghost-selected: var(--aegis-control);
+    --button-text-color-ghost: var(--aegis-text);
+    --button-text-color-ghost-hover: var(--aegis-text);
+    --button-text-color-ghost-active: var(--aegis-text);
+    --button-text-color-ghost-selected: var(--aegis-text);
+    /* Fila elegida: --aegis-sel (Firefox usa el color del botón principal, que en Aegis es blanco). */
+    --button-background-color-primary: var(--aegis-sel);
+    --button-text-color-primary: var(--aegis-text);
+    /* Buscador: campo de Aegis (relleno suave, borde de 1 px). */
+    --input-text-background-color: var(--aegis-hover);
+    --input-text-border: 1px solid var(--aegis-field-border);
+    --input-text-color: var(--aegis-text);
+  }
+}
+
+/* Dentro de los componentes (hoja de usuario). Carpetas a la altura de las filas, para que la lista sea regular. */
+details > summary,
+.bookmark-folder-label {
+  line-height: var(--sidebar-panel-list-item-height) !important;
+}
+/* Botones de icono de la cabecera (cerrar y «Gestionar en una ventana»): radio 7, juntos a la derecha. */
+.sidebar-panel-heading > moz-button {
+  --button-border-radius: var(--aegis-r-7) !important;
+}
+/* Título del panel en 600, como Historial y Contraseñas (Firefox: 700). */
+.sidebar-panel-heading > h4 {
+  font-weight: 600 !important;
+}
+.aegis-marcadores-ventana {
+  margin-inline: auto 0 !important;
+}
+
+/* Título de sección («Todos los marcadores») con sus acciones discretas a la derecha. */
+.aegis-marcadores-seccion {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--aegis-s-8) !important;
+  margin-block: var(--aegis-s-12) var(--aegis-s-4) !important;
+  padding-inline-start: var(--aegis-s-4) !important;
+}
+.aegis-marcadores-titulo {
+  flex: 1 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.aegis-marcadores-acciones {
+  display: flex !important;
+  flex-shrink: 0 !important;
+}
+.aegis-marcadores-acciones > moz-button {
+  --button-border-radius: var(--aegis-r-7) !important;
+}
+/* «Nueva carpeta»: una fila más, alineada con la lista, con el «+» donde va el icono de carpeta. */
+.aegis-marcadores-nueva {
+  width: 100% !important;
+  --button-content-alignment: flex-start !important;
+  --button-font-weight: 400 !important;
+  --button-border-radius: var(--aegis-r-7) !important;
+}
+/* Mientras se busca, la lista muestra resultados (Firefox pone su título h3): fuera el título de sección y
+   «Nueva carpeta». */
+.sidebar-panel:has(> .sidebar-panel-scrollable-content > h3) > :is(.aegis-marcadores-seccion, .aegis-marcadores-nueva) {
+  display: none !important;
+}
+/* Pie: «Añadir pestaña actual», botón secundario a lo ancho, separado de la lista por una línea. */
+.aegis-marcadores-pie {
+  margin-block-start: var(--aegis-s-8) !important;
+  padding-block-start: var(--aegis-s-12) !important;
+  border-block-start: 1px solid var(--aegis-line) !important;
+}
+.aegis-marcadores-pie > moz-button {
+  width: 100% !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-marcadores-titulo {
+    color: var(--aegis-text) !important;
+  }
+  .aegis-marcadores-nueva {
+    --button-text-color-ghost: var(--aegis-sub) !important;
+  }
+  .aegis-marcadores-pie > moz-button {
+    --button-background-color: var(--aegis-control) !important;
+    --button-background-color-hover: var(--aegis-control-hover) !important;
+    --button-background-color-active: var(--aegis-control-down) !important;
+    /* --button-border ya viene resuelto desde la raíz: se sustituye entero. */
+    --button-border: 1px solid transparent !important;
+    --button-border-color-hover: transparent !important;
+    --button-border-color-active: transparent !important;
+    --button-text-color: var(--aegis-text) !important;
+    --button-text-color-hover: var(--aegis-text) !important;
+    --button-text-color-active: var(--aegis-text) !important;
+  }
+}
+
+/* ─── Panel de marcadores antiguo (bookmarksSidebar.xhtml, con sidebar.updatedBookmarks.enabled apagada) ───── */
+
+#bookmarksPanel {
+  --button-border-radius: var(--aegis-r-7);
+}
+#bookmarksPanel #search-box {
+  --input-search-border-radius: var(--aegis-r-8);
+  --input-text-min-height: var(--aegis-h-field);
+}
+#bookmarksPanel .sidebar-placesTreechildren::-moz-tree-row {
+  min-height: 32px;
+}
+#bookmarksPanel .sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
+  text-decoration: none;
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  #bookmarksPanel {
+    --button-background-color-ghost: transparent;
+    --button-background-color-ghost-hover: var(--aegis-hover);
+    --button-background-color-ghost-active: var(--aegis-control);
+  }
+  #bookmarksPanel #search-box {
+    --input-text-background-color: var(--aegis-hover);
+    --input-text-border: 1px solid var(--aegis-field-border);
+  }
+  #bookmarksPanel .sidebar-placesTreechildren::-moz-tree-row(hover) {
+    background-color: var(--aegis-hover);
+  }
+  #bookmarksPanel .sidebar-placesTreechildren::-moz-tree-row(selected) {
+    background-color: var(--aegis-sel);
+  }
+  #bookmarksPanel .sidebar-placesTreechildren::-moz-tree-cell-text(selected),
+  #bookmarksPanel .sidebar-placesTreechildren::-moz-tree-image(selected),
+  #bookmarksPanel .sidebar-placesTreechildren::-moz-tree-twisty(selected) {
+    color: var(--aegis-text);
+  }
+}
+
+/* ─── Ventana Biblioteca (places.xhtml) ────────────────────────────────────────────────────────────────────── */
+
+/* Colores: los de la Biblioteca (variables --organizer-* de Firefox) pasan a ser los de Aegis. */
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  #places {
+    --organizer-color: var(--aegis-text) !important;
+    --organizer-deemphasized-color: var(--aegis-sub) !important;
+    --organizer-toolbar-background: var(--aegis-bg) !important;
+    --organizer-pane-background: var(--aegis-sidebar) !important;
+    --organizer-content-background: var(--aegis-surface) !important;
+    --organizer-hover-background: var(--aegis-hover) !important;
+    --organizer-hover-color: var(--aegis-text) !important;
+    --organizer-selected-background: var(--aegis-sel) !important;
+    --organizer-selected-color: var(--aegis-text) !important;
+    --organizer-focus-selected-background: var(--aegis-control-down) !important;
+    --organizer-focus-selected-color: var(--aegis-text) !important;
+    --organizer-outline-color: var(--aegis-focus) !important;
+    --organizer-separator-color: var(--aegis-line) !important;
+    --organizer-border-color: var(--aegis-line) !important;
+    --organizer-pane-field-border-color: var(--aegis-field-border) !important;
+    --input-text-background-color: var(--aegis-hover) !important;
+    --input-text-border: 1px solid var(--aegis-field-border);
+    background-color: var(--aegis-bg);
+    color: var(--aegis-text);
+  }
+  #places treecols,
+  #places treecol {
+    background-color: var(--aegis-surface) !important;
+    color: var(--aegis-muted);
+  }
+  #places treecol:hover {
+    background-color: var(--aegis-hover) !important;
+    color: var(--aegis-sub);
+  }
+}
+
+/* Barra de 44: botones y menús de 28 de alto y radio 7, sin subrayados ni bordes. */
+#placesToolbar {
+  min-height: 44px;
+  padding-inline: var(--aegis-s-8) !important;
+  gap: var(--aegis-s-4);
+}
+#placesToolbar > toolbarbutton,
+#placesMenu > menu {
+  min-height: var(--aegis-h-icon) !important;
+  border-radius: var(--aegis-r-7) !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+}
+#placesMenu > menu {
+  padding-inline: var(--aegis-s-8) !important;
+}
+/* Letras de acceso: sin subrayado (siguen funcionando con Alt), también en el diálogo de editar un marcador.
+   Firefox lo dibuja en el texto que genera -moz-label-content; con el valor tal cual, desaparece. */
+#places label[value]::before,
+#bookmarkpropertiesdialog label[value]::before {
+  content: attr(value) !important;
+}
+#searchFilter {
+  --input-search-border-radius: var(--aegis-r-8);
+  --input-text-min-height: var(--aegis-h-icon);
+  margin-inline-end: var(--aegis-s-4);
+}
+
+/* Árboles: filas de 32 con resalte de radio 7 separado 4 px del borde (como menús y listas de Aegis). */
+#places treechildren::-moz-tree-row {
+  min-height: 32px;
+  margin-inline: var(--aegis-s-4);
+  border-radius: var(--aegis-r-7);
+}
+#places treechildren::-moz-tree-row(selected) {
+  border-color: transparent;
+}
+/* Foco del árbol: línea de 1 px con --aegis-focus, no el punteado amarillo de Firefox. */
+#places treechildren::-moz-tree-row(current, focus) {
+  outline: 1px solid var(--aegis-focus);
+  outline-offset: -1px;
+}
+#places treechildren::-moz-tree-cell-text(leaf, hover) {
+  text-decoration: none;
+}
+#placesList {
+  padding-block: var(--aegis-s-4);
+}
+
+/* Cabeceras de columna discretas: 12 px y gris apagado, sin bordes ni relieve; solo la línea inferior de Firefox. */
+#places treecols {
+  appearance: none !important;
+  border: 0 !important;
+}
+#places treecol:not([hideheader="true"]) {
+  appearance: none !important;
+  min-height: var(--aegis-h-icon);
+  padding-inline: var(--aegis-s-8) !important;
+  border: 0 !important;
+  font-size: 12px;
+  font-weight: 400;
+}
+#places treecols .tree-splitter {
+  border: 0 !important;
+}
+
+/* Panel de detalles inferior. */
+#detailsPane {
+  padding: var(--aegis-s-12) !important;
+}
+#places .expander-up,
+#places .expander-down {
+  border-radius: var(--aegis-r-7) !important;
+}
+#places #editBookmarkPanelContent input[type="text"] {
+  border-radius: var(--aegis-r-7);
+}

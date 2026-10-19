@@ -1,0 +1,2 @@
+# Linux x86_64 (compilado en WSL Arch o en cualquier Linux).
+ac_add_options --target=x86_64-pc-linux-gnu

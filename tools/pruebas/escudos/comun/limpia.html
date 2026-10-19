@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página limpia · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos</p>
+<h1>Una página sin rastreadores</h1>
+<p>Al llegar aquí desde una página con rastreadores, el contador del botón de Escudos vuelve a cero: cuenta lo
+bloqueado en la página que se ve, no lo de antes.</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<script>
+"use strict";
+Banco.listo({ titulo: document.title });
+</script>
+</body>
+</html>

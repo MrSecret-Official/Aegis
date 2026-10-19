@@ -1,0 +1,21 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Aegis · Escudos: el motor del bloqueador. El código Rust (Cargo.toml, src/) lo compila gkrust (parche
+# 0600-escudos/0001); aquí solo van la interfaz y el registro del servicio.
+
+XPIDL_SOURCES += [
+    "nsIAegisEscudosMotor.idl",
+]
+
+XPIDL_MODULE = "aegis_escudos"
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+FINAL_LIBRARY = "xul"
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "General")

@@ -1,0 +1,53 @@
+[package]
+name = "aegis-setup"
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0"
+description = "Instalador de Aegis para Windows: por usuario, sin UAC, atómico y sin conexiones"
+publish = false
+build = "build.rs"
+
+[[bin]]
+name = "aegis-setup"
+path = "src/main.rs"
+
+# Versiones exactas (=): el instalador se reconstruye igual cada vez. Cargo.lock fija también las indirectas.
+[dependencies]
+# Interfaz: winit + renderizador por software (sin OpenGL ni motor web; redibuja solo lo que cambia).
+slint = { version = "=1.18.1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "accessibility", "unstable-winit-030"] }
+# Carga: zip (deflate) y su suma SHA-256.
+zip = { version = "=9.0.1", default-features = false, features = ["deflate"] }
+sha2 = "=0.11.0"
+# Capturas de la interfaz (--captura).
+png = "=0.18.1"
+
+[target.'cfg(windows)'.dependencies]
+mslnk = "=0.1.8"
+windows-sys = { version = "=0.61.2", features = [
+    "Win32_Foundation",
+    "Win32_Globalization",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_System_Registry",
+    "Win32_UI_HiDpi",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[build-dependencies]
+slint-build = "=1.18.1"
+
+[profile.release]
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+strip = true
+
+# Para iterar: sin LTO y con más unidades (enlaza en segundos).
+[profile.desarrollo]
+inherits = "release"
+opt-level = 1
+lto = false
+codegen-units = 16
+incremental = true

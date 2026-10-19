@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: =?UTF-8?q?Actualizaciones=20desde=20los=20archivos=20est=C3=A1tic?=
+ =?UTF-8?q?os=20de=20Aegis?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: Aegis no tiene servidores. El navegador pide un update.xml fijo por
+objetivo y canal (update-<objetivo>-<canal>.xml) en GitHub Releases, en vez del
+servicio de Mozilla (aus5). La URL no lleva versión, idioma, sistema ni
+identificadores del equipo. El host lo pone el mozconfig (MOZ_APPUPDATE_HOST).
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0100-build/0001-actualizaciones-estaticas.patch
+
+diff --git a/build/application.ini.in b/build/application.ini.in
+index 6df13230a4..36612e720f 100644
+--- a/build/application.ini.in
++++ b/build/application.ini.in
+@@ -52,5 +52,5 @@ ServerURL=@MOZ_CRASHREPORTER_URL@/submit?id=@MOZ_APP_ID@&version=@MOZ_APP_VERSIO
+ 
+ #if MOZ_UPDATER
+ [AppUpdate]
+-URL=https://@MOZ_APPUPDATE_HOST@/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml
++URL=https://@MOZ_APPUPDATE_HOST@/update-%BUILD_TARGET%-%CHANNEL%.xml
+ #endif
+diff --git a/build/moz.configure/update-programs.configure b/build/moz.configure/update-programs.configure
+index c017c7fb5e..bbf1487b15 100644
+--- a/build/moz.configure/update-programs.configure
++++ b/build/moz.configure/update-programs.configure
+@@ -358,3 +358,8 @@ with only_when("--enable-updater"):
+                     "You must enable at least one patch format when --enable-updater "
+                     "is used. Use --enable-bspatch or --enable-zucchini."
+                 )
++
++
++# Aegis: host (y ruta) del update.xml estático; build/moz.build lo lleva a application.ini.
++option(env="MOZ_APPUPDATE_HOST", nargs=1, help="Host and path of the static update.xml")
++set_config("MOZ_APPUPDATE_HOST", depends_if("MOZ_APPUPDATE_HOST")(lambda h: h[0]))

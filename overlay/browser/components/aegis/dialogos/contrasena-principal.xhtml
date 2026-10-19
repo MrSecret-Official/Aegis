@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- Aegis · diálogo de la contraseña principal: crearla (antes de guardar la primera contraseña, desde el panel,
+     about:logins o Ajustes) o cambiarla (Ajustes). Sustituye al changemp.xhtml de Firefox con un «override» del
+     manifiesto chrome (overlay/browser/themes/addons/aegis-temas.inc.mn), así que llega por todos los caminos que lo
+     abren, sin parche: Ajustes (gSubDialog), about:logins y el aviso de guardar (openDialog) y contrasenas.sys.mjs
+     (gDialogBox). Por eso las direcciones son absolutas: el documento conserva la de Firefox.
+     La lógica, en contrasena-principal.mjs; la fortaleza, en fortaleza.mjs (en el equipo, sin red); el aspecto, en
+     dialogo.css (común a los diálogos de Aegis) con los tokens (docs/DISENO.md). Textos: aegis.ftl («aegis-principal-*»).
+     La CSP no deja conectar con nada (connect-src 'none') ni enviar el formulario a ninguna parte. -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; script-src chrome:; style-src chrome: resource:; img-src chrome:; font-src chrome:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title data-l10n-id="aegis-principal-ventana"></title>
+    <link rel="stylesheet" href="resource:///modules/aegis/estilos/tokens.css" />
+    <link rel="stylesheet" href="chrome://browser/content/aegis/dialogo.css" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="aegis.ftl" />
+    <script type="module" src="chrome://browser/content/aegis/contrasena-principal.mjs"></script>
+  </head>
+  <body>
+    <form id="formulario" class="principal" novalidate="novalidate" autocomplete="off">
+      <header class="cabecera">
+        <div class="icono" aria-hidden="true"></div>
+        <h1 id="titulo" data-l10n-id="aegis-principal-titulo-crear"></h1>
+        <p id="explicacion" class="explicacion" data-l10n-id="aegis-principal-explicacion-crear"></p>
+        <p id="politica" class="explicacion" data-l10n-id="aegis-principal-politica" hidden="hidden"></p>
+      </header>
+
+      <div id="bloque-actual" class="campo" hidden="hidden">
+        <label for="actual" data-l10n-id="aegis-principal-actual"></label>
+        <div class="caja">
+          <input id="actual" type="password" autocomplete="off" spellcheck="false" aria-describedby="error-actual" />
+          <button type="button" class="ver" aria-controls="actual" aria-pressed="false"
+                  data-l10n-id="aegis-principal-mostrar"></button>
+        </div>
+        <p id="error-actual" class="error" data-l10n-id="aegis-principal-error-actual" hidden="hidden"></p>
+      </div>
+
+      <div class="campo">
+        <label id="etiqueta-nueva" for="nueva" data-l10n-id="aegis-principal-nueva"></label>
+        <div class="caja">
+          <input id="nueva" type="password" autocomplete="off" spellcheck="false" aria-describedby="nota-fortaleza" />
+          <button type="button" class="ver" aria-controls="nueva" aria-pressed="false"
+                  data-l10n-id="aegis-principal-mostrar"></button>
+        </div>
+        <!-- El medidor es solo visual: el nivel lo dice el texto de debajo, que leen los lectores de pantalla. -->
+        <div id="medidor" class="medidor" data-nivel="0" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <p id="nota-fortaleza" class="nota" aria-live="polite" data-l10n-id="aegis-principal-requisito"></p>
+      </div>
+
+      <div class="campo">
+        <label for="repetir" data-l10n-id="aegis-principal-repetir"></label>
+        <div class="caja">
+          <input id="repetir" type="password" autocomplete="off" spellcheck="false" aria-describedby="error-repetir" />
+          <button type="button" class="ver" aria-controls="repetir" aria-pressed="false"
+                  data-l10n-id="aegis-principal-mostrar"></button>
+        </div>
+        <p id="error-repetir" class="error" data-l10n-id="aegis-principal-no-coinciden" hidden="hidden"></p>
+      </div>
+
+      <section class="aviso" aria-labelledby="aviso-titulo">
+        <h2 id="aviso-titulo" data-l10n-id="aegis-principal-olvido-titulo"></h2>
+        <p data-l10n-id="aegis-principal-olvido-texto"></p>
+      </section>
+      <p class="limites" data-l10n-id="aegis-principal-limites"></p>
+
+      <p id="error-general" class="error" role="alert" data-l10n-id="aegis-principal-error" hidden="hidden"></p>
+      <footer class="acciones">
+        <button type="button" id="cancelar" class="secundario" data-l10n-id="aegis-principal-no-guardar"></button>
+        <button type="submit" id="aceptar" class="primario" disabled="disabled"
+                data-l10n-id="aegis-principal-crear-guardar"></button>
+      </footer>
+    </form>
+  </body>
+</html>

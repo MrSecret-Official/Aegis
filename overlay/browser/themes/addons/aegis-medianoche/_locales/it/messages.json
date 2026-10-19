@@ -1,0 +1,10 @@
+{
+  "nombre": {
+    "message": "Mezzanotte",
+    "description": "Nombre del tema en Complementos › Temas."
+  },
+  "descripcion": {
+    "message": "Nero profondo con una luce tenue in alto.",
+    "description": "Descripción del tema."
+  }
+}

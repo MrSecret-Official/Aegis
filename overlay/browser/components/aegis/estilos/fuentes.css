@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · Inter (DISENO §3), cargada desde el navegador y nunca instalada en el sistema. La dirección es
+   chrome://aegis-fuentes/ (lo registra AegisArranque.registrarFuentes), que admiten las páginas con
+   «default-src chrome:» como Ajustes y Complementos. Esta hoja solo se pone en los documentos cuya CSP admite chrome:
+   (AegisArranque.ponerInter); en los demás, Inter llega por sus bytes. Así ninguna CSP tiene que bloquear nada. */
+
+@font-face {
+  font-family: "Inter";
+  src: url("chrome://aegis-fuentes/content/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}

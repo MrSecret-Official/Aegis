@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu cuenta · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · inicio de sesión</p>
+<h1 id="titulo">Tu cuenta</h1>
+<p>Si el inicio de sesión ha funcionado, el servidor reconoce la cookie de sesión de esta web.</p>
+<div class="tarjeta"><p id="estado-fase">Comprobando…</p><div id="siguiente"></div></div>
+<script>
+"use strict";
+(async () => {
+  const cuenta = await Banco.json(`/__/cuenta?id=${encodeURIComponent(Banco.id("cuenta"))}`);
+  document.getElementById("titulo").textContent = cuenta.usuario ? `Hola, ${cuenta.usuario}` : "No has iniciado sesión";
+  await Banco.listo({ usuario: cuenta.usuario });
+})();
+</script>
+</body>
+</html>

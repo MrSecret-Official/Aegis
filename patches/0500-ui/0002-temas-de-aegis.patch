@@ -1,0 +1,81 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Temas de Aegis
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: Complementos › Temas traía los de Firefox: Alpenglow (con la marca y un
+degradado de color) y la colección «Temas de Firefox» (Sun, Spark, Flame…), que se
+descarga de addons.mozilla.org al elegir un tema (conexión fuera de CONEXIONES.md).
+Aegis instala sus temas monocromos (overlay/browser/themes/addons/aegis-*, lista en
+AegisTemas.sys.mjs) y los selectores de temas (Complementos, editor de perfiles,
+bienvenida) solo ofrecen los integrados. Tres cambios de una línea o un bloque: el
+#include del jar.mn con nuestros archivos, la lista de temas integrados (sin
+Alpenglow) y la lista de los selectores.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0500-ui/0002-temas-de-aegis.patch
+
+diff --git a/browser/themes/BuiltInThemeConfig.sys.mjs b/browser/themes/BuiltInThemeConfig.sys.mjs
+index 39d16addcf..e0aa1e7efb 100644
+--- a/browser/themes/BuiltInThemeConfig.sys.mjs
++++ b/browser/themes/BuiltInThemeConfig.sys.mjs
+@@ -2,6 +2,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++import { TEMAS_AEGIS } from "resource://builtin-themes/AegisTemas.sys.mjs";
++
+ /**
+  * A Map of themes built in to the browser. Params for the objects contained
+  * within the map:
+@@ -37,11 +39,6 @@ export const BuiltInThemeConfig = new Map([
+       inApp: true,
+     },
+   ],
+-  [
+-    "firefox-alpenglow@mozilla.org",
+-    {
+-      version: "1.5.3",
+-      path: "resource://builtin-themes/alpenglow/",
+-    },
+-  ],
++  // Aegis: sus temas en lugar de Alpenglow (lleva la marca y un degradado de color).
++  ...TEMAS_AEGIS,
+ ]);
+diff --git a/browser/themes/ThemesList.sys.mjs b/browser/themes/ThemesList.sys.mjs
+index bf2b430244..95daf5dc80 100644
+--- a/browser/themes/ThemesList.sys.mjs
++++ b/browser/themes/ThemesList.sys.mjs
+@@ -2,6 +2,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++import { SELECTOR_AEGIS } from "resource://builtin-themes/AegisTemas.sys.mjs";
++
+ const lazy = {};
+ ChromeUtils.defineESModuleGetters(lazy, {
+   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+@@ -265,8 +267,9 @@ const FIREFOX_THEMES_LIST = [
+   },
+ ];
+ 
++// Aegis: solo los temas integrados (AegisTemas.sys.mjs); los de esta lista se instalan desde addons.mozilla.org.
+ const FIREFOX_THEMES_MAP = new Map(
+-  FIREFOX_THEMES_LIST.map(theme => [theme.id, theme])
++  SELECTOR_AEGIS.map(theme => [theme.id, theme])
+ );
+ 
+ // Surface colors shared by the previews of all the AMO-hosted Nova themes.
+diff --git a/browser/themes/addons/jar.mn b/browser/themes/addons/jar.mn
+index fc83c11fdf..5609d2b50e 100644
+--- a/browser/themes/addons/jar.mn
++++ b/browser/themes/addons/jar.mn
+@@ -23,3 +23,5 @@ browser.jar:
+   content/builtin-themes/aiwindow-nova/aiwindow-theme-nova.css  (aiwindow-nova/aiwindow-theme-nova.css)
+ 
+   content/builtin-themes/privatewindow/manifest.json            (privatewindow/manifest.json)
++
++#include aegis-temas.inc.mn

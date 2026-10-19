@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cosmético · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+<script>
+"use strict";
+// Lo primero de la página (antes no ha corrido nada suyo): cuántas hojas ve y la variable que vigila un detector.
+// Scriptlet «angrybirdsnest.com##+js(set, adblock, false)» (uBlock filters): aunque la página la ponga a true, queda en
+// false en ese sitio. En el resto, true.
+window.__hojasAlEmpezar = document.styleSheets.length;
+window.adblock = true;
+// Scriptlets de dos capas en el mismo sitio (mediafire.com, uBlock filters y AdGuard Base en la capa 0; uBlock
+// filters – Annoyances en la 2, «ventanas y banners»), los dos con dependencias que son clases (RangeParser):
+// - capa 0, «set-constant, InfCustomFPSTAFunc, noopFunc»: la página la pone a 42 y se queda en una función;
+// - capa 2, «nostif, scan, 500»: este temporizador no llega a correr.
+window.InfCustomFPSTAFunc = 42;
+window.__inicioPagina = performance.now();
+setTimeout(() => { window.__escaneo = "scan"; }, 500);
+</script>
+<style>
+  .hueco { padding: 8px 12px; margin: 4px 0; border: 1px dashed currentColor; }
+</style>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · cosmético y scriptlets</p>
+<h1>Huecos de anuncios y molestias</h1>
+<p>Cada recuadro discontinuo es algo que las listas reales ocultan (en este sitio o en todos). Con los Escudos subidos
+no deberían verse los anuncios ni los avisos; el contenido normal, sí. Nada de esto puede dejar rastro en las hojas ni
+en el DOM de la página.</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<div class="tarjeta" id="fijos">
+  <div class="hueco" id="f-generico-1" data-ad-module="banner">Anuncio · genérico complejo [data-ad-module]</div>
+  <div class="hueco" id="f-generico-2" data-ad-cls="x">Anuncio · genérico complejo [data-ad-cls]</div>
+  <div class="hueco" id="ad_banner">Anuncio · genérico por id ###ad_banner</div>
+  <div class="hueco" id="cookie-notice">Aviso de cookies · ###cookie-notice (molestias: cookies)</div>
+  <div class="hueco" id="adblock-notice">Aviso anti-bloqueador · ###adblock-notice (molestias: anti-bloqueador)</div>
+  <div class="hueco" id="shopping-timely-shelf">Solo en youtube.com · ###shopping-timely-shelf</div>
+  <div class="post-container"><div class="post hueco">Solo en angrybirdsnest.com · .post-container > div.post:not([id])</div></div>
+  <div class="hueco" id="f-proc"><div><div><span>Advertisement</span> · Solo en mobalytics.gg · procedural span:has-text(Advertisement):upward(3)</div></div></div>
+  <div class="hueco contenido" id="f-control">Contenido normal (nunca se oculta)</div>
+</div>
+<div class="tarjeta"><table><thead><tr><th>Elemento</th><th>Se ve</th></tr></thead><tbody id="tabla"></tbody></table></div>
+<script>
+"use strict";
+(async () => {
+  if (document.readyState != "complete") {
+    await new Promise(r => addEventListener("load", r, { once: true }));
+  }
+  const oculto = el => !!el && getComputedStyle(el).display == "none";
+  const de = id => document.getElementById(id);
+  // Una clase genérica (##.ad-slot, EasyList) que aparece después de cargar: la tiene que ver el observador.
+  const dinamico = document.createElement("div");
+  dinamico.className = "ad-slot hueco";
+  dinamico.id = "f-dinamico";
+  dinamico.textContent = "Anuncio · genérico por clase ##.ad-slot, añadido después de cargar";
+  de("fijos").append(dinamico);
+  // Una vuelta por el padre: como mucho 3 s (si no llega, el veredicto lo dirá).
+  for (let i = 0; i < 30 && !oculto(dinamico); i++) {
+    await Banco.espera(100);
+  }
+  const elementos = {
+    "generico-1": de("f-generico-1"),
+    "generico-2": de("f-generico-2"),
+    "ad_banner": de("ad_banner"),
+    "dinamico": dinamico,
+    "cookie-notice": de("cookie-notice"),
+    "adblock-notice": de("adblock-notice"),
+    "youtube": de("shopping-timely-shelf"),
+    "angrybirdsnest": document.querySelector(".post-container > .post"),
+    "procedural": de("f-proc"),
+    "control": de("f-control"),
+  };
+  const ocultos = Object.fromEntries(Object.entries(elementos).map(([k, el]) => [k, oculto(el)]));
+  const tabla = de("tabla");
+  for (const [k, v] of Object.entries(ocultos)) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td class='mono'></td><td></td>";
+    tr.children[0].textContent = k;
+    tr.children[1].textContent = v ? "oculto" : "se ve";
+    tabla.append(tr);
+  }
+  // Recurso neutro: un detector de bloqueadores como los de verdad. Carga adsbygoogle.js y mira si AdSense está.
+  let detector = null;
+  if (location.hostname == "sitio-a.test") {
+    const url = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?id=${encodeURIComponent(Banco.id("adsbygoogle"))}`;
+    const carga = await Banco.cargar("script", url);
+    detector = { carga, adsbygoogle: !!(window.adsbygoogle && window.adsbygoogle.loaded === true) };
+  }
+  // El temporizador de 500 ms de la cabecera ya habría corrido.
+  await Banco.espera(Math.max(0, 800 - (performance.now() - window.__inicioPagina)));
+  const capas = { capa0: typeof window.InfCustomFPSTAFunc == "function", capa2: window.__escaneo === undefined };
+  // Rastro en la página: hojas (document.styleSheets) y elementos de estilo en el DOM.
+  const hojas = {
+    alEmpezar: window.__hojasAlEmpezar,
+    alFinal: document.styleSheets.length,
+    propias: document.querySelectorAll("link[rel=stylesheet], style").length,
+    reglasDeLaPrimera: document.styleSheets[0]?.cssRules.length ?? null,
+  };
+  await Banco.listo({
+    host: location.hostname,
+    ocultos,
+    hojas,
+    adblock: window.adblock,
+    capas,
+    detector,
+    atributos: document.querySelectorAll("[style]").length,
+  });
+})();
+</script>
+</body>
+</html>

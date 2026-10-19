@@ -1,0 +1,97 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · Contraseñas (about:logins), con la forma de los Ajustes de SecretOS (docs/DISENO.md): la lista a la
+   izquierda como barra lateral y, a la derecha, la contraseña elegida en tarjetas o el estado vacío. Hoja de autor
+   de la página (AegisPaginasChild): solo lo que está fuera de los componentes. Lo de dentro (shadow DOM) va en
+   contrasenas-sombra.css, hoja de usuario. Solo var(--aegis-*); los colores, fuera de alto contraste. */
+
+/* Cabecera (fila de arriba de la columna derecha): solo el menú «⋯», a 44 de alto como la barra de Aegis. */
+header {
+  min-height: 44px;
+  box-sizing: border-box;
+  padding-block: var(--aegis-s-8) !important;
+  padding-inline: var(--aegis-s-16) !important;
+}
+menu-button {
+  margin-inline-start: var(--aegis-s-8) !important;
+}
+
+/* Cuenta de Firefox Sync: Aegis no la usa (identity.fxaccounts.enabled está apagada); fuera también su botón. */
+fxaccounts-button {
+  display: none !important;
+}
+
+/* Aviso «Sin contraseña principal» (contrasenas.sys.mjs), a la izquierda de la cabecera: superficie, borde de línea y
+   radio 12 (DISENO §9, «Aviso»); el botón, secundario compacto (30 de alto, radio 7). */
+.aegis-aviso-principal {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--aegis-s-12);
+  min-width: 0;
+  margin-inline-end: auto;
+  padding: var(--aegis-s-4) var(--aegis-s-4) var(--aegis-s-4) var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+}
+.aegis-aviso-principal-texto {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.aegis-aviso-principal-boton {
+  appearance: none;
+  flex: none;
+  min-height: 30px;
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--aegis-s-12);
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  font: inherit;
+  font-size: 13px;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+}
+.aegis-aviso-principal-boton:focus-visible {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: 2px;
+}
+.aegis-aviso-principal-boton:disabled {
+  opacity: 0.28;
+}
+
+/* Estado vacío centrado en la columna derecha (el contenido lo pone contrasenas.sys.mjs). */
+login-intro {
+  justify-content: center;
+  padding: var(--aegis-s-24) !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  body,
+  header {
+    background-color: var(--aegis-bg) !important;
+  }
+  .aegis-aviso-principal {
+    background-color: var(--aegis-surface) !important;
+    border-color: var(--aegis-line) !important;
+    color: var(--aegis-text) !important;
+  }
+  .aegis-aviso-principal-boton {
+    background-color: var(--aegis-control) !important;
+    color: var(--aegis-text) !important;
+  }
+  .aegis-aviso-principal-boton:hover:not(:disabled) {
+    background-color: var(--aegis-control-hover) !important;
+  }
+  .aegis-aviso-principal-boton:hover:active:not(:disabled) {
+    background-color: var(--aegis-control-down) !important;
+  }
+  /* Lista: el color de la barra lateral de Aegis y una línea a su derecha. */
+  login-list {
+    background-color: var(--aegis-sidebar) !important;
+    border-inline-end-color: var(--aegis-line) !important;
+  }
+}

@@ -1,0 +1,264 @@
+/* Banco de pruebas de Escudos: el lenguaje de Aegis (docs/DISENO.md) en una web normal. Es una página de pruebas que
+ * sirve el servidor local del banco: no puede leer tokens.css del navegador, así que copia aquí sus valores. */
+
+@font-face {
+  font-family: "Banco Inter";
+  src: url("/fuentes/inter.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark light;
+  --bg: #0a0a0b;
+  --surface: #151517;
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --text: #f4f4f5;
+  --sub: #a1a1aa;
+  --muted: #85858e;
+  --control: rgb(255 255 255 / 0.07);
+  --control-hover: rgb(255 255 255 / 0.1);
+  --prim: #ececee;
+  --on-prim: #0b0b0c;
+  --focus: rgb(244 244 245 / 0.55);
+  --err: #fca5a5;
+  --warn: #fbbf24;
+  --ok: #88b89a;
+  --err-fill: rgb(248 113 113 / 0.12);
+  --ok-fill: rgb(136 184 154 / 0.12);
+  --warn-fill: rgb(251 191 36 / 0.1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --line: rgb(0 0 0 / 0.08);
+    --line-strong: rgb(0 0 0 / 0.16);
+    --text: #0a0a0b;
+    --sub: #5f5f67;
+    --muted: #5f5f67;
+    --control: rgb(0 0 0 / 0.05);
+    --control-hover: rgb(0 0 0 / 0.08);
+    --prim: #1c1c1e;
+    --on-prim: #ffffff;
+    --err: #b91c1c;
+    --warn: #854d0e;
+    --ok: #3a7352;
+    --err-fill: rgb(220 38 38 / 0.08);
+    --ok-fill: rgb(58 115 82 / 0.08);
+    --warn-fill: rgb(133 77 14 / 0.08);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  color: var(--text);
+  font: 400 14px/1.5 "Banco Inter", system-ui, sans-serif;
+  font-feature-settings: "cv11";
+}
+
+body {
+  margin: 0 auto;
+  max-width: 1080px;
+  padding: 32px 16px 48px;
+}
+
+h1 {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  margin: 0 0 4px;
+}
+
+h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 24px 0 8px;
+}
+
+p {
+  margin: 0 0 12px;
+  color: var(--sub);
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+code,
+.mono {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+}
+
+.etiqueta {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tarjeta {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+button,
+.boton {
+  font: inherit;
+  color: var(--text);
+  background: var(--control);
+  border: 0;
+  border-radius: 8px;
+  min-height: 38px;
+  padding: 0 16px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+button:hover,
+.boton:hover {
+  background: var(--control-hover);
+}
+
+.principal {
+  background: var(--prim);
+  color: var(--on-prim);
+  font-weight: 600;
+  min-width: 112px;
+  justify-content: center;
+}
+
+.principal:hover {
+  background: var(--prim);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+select,
+input {
+  font: inherit;
+  color: var(--text);
+  background: var(--control);
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+label {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  text-align: start;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+td {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+td.estado {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.ok {
+  color: var(--ok);
+}
+
+.fallo {
+  color: var(--err);
+}
+
+.no-discrimina,
+.manual,
+.info {
+  color: var(--warn);
+}
+
+tr.fallo td:first-child {
+  box-shadow: inset 3px 0 0 var(--err);
+}
+
+tr.ok td:first-child {
+  box-shadow: inset 3px 0 0 var(--ok);
+}
+
+.resumen {
+  display: flex;
+  gap: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.resumen b {
+  display: block;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.porque {
+  color: var(--sub);
+  font-size: 12px;
+}
+
+.oculto {
+  display: none;
+}
+
+iframe {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  width: 220px;
+  height: 60px;
+  background: var(--surface);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button,
+  .boton {
+    transition: background-color 120ms cubic-bezier(0.33, 1, 0.68, 1);
+  }
+}

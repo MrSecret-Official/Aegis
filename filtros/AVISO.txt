@@ -1,0 +1,48 @@
+Listas de filtros de Escudos incluidas en Aegis, tal como las publican sus autores (solo con los finales
+de línea en LF). Son obras de sus autores, distribuidas junto a Aegis con su licencia; Aegis no las
+modifica. Cada una se actualiza sola desde la URL de su autor. Licencias en licencias/.
+
+- uBlock filters (ubo-filtros.txt): uBlock Origin. Licencia: GPL-3.0. Origen: https://ublockorigin.github.io/uAssetsCDN/filters/filters.min.txt
+- uBlock filters – Privacy (ubo-privacidad.txt): uBlock Origin. Licencia: GPL-3.0. Origen: https://ublockorigin.github.io/uAssetsCDN/filters/privacy.min.txt
+- uBlock filters – Badware risks (ubo-badware.txt): uBlock Origin. Licencia: GPL-3.0. Origen: https://ublockorigin.github.io/uAssetsCDN/filters/badware.min.txt
+- uBlock filters – Quick fixes (ubo-arreglos.txt): uBlock Origin. Licencia: GPL-3.0. Origen: https://ublockorigin.github.io/uAssetsCDN/filters/quick-fixes.min.txt
+- uBlock filters – Unbreak (ubo-desbloqueo.txt): uBlock Origin. Licencia: GPL-3.0. Origen: https://ublockorigin.github.io/uAssetsCDN/filters/unbreak.min.txt
+- EasyList (easylist.txt): The EasyList authors. Licencia: GPL-3.0 o CC BY-SA 3.0. Origen: https://easylist.to/easylist/easylist.txt
+- EasyPrivacy (easyprivacy.txt): The EasyList authors. Licencia: GPL-3.0 o CC BY-SA 3.0. Origen: https://easylist.to/easylist/easyprivacy.txt
+- AdGuard Base filter (adguard-base.txt): AdGuard. Licencia: GPL-3.0. Origen: https://filters.adtidy.org/extension/ublock/filters/2_without_easylist.txt
+- Brave Unbreak (brave-desbloqueo.txt): Brave. Licencia: MPL-2.0. Origen: https://raw.githubusercontent.com/brave/adblock-lists/master/brave-unbreak.txt
+- Brave Specific (brave-especificas.txt): Brave. Licencia: MPL-2.0. Origen: https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-specific.txt
+- AdGuard Tracking Protection filter (adguard-rastreo.txt): AdGuard. Licencia: GPL-3.0. Origen: https://filters.adtidy.org/extension/ublock/filters/3.txt
+- uBlock filters – Cookie Notices (ubo-cookies.txt): uBlock Origin. Licencia: GPL-3.0. Origen: https://ublockorigin.github.io/uAssetsCDN/filters/annoyances-cookies.txt
+- AdGuard Cookie Notices filter (adguard-cookies.txt): AdGuard. Licencia: GPL-3.0. Origen: https://filters.adtidy.org/extension/ublock/filters/18.txt
+- uBlock filters – Annoyances (ubo-molestias.txt): uBlock Origin. Licencia: GPL-3.0. Origen: https://ublockorigin.github.io/uAssetsCDN/filters/annoyances.min.txt
+- AdGuard Popups filter (adguard-ventanas.txt): AdGuard. Licencia: GPL-3.0. Origen: https://filters.adtidy.org/extension/ublock/filters/19.txt
+- AdGuard Mobile App Banners filter (adguard-banners-apps.txt): AdGuard. Licencia: GPL-3.0. Origen: https://filters.adtidy.org/extension/ublock/filters/20.txt
+- AdGuard Other Annoyances filter (adguard-otras-molestias.txt): AdGuard. Licencia: GPL-3.0. Origen: https://filters.adtidy.org/extension/ublock/filters/21.txt
+- AdGuard Widgets filter (adguard-widgets.txt): AdGuard. Licencia: GPL-3.0. Origen: https://filters.adtidy.org/extension/ublock/filters/22.txt
+- Adblock Warning Removal List (easylist-antiadblock.txt): The EasyList authors. Licencia: GPL-3.0 o CC BY-SA 3.0. Origen: https://easylist-downloads.adblockplus.org/antiadblockfilters.txt
+- EasyList Spanish (easylist-es.txt): The EasyList authors. Licencia: GPL-3.0 o CC BY-SA 3.0. Origen: https://easylist-downloads.adblockplus.org/easylistspanish.txt
+- AdGuard Spanish/Portuguese filter (adguard-es-pt.txt): AdGuard. Licencia: GPL-3.0. Origen: https://filters.adtidy.org/extension/ublock/filters/9.txt
+- AdGuard French filter (adguard-fr.txt): AdGuard. Licencia: GPL-3.0. Origen: https://filters.adtidy.org/extension/ublock/filters/16.txt
+- EasyList Germany (easylist-de.txt): The EasyList authors. Licencia: GPL-3.0 o CC BY-SA 3.0. Origen: https://easylist.to/easylistgermany/easylistgermany.txt
+- EasyList Italy (easylist-it.txt): The EasyList authors. Licencia: GPL-3.0 o CC BY-SA 3.0. Origen: https://easylist-downloads.adblockplus.org/easylistitaly.txt
+
+EasyList, EasyPrivacy, Adblock Warning Removal List y las regionales de EasyList: © The EasyList
+authors (https://easylist.to/), con licencia GPL-3.0 o CC BY-SA 3.0, a elegir.
+uBlock filters: © Raymond Hill y colaboradores de uBlockOrigin/uAssets, GPL-3.0.
+Listas de AdGuard: © AdGuard Software Ltd y colaboradores de AdguardTeam/AdguardFilters, GPL-3.0.
+Listas de Brave: © Brave Software, MPL-2.0.
+
+Dónde está la fuente (la «forma preferida» para modificar cada lista):
+- uBlock filters: las versiones .min.txt (uAssetsCDN) se generan de los archivos de filters/ del repositorio
+  https://github.com/uBlockOrigin/uAssets (filters.txt, privacy.txt, badware.txt, quick-fixes.txt, unbreak.txt,
+  annoyances*.txt), en la versión de la fecha de su línea «! Last modified».
+- AdGuard: las listas compiladas de filters.adtidy.org se generan de las carpetas de
+  https://github.com/AdguardTeam/AdguardFilters (BaseFilter, SpywareFilter, AnnoyancesFilter, SpanishFilter,
+  FrenchFilter…) con https://github.com/AdguardTeam/FiltersCompiler, en la versión de su línea «! Version».
+- EasyList y sus listas: se generan de los repositorios de https://github.com/easylist (easylist, easylistgermany,
+  easylistspanish, easylistitaly, antiadblockfilters), en la versión de su línea «! Version».
+- Brave: los archivos de https://github.com/brave/adblock-lists ya son la fuente.
+
+Aviso: que estas listas puedan ir dentro de Aegis como obras separadas junto a un programa MPL-2.0 (agregación) está
+pendiente de una revisión jurídica antes de publicar.

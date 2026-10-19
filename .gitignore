@@ -1,0 +1,12 @@
+# Árbol de Firefox, objdir y cachés: viven en el ext4 de WSL (~/aegis), nunca aquí.
+/work/
+/out/
+/tools/.cache/
+__pycache__/
+*.pyc
+
+# Claves: la privada nunca entra en el repo
+*.key
+*.p12
+*.pfx
+updates/privado/

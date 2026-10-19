@@ -1,0 +1,85 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · lanzador de la barra lateral (<sidebar-main>: Historial, Marcadores… y el engranaje), con los botones de
+   icono de Aegis (DISENO §9): 28 × 28, radio 7, sin fondo en reposo, --aegis-hover al pasar y --aegis-control al
+   pulsar. Firefox 157 (Nova) los pinta como círculos de 32 con fondo gris: radio --border-radius-xlarge y
+   --button-background-color-ghost igual al fondo del botón normal.
+   Hoja de USUARIO de la ventana (la pone barra-lateral.sys.mjs): los márgenes de cada botón los declara Firefox en
+   la sombra de sidebar-main (sidebar-main.css) y solo una hoja de usuario llega ahí; por eso todo lleva !important.
+   El resto son variables de moz-button puestas en el propio <sidebar-main>, que bajan por herencia. Los selectores
+   de la sombra cuelgan de .buttons-wrapper, que solo existe en el lanzador. Solo var(--aegis-*); los colores, fuera
+   de alto contraste y sin tema elegido ([lwtheme]: mandan sus colores, como en la barra). */
+
+/* ───────── Forma: con cualquier tema y también en alto contraste ───────── */
+
+sidebar-main {
+  --button-size-icon: var(--aegis-h-icon) !important;
+  --button-min-height: var(--aegis-h-icon) !important;
+  --button-border-radius: var(--aegis-r-7) !important;
+  --button-padding-icon: 0 !important;
+  /* Columna, sin pestañas verticales: el botón a la misma distancia del borde que el primer botón de la barra de
+     herramientas (el de la barra lateral, justo encima y también de 28), es decir, el margen de la barra. */
+  --sidebar-launcher-button-padding-inline: var(--toolbar-padding-inline, var(--aegis-s-8)) !important;
+}
+/* Con pestañas verticales: centrado en la misma columna que las pestañas plegadas (Firefox: fondo de la pestaña más
+   su margen a cada lado), así el glifo queda en el eje de los favicons, en cualquier densidad. */
+@media -moz-pref("sidebar.verticalTabs") {
+  sidebar-main {
+    --sidebar-launcher-button-padding-inline: calc((var(--tab-collapsed-width) - var(--aegis-h-icon)) / 2) !important;
+  }
+}
+
+/* Separación: 4 entre botones y 8 arriba y abajo de cada grupo (herramientas y engranaje), en la rejilla de 4. */
+.buttons-wrapper > .actions-list > moz-button:not(.tools-overflow) {
+  --button-outer-padding-block: calc(var(--aegis-s-4) / 2) !important;
+}
+.buttons-wrapper > .actions-list > moz-button:not(.tools-overflow):first-of-type {
+  --button-outer-padding-block-start: var(--aegis-s-8) !important;
+}
+.buttons-wrapper > .actions-list > moz-button:not(.tools-overflow):last-of-type {
+  --button-outer-padding-block-end: var(--aegis-s-8) !important;
+}
+
+/* Expandida (pestañas verticales con nombre): las herramientas van en fila. La misma separación de 4 y el primer
+   botón en el eje de los favicons; Firefox (Nova) las separa 12,5. */
+.buttons-wrapper > .tools-and-extensions[orientation="horizontal"] {
+  gap: var(--aegis-s-4) !important;
+  padding-inline-start: calc((var(--tab-collapsed-width) - var(--aegis-h-icon)) / 2) !important;
+  padding-block-end: var(--aegis-s-8) !important;
+}
+.buttons-wrapper > .tools-and-extensions[orientation="horizontal"]:not([overflowing="true"]) {
+  padding-inline-end: calc((var(--tab-collapsed-width) - var(--aegis-h-icon)) / 2) !important;
+}
+
+/* ───────── Colores ───────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* En reposo, solo el glifo: sin fondo ni borde. */
+  sidebar-main {
+    --button-background-color-ghost: transparent !important;
+    --button-border-color-ghost: transparent !important;
+    --button-border-color-ghost-hover: transparent !important;
+    --button-border-color-ghost-active: transparent !important;
+    --button-border-color-ghost-selected: transparent !important;
+  }
+
+  :root:not([lwtheme]) sidebar-main {
+    /* Al pasar, --aegis-hover; pulsado, --aegis-control (como los botones de la barra). */
+    --button-background-color-ghost-hover: var(--aegis-hover) !important;
+    --button-background-color-ghost-active: var(--aegis-control) !important;
+    --button-background-color-ghost-selected: var(--aegis-sel) !important;
+    /* La herramienta abierta (type="icon"; aria-pressed hasta Firefox 157, aria-selected desde la 158): la fila
+       elegida de Aegis, --aegis-sel, y además un contorno de 1 px de línea fuerte, para que no dependa solo del
+       relleno. Encima, 10 %; pulsada, 14 %. */
+    --button-background-color: var(--aegis-sel) !important;
+    --button-background-color-selected: var(--aegis-sel) !important;
+    --button-background-color-hover: var(--aegis-control-hover) !important;
+    --button-background-color-active: var(--aegis-control-down) !important;
+    --button-border-color: var(--aegis-line-strong) !important;
+    --button-border-color-selected: var(--aegis-line-strong) !important;
+    --button-border-color-hover: var(--aegis-line-strong) !important;
+    --button-border-color-active: var(--aegis-line-strong) !important;
+  }
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSP estricta · Banco de Escudos</title>
+<!-- Precarga del analizador especulativo: sale antes de que el documento empiece (sin la máscara del actor). -->
+<link rel="preload" as="script" href="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-banco-precarga">
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+<script>
+"use strict";
+// Lo primero: apuntar cualquier violación de la CSP (si el navegador redirigiera a un data: que la CSP no admite, la
+// página lo vería aquí y el servidor recibiría el informe).
+window.__violaciones = [];
+document.addEventListener("securitypolicyviolation", e => {
+  window.__violaciones.push({ directiva: e.violatedDirective, bloqueada: e.blockedURI });
+});
+</script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · CSP estricta</p>
+<h1>Una web con CSP estricta</h1>
+<p>Esta página llega con «Content-Security-Policy: script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com»
+(sin data:) y manda los informes de violación a su servidor. Pide adsbygoogle.js, que las listas sustituyen por un
+recurso neutro en data:. Con esta CSP, Escudos tiene que cancelar la petición en vez de redirigirla: si no, la CSP la
+bloquearía y el navegador mandaría un informe que delata el bloqueador.</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<script>
+"use strict";
+(async () => {
+  const url = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?id=${encodeURIComponent(Banco.id("adsbygoogle"))}`;
+  const carga = await Banco.cargar("script", url);
+  // Los informes de violación salen un poco después.
+  await Banco.espera(1500);
+  await Banco.listo({ carga, violaciones: window.__violaciones, adsbygoogle: !!window.adsbygoogle });
+})();
+</script>
+</body>
+</html>

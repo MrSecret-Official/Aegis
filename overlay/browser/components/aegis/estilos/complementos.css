@@ -1,0 +1,404 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · Complementos (about:addons) con la forma de Ajustes (docs/DISENO.md): barra lateral con la cabecera
+   pequeña, el buscador y las categorías; a la derecha, título de 24, etiquetas de sección en mayúsculas pequeñas y
+   tarjetas de radio 12 con filas. complementos.sys.mjs monta la cabecera y el estado vacío; lo que está dentro de los
+   componentes de Firefox (shadow DOM) va en complementos-sombra.css.
+   Los controles de Firefox declaran sus variables en su :host: se cambian en el propio elemento (manda sobre el
+   :host) o, si se heredan, en :root. Solo var(--aegis-*); los colores, al final, fuera de alto contraste. */
+
+/* ───────────────────────── Lo que sobra ───────────────────────── */
+
+/* «Ayuda de complementos» (soporte de Mozilla) y el texto de reserva del estado vacío sin Nova. */
+moz-page-nav-button[support-page="addons-help"],
+#empty-addons-message,
+/* «Más información» y las insignias llevan a support.mozilla.org (como en Ajustes, fuera). */
+a[is="moz-support-link"],
+/* El botón de la lupa: el buscador busca con Intro, como el de Ajustes. */
+.aegis-complementos-cabecera search-addons > moz-button,
+/* Con el buscador en la barra lateral, su sitio de arriba («Encontrar más complementos») queda vacío. */
+:root[aegis-complementos] .main-search {
+  display: none !important;
+}
+
+/* ───────────────────────── Página ───────────────────────── */
+
+:root {
+  --sidebar-width: 256px !important;
+  --page-main-content-width: 680px !important;
+  --main-margin-start: auto !important;
+  --main-margin-end: auto !important;
+  --addon-icon-size: 28px;
+  /* Botones y campos con los radios de Aegis (Nova los hace píldora). */
+  --button-border-radius: var(--aegis-r-8) !important;
+  --input-text-border-radius: var(--aegis-r-8) !important;
+  /* Tarjetas: radio 12, sin sombra (DISENO §5). */
+  --card-border-radius: var(--aegis-r-12) !important;
+  --card-box-shadow: none !important;
+  --card-box-shadow-hover: none !important;
+}
+
+body {
+  font-size: 14px;
+}
+
+/* Contenido: columna centrada de 680 como máximo, a 36 de arriba (como Ajustes). */
+#content {
+  padding: 0 44px 48px;
+}
+.sticky-container,
+global-warnings,
+#main {
+  margin-inline: auto !important;
+}
+:root[aegis-complementos] .main-heading {
+  padding-block: 36px var(--aegis-s-24);
+}
+/* Título de la página (Centro: Titulo.qml, 24 y 600). */
+.main-heading .header-name {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
+}
+.main-heading {
+  align-items: center;
+}
+
+/* Etiquetas de sección («ACTIVADAS», «DESACTIVADAS»): 11, mayúsculas, 600 y gris apagado (DISENO §3). */
+.list-section-heading {
+  margin: 0 0 var(--aegis-s-8);
+  padding-inline: var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.section {
+  margin-bottom: var(--aegis-s-24);
+}
+#main > addon-list > section:not(:empty) {
+  margin-block-end: var(--aegis-s-24);
+}
+
+/* ───────────────────────── Barra lateral ───────────────────────── */
+
+/* Como Ajustes: 256 de ancho, pegada a la izquierda, a toda altura, con una línea a la derecha. */
+#sidebar {
+  width: 256px;
+  box-sizing: border-box;
+  border-inline-end: 1px solid transparent;
+}
+categories-box > moz-page-nav,
+categories-box > moz-page-nav > moz-page-nav-button {
+  --page-nav-margin-inline-start: 0px;
+  --page-nav-margin-block-start: 0px;
+  --page-nav-gap: 0px;
+  --page-nav-button-gap: 0px;
+  --page-nav-button-padding: var(--aegis-s-8);
+  --page-nav-button-padding-small: var(--aegis-s-8);
+  --page-nav-button-border-radius: var(--aegis-r-7);
+  --page-nav-button-border-radius-focused: var(--aegis-r-7);
+  --page-nav-button-indicator-width: 0px;
+  --page-nav-focus-outline-offset: -2px;
+  --page-nav-focus-padding: 0px;
+}
+categories-box > moz-page-nav {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--aegis-s-16) var(--aegis-s-12) var(--aegis-s-12);
+  border-inline-end: none;
+  font-size: 13px;
+}
+
+.aegis-complementos-cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-12);
+  padding-block-end: var(--aegis-s-12);
+}
+.aegis-complementos-marca {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  min-height: 20px;
+  padding-inline: var(--aegis-s-8);
+}
+.aegis-complementos-icono {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.aegis-complementos-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* Buscador: campo de 32 con radio 8, a lo ancho de la barra. */
+.aegis-complementos-cabecera search-addons {
+  display: flex;
+}
+.aegis-complementos-cabecera moz-input-search {
+  --input-text-min-height: 32px;
+  --input-text-border-radius: var(--aegis-r-8);
+  --input-search-border-radius: var(--aegis-r-8);
+  flex: 1;
+  width: auto;
+  font-size: 13px;
+}
+
+/* Contador de actualizaciones: pastilla de radio 5, como el contador de Escudos. */
+.category-badge {
+  border-radius: var(--aegis-r-5);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ───────────────────────── Tarjetas ───────────────────────── */
+
+.addon.card {
+  border-radius: var(--aegis-r-12);
+  box-shadow: none;
+}
+
+/* Extensiones y plugins: una tarjeta por sección con una fila por complemento (como las listas de SecretOS): sin
+   hueco entre ellas, la línea entre filas y el radio solo en los extremos. */
+addon-list:not([type="theme"]) > section > addon-card > .addon.card {
+  margin: 0;
+  padding: var(--aegis-s-12) var(--aegis-s-16);
+  border-radius: 0;
+  border-block-start-width: 0;
+}
+addon-list:not([type="theme"]) > section > addon-card:first-of-type > .addon.card {
+  border-block-start-width: 1px;
+  border-start-start-radius: var(--aegis-r-12);
+  border-start-end-radius: var(--aegis-r-12);
+}
+addon-list:not([type="theme"]) > section > addon-card:last-of-type > .addon.card {
+  border-end-start-radius: var(--aegis-r-12);
+  border-end-end-radius: var(--aegis-r-12);
+}
+
+/* Fila: icono de 28, nombre de 14 y descripción de 12; interruptor y «…» a la derecha. */
+.addon-card-collapsed {
+  align-items: center;
+}
+.card-heading-icon {
+  margin-inline-end: var(--aegis-s-12);
+}
+/* Extensión sin icono propio: el glifo de línea de las extensiones en lugar de la pieza de puzle rellena (no se
+   mezclan iconos de relleno y de línea, DISENO §8). */
+img.card-heading-icon[src="chrome://mozapps/skin/extensions/extensionGeneric.svg"] {
+  content: url("chrome://mozapps/skin/extensions/extension.svg");
+  -moz-context-properties: fill;
+}
+.addon-name-container {
+  margin-top: 0;
+  gap: var(--aegis-s-8);
+}
+.addon-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  margin-inline-end: 0;
+}
+.addon-description {
+  font-size: 12px;
+}
+
+/* Botones de icono («…», engranaje, volver): radio 7, no círculo (DISENO §9). */
+moz-button.more-options-button,
+moz-button.back-button {
+  --button-border-radius: var(--aegis-r-7);
+}
+
+/* Interruptor de 34 × 20 con botón de 16 (DISENO §9). */
+moz-toggle {
+  --toggle-width: 34px;
+  --toggle-height: 20px;
+  --toggle-border-width: 0px;
+  --toggle-dot-margin: 2px;
+  --toggle-border-radius: var(--aegis-r-10);
+}
+
+/* Temas: rejilla de dos columnas con la vista previa arriba y el nombre debajo. */
+addon-list[type="theme"] > section:not(:empty) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--aegis-s-12);
+}
+addon-list[type="theme"] > section > .list-section-heading {
+  grid-column: 1 / -1;
+  margin-block-end: calc(var(--aegis-s-4) * -1);
+}
+addon-list[type="theme"] > section > addon-card > .addon.card {
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+addon-list[type="theme"] .addon-card-collapsed {
+  padding-block-start: var(--aegis-s-4);
+}
+@media (max-width: 760px) {
+  addon-list[type="theme"] > section:not(:empty) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Claro, Oscuro o Dispositivo: segmentos (DISENO §9). El contenedor y las opciones, en complementos-sombra.css. */
+aboutaddons-themes-mode {
+  margin-block-end: var(--aegis-s-8);
+}
+
+/* Estado vacío (complementos.sys.mjs): sin ilustración; glifo, una frase y un botón secundario. */
+addons-promo#empty-addons-promo {
+  --addons-promo-padding: 40px;
+  --addons-promo-text-padding-inline: 0px;
+}
+addons-promo#empty-addons-promo > moz-button {
+  --button-min-height: 38px;
+  font-size: 14px;
+}
+
+/* ───────────────────────── Colores ───────────────────────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  :root {
+    /* Sin violeta: el énfasis de Aegis (monocromo de serie) en enlaces, insignias, foco y selección. */
+    --color-accent-primary: var(--aegis-accent) !important;
+    --color-accent-primary-hover: var(--aegis-accent-hover) !important;
+    --color-accent-primary-active: var(--aegis-accent-down) !important;
+    --link-color: var(--aegis-text) !important;
+    --link-color-hover: var(--aegis-text) !important;
+    --link-color-active: var(--aegis-sub) !important;
+    --icon-color: var(--aegis-text) !important;
+    --focus-outline-color: var(--aegis-focus) !important;
+    --card-background-color: var(--aegis-surface) !important;
+    --card-border-color: var(--aegis-line) !important;
+
+    /* Botones: secundarios grises sin el borde claro de Firefox («Activar», engranaje); los de icono (opciones
+       «…»), sin borde ni fondo en reposo (DISENO §9). */
+    --button-border-color: transparent !important;
+    --button-border-color-hover: transparent !important;
+    --button-border-color-active: transparent !important;
+    --button-border-color-ghost: transparent !important;
+    --button-border-color-ghost-hover: transparent !important;
+    --button-background-color-ghost: transparent !important;
+    --button-background-color-ghost-hover: var(--aegis-hover) !important;
+    --button-background-color-ghost-active: var(--aegis-control) !important;
+
+    background-color: var(--aegis-bg);
+  }
+
+  body,
+  #content,
+  .sticky-container,
+  .main-search,
+  .main-heading {
+    background-color: var(--aegis-bg);
+    color: var(--aegis-text);
+  }
+
+  #sidebar {
+    background-color: var(--aegis-sidebar);
+    border-inline-end-color: var(--aegis-line);
+  }
+  categories-box > moz-page-nav,
+  categories-box > moz-page-nav > moz-page-nav-button {
+    --page-nav-button-background-color: transparent;
+    --page-nav-button-background-color-hover: var(--aegis-hover);
+    --page-nav-button-background-color-active: var(--aegis-sel);
+    --page-nav-button-background-color-selected: var(--aegis-sel);
+    --page-nav-button-border-color: transparent;
+    --page-nav-button-border-color-hover: transparent;
+    --page-nav-button-border-color-active: transparent;
+    --page-nav-button-text-color: var(--aegis-text);
+    --page-nav-button-text-color-hover: var(--aegis-text);
+    --page-nav-button-text-color-active: var(--aegis-text);
+    --page-nav-button-text-color-selected: var(--aegis-text);
+    --page-nav-button-indicator-background-color: transparent;
+    --page-nav-border-color: transparent;
+    --page-nav-hr-background-color: var(--aegis-line);
+  }
+  .aegis-complementos-titulo {
+    color: var(--aegis-text);
+  }
+  .aegis-complementos-cabecera moz-input-search {
+    --input-text-background-color: var(--aegis-surface);
+    --input-text-border-color: var(--aegis-field-border);
+    --input-text-color: var(--aegis-text);
+  }
+
+  .category-badge {
+    background-color: var(--aegis-prim);
+    color: var(--aegis-on-prim);
+  }
+
+  .main-heading .header-name {
+    color: var(--aegis-text);
+  }
+  .list-section-heading {
+    color: var(--aegis-muted);
+  }
+
+  .addon.card {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+  /* Filas: al pasar el ratón, el resalte de fila (no la sombra de Firefox). */
+  addon-card:not([expanded]) > .addon.card:hover {
+    box-shadow: none;
+    background-color: var(--aegis-surface);
+  }
+  addon-list:not([type="theme"]) > section > addon-card:not([expanded]) > .addon.card:hover {
+    background-image: linear-gradient(var(--aegis-hover), var(--aegis-hover));
+  }
+  addon-list[type="theme"] > section > addon-card:not([expanded]) > .addon.card:hover {
+    border-color: var(--aegis-line-strong);
+  }
+  addon-card:not([expanded]) > .addon.card:hover .addon-name-link,
+  .addon-name-link {
+    color: var(--aegis-text);
+  }
+  .addon-description {
+    color: var(--aegis-sub);
+  }
+  .card-heading-icon {
+    fill: var(--aegis-sub);
+  }
+  .card-heading-image {
+    border-bottom-color: var(--aegis-line);
+  }
+
+  /* Interruptor: pista gris; encendido, el énfasis con el botón del color que va encima. */
+  moz-toggle {
+    --toggle-background-color: var(--aegis-track);
+    --toggle-background-color-hover: var(--aegis-track);
+    --toggle-background-color-active: var(--aegis-track);
+    --toggle-background-color-pressed: var(--aegis-accent);
+    --toggle-background-color-pressed-hover: var(--aegis-accent);
+    --toggle-background-color-pressed-active: var(--aegis-accent);
+    --toggle-dot-background-color: var(--aegis-sub);
+    --toggle-dot-background-color-hover: var(--aegis-text);
+    --toggle-dot-background-color-active: var(--aegis-text);
+    --toggle-dot-background-color-on-pressed: var(--aegis-on-accent);
+  }
+
+  /* Segmentos: el elegido es la acción principal (botón «primary», que mapeo-firefox.css pasa a --aegis-prim); los
+     demás, controles grises. */
+  aboutaddons-themes-mode {
+    --border-color-interactive: var(--aegis-field-border);
+    --button-background-color-ghost: var(--aegis-control);
+    --button-background-color-ghost-hover: var(--aegis-control-hover);
+    --button-background-color-ghost-active: var(--aegis-control-down);
+    --button-text-color-ghost: var(--aegis-text);
+  }
+
+  addons-promo#empty-addons-promo {
+    color: var(--aegis-text);
+  }
+}

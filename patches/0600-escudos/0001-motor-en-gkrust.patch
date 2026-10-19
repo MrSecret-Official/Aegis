@@ -1,0 +1,80 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Escudos: el motor del bloqueador en gkrust
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: el motor de Escudos es adblock-rust 0.12.1, el mismo crate que
+Firefox ya compila en gkrust para su ContentClassifierService (desde Firefox
+158, su fork etp_engine, con la misma API y el mismo formato .dat), detrás de un
+servicio XPCOM fino (@aegis/escudos/motor;1). El crate, la interfaz y el
+registro del servicio son archivos nuevos de Aegis en
+browser/components/aegis/escudos/motor-nativo/ (overlay); aquí solo se enlaza
+con gkrust: una dependencia en toolkit/library/rust/shared/Cargo.toml, su
+extern crate en lib.rs y su entrada en Cargo.lock (sin crates nuevos de
+crates.io: todas sus dependencias ya están vendorizadas). Frente a compilar el
+mismo crate a WebAssembly: la mitad de memoria, menos coste por petición en el
+hilo principal y sin permitir WebAssembly en el proceso padre.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0600-escudos/0001-motor-en-gkrust.patch
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 63ca9ea9a7..ed1d636c18 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -56,6 +56,19 @@ dependencies = [
+  "viaduct-dev",
+ ]
+ 
++[[package]]
++name = "aegis_escudos_motor"
++version = "1.0.0"
++dependencies = [
++ "etp_engine",
++ "moz_task",
++ "nserror",
++ "nsstring",
++ "serde_json",
++ "thin-vec",
++ "xpcom",
++]
++
+ [[package]]
+ name = "aho-corasick"
+ version = "1.1.0"
+@@ -2995,6 +3008,7 @@ version = "0.1.0"
+ dependencies = [
+  "aa-stroke",
+  "abridged_certs",
++ "aegis_escudos_motor",
+  "app_collator_glue",
+  "audio_thread_priority",
+  "audioipc2-client",
+diff --git a/toolkit/library/rust/shared/Cargo.toml b/toolkit/library/rust/shared/Cargo.toml
+index eec4e9adb7..862d2e3d9f 100644
+--- a/toolkit/library/rust/shared/Cargo.toml
++++ b/toolkit/library/rust/shared/Cargo.toml
+@@ -127,6 +127,8 @@ uritemplate_glue = { path = "../../../../netwerk/base/uritemplate_glue" }
+ 
+ etp_engine = { path = "../../../components/content-classifier/etp_engine", features = ["full-regex-handling", "single-thread"], default-features = false }
+ content_classifier_engine = { path = "../../../components/content-classifier/content_classifier_engine" }
++# Aegis: el motor de Escudos (overlay de Aegis, adblock-rust tras un servicio XPCOM).
++aegis_escudos_motor = { path = "../../../../browser/components/aegis/escudos/motor-nativo" }
+ 
+ libz-rs-sys = { version = "0.6", features = ["custom-prefix"], optional = true }
+ zlib-rs = { version = "0.6", features = ["avx512"], optional = true }
+diff --git a/toolkit/library/rust/shared/lib.rs b/toolkit/library/rust/shared/lib.rs
+index 3896586042..060bf4de50 100644
+--- a/toolkit/library/rust/shared/lib.rs
++++ b/toolkit/library/rust/shared/lib.rs
+@@ -166,6 +166,7 @@ extern crate urlpattern_glue;
+ 
+ extern crate content_classifier_engine;
+ extern crate etp_engine;
++extern crate aegis_escudos_motor;
+ 
+ #[cfg(feature = "libz-rs-sys")]
+ extern crate libz_rs_sys;

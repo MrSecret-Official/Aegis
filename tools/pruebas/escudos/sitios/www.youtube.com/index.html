@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YouTube (simulado) · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+<script src="/google.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · Google limpio</p>
+<h1>YouTube (simulado)</h1>
+<p>Se cortan las estadísticas de anuncios, la calidad de reproducción y el registro de uso; pasan las de
+reproducción y tiempo visto (historial y «seguir viendo») y el vídeo.</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<div class="tarjeta"><a id="redirect" href="#">Enlace de la descripción de un vídeo (/redirect)</a></div>
+<div id="marcos" class="fila"></div>
+<script>
+"use strict";
+const destino = `https://sitio-a.test/destino.html?${Banco.parametros({ fase: "g-yt-redirect" })}`;
+document.getElementById("redirect").href =
+  `/redirect?event=video_description&redir_token=QUFFprueba&q=${encodeURIComponent(destino)}` +
+  `&aegisid=${encodeURIComponent(`${Banco.run}.g-yt-redirect.url`)}`;
+lanzarGoogle("g-youtube").then(senales => Banco.listo({ senales }));
+</script>
+</body>
+</html>

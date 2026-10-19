@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anuncios · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · anuncios (motor propio)</p>
+<h1>Una web con anuncios</h1>
+<p>Esta página pide recursos a servidores de anuncios y de rastreo que están en las listas reales de Escudos (uBlock
+filters, EasyList, EasyPrivacy, AdGuard), servidos aquí mismo. El servidor del banco apunta lo que le llega: lo
+bloqueado no llega. Cada fila dice de qué grupo de listas sale la regla.</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<div class="tarjeta"><table><thead><tr><th>Petición</th><th>Grupo</th><th>Resultado</th></tr></thead><tbody id="tabla"></tbody></table></div>
+<script>
+"use strict";
+// Mismo orden que casos.js (PETICIONES_ANUNCIOS): [etiqueta, URL, tipo, grupo]. Reglas comprobadas con las listas de
+// filtros/ (aegis.py filtros, 2026-10-14).
+const PETICIONES = [
+  ["pubmatic-script", "https://ads.pubmatic.com/AdServer/js/pwt/1/pwt.js", "script", "base"],
+  ["pubmatic-imagen", "https://ads.pubmatic.com/AdServer/img/px.gif", "imagen", "base"],
+  ["taboola", "https://cdn.taboola.com/libtrc/aegis/loader.js", "script", "base"],
+  ["criteo", "https://static.criteo.net/js/ld/publishertag.js", "script", "base"],
+  ["amazon", "https://c.amazon-adsystem.com/aax2/apstag.js", "script", "base"],
+  ["adnxs", "https://ib.adnxs.com/px", "imagen", "base"],
+  ["prebid-ruta", "https://sitio-b.test/js/prebid.js", "script", "base"],
+  ["snssdk", "https://mon.snssdk.com/monitor/x.js", "script", "rastreo"],
+  ["cookies", "https://cookies.truecaller.com/consent.js", "script", "cookies"],
+  ["ventanas", "https://omapi.fangraphs.com/campaign.js", "script", "ventanas"],
+  ["antiadblock", "https://abruptroad.com/detect.js", "script", "antiadblock"],
+  ["control", "https://sitio-b.test/__/js", "script", "control"],
+];
+
+(async () => {
+  const tareas = [];
+  for (const [etiqueta, url, tipo] of PETICIONES) {
+    const u = new URL(url);
+    u.searchParams.set("id", Banco.id(etiqueta));
+    tareas.push(Banco.cargar(tipo, u.href));
+  }
+  // Lo que ve la página de cada petición («carga», «error»…), en el orden de PETICIONES: casos.js lo usa para la
+  // vuelta atrás (una imagen que cargó sale de la caché de imágenes sin pedirse).
+  const enPagina = await Promise.all(tareas);
+  const llegadas = await Banco.estabilizar(`${Banco.run}.${Banco.fase}.`);
+  const recibidos = new Set(llegadas.map(p => new URL(p.url).searchParams.get("id")));
+  const tabla = document.getElementById("tabla");
+  for (const [etiqueta, url, , grupo] of PETICIONES) {
+    const tr = document.createElement("tr");
+    const llego = recibidos.has(Banco.id(etiqueta));
+    for (const t of [new URL(url).host + new URL(url).pathname, grupo, llego ? "llega" : "bloqueada"]) {
+      const td = document.createElement("td");
+      td.textContent = t;
+      tr.append(td);
+    }
+    tr.children[0].className = "mono";
+    tr.children[2].className = llego ? "" : "ok";
+    tabla.append(tr);
+  }
+  await Banco.listo({ peticiones: PETICIONES, enPagina });
+})();
+</script>
+</body>
+</html>

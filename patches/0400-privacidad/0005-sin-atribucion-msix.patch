@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: =?UTF-8?q?Sin=20atribuci=C3=B3n=20en=20el=20paquete=20de=20la=20T?=
+ =?UTF-8?q?ienda?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: en el paquete MSIX (Microsoft Store), AttributionCode lee la
+atribución con nsIWindowsPackageManager.campaignId(), que llama a
+StoreContext.GetStoreProductForCurrentAppAsync (y, si no, GetAppLicenseAsync):
+una consulta a la Tienda de Windows, con la cuenta Microsoft del usuario si
+tiene sesión. La lanza TelemetryStartup en cada arranque (profile-after-change
+→ TelemetryEnvironment → EnvironmentCache._loadAttributionAsync), sin mirar
+ninguna pref, así que pasa antes de la bienvenida aunque la telemetría esté
+apagada; también podría lanzarla una filter_expression de Remote Settings con
+env.attribution. Aegis no usa la atribución. msixCampaignId() es la única
+llamada a campaignId() en el código JS: devolver "" corta todos esos caminos.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0400-privacidad/0005-sin-atribucion-msix.patch
+
+diff --git a/browser/components/attribution/AttributionCode.sys.mjs b/browser/components/attribution/AttributionCode.sys.mjs
+index 810b0b34e8..f08f50deae 100644
+--- a/browser/components/attribution/AttributionCode.sys.mjs
++++ b/browser/components/attribution/AttributionCode.sys.mjs
+@@ -69,11 +69,10 @@ export var AttributionCode = {
+    * This function solely exists to make it easy to mock out for tests.
+    */
+   async msixCampaignId() {
+-    const windowsPackageManager = Cc[
+-      "@mozilla.org/windows-package-manager;1"
+-    ].createInstance(Ci.nsIWindowsPackageManager);
+-
+-    return windowsPackageManager.campaignId();
++    // Aegis: sin atribución en el paquete de la Tienda. campaignId() pregunta a
++    // la Tienda de Windows (StoreContext) en cada arranque, también antes de la
++    // bienvenida, y con la cuenta Microsoft del usuario. Aegis no la usa.
++    return "";
+   },
+ 
+   /**

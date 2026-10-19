@@ -1,0 +1,54 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · Tor en la ventana (tor/tor.sys.mjs, DISENO §8 y §9): en la instancia con Tor, el indicador de la barra: los
+   anillos de tres capas y «Tor» o el porcentaje mientras conecta. Monocromo; el error, con su color y siempre con
+   texto (la descripción). La entrada del menú ☰ va sin icono, como las demás filas del menú. */
+
+.aegis-tor-indicador {
+  align-items: center;
+  align-self: center;
+  gap: var(--aegis-s-4);
+  min-height: 28px;
+  margin-inline: var(--aegis-s-4);
+  padding-inline: 6px;
+  border-radius: var(--aegis-r-7);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  &:focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: 2px;
+  }
+}
+.aegis-tor-indicador-glifo {
+  width: 16px;
+  height: 16px;
+  list-style-image: url("iconos/tor.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+.aegis-tor-indicador-texto {
+  margin: 0;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-tor-indicador {
+    color: var(--aegis-text);
+
+    &:hover {
+      background-color: var(--aegis-hover);
+    }
+    &[open],
+    &:hover:active {
+      background-color: var(--aegis-control);
+    }
+  }
+  /* Error o tor caído: el glifo en el color de error; el estado se lee en el texto del menú y en la descripción. */
+  .aegis-tor-indicador:is([aegis-tor-fase="error"], [aegis-tor-fase="parado"]) > .aegis-tor-indicador-glifo {
+    fill: var(--aegis-err-fill);
+  }
+}

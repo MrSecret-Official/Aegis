@@ -1,0 +1,600 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · Escudos (escudos.sys.mjs): el botón con el uróboros y su contador en la barra de direcciones, y su panel,
+   con la forma del Centro de SecretOS (DISENO §4, §5 y §9). La carga escudos.sys.mjs en cada ventana del navegador.
+   Solo var(--aegis-*); los colores, fuera de alto contraste. */
+
+/* ── Botón de la barra ──────────────────────────────────────────────────────────────────────────────────────── */
+
+/* Al final de la barra, después de la estrella (como el león de Brave), con el tamaño, el color y la opacidad de los
+   iconos vecinos: es un .urlbar-page-action más (26 × 26 en la barra de 34, con el icono de 16). */
+#aegis-escudos-button {
+  position: relative;
+  overflow: visible;
+  order: 1;
+}
+#aegis-escudos-button > .urlbar-icon {
+  list-style-image: url("iconos/escudo.svg");
+}
+#aegis-escudos-button[bajados] > .urlbar-icon {
+  list-style-image: url("iconos/escudo-bajado.svg");
+}
+
+/* Resalte de los botones de la barra de direcciones: sin fondo en reposo, --aegis-hover al pasar y --aegis-control
+   pulsado o con su panel abierto (Firefox usa aquí un violeta translúcido). Radio 5: concéntrico con la barra
+   (8 − 3 de separación = 5, DISENO §5). Para todos los botones de la barra, así el de Escudos no destaca. */
+#page-action-buttons > .urlbar-page-action {
+  border-radius: var(--aegis-r-5) !important;
+}
+
+/* Contador como en Brave: pastilla pequeña en la esquina inferior derecha, fuera del anillo en lo posible y visible
+   también con el panel abierto. 14 de alto, 11 px 600 en tabulares (el mínimo de DISENO §3), radio 5. */
+#aegis-escudos-contador {
+  position: absolute;
+  z-index: 1;
+  inset-inline-end: -2px;
+  bottom: 0;
+  box-sizing: border-box;
+  min-width: 14px;
+  height: 14px;
+  padding-inline: 3px;
+  border-radius: var(--aegis-r-5);
+  font: 600 11px/14px var(--aegis-font);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+  text-align: center;
+  pointer-events: none;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+/* Identidad del sitio (el «icono de confianza» de Firefox): un candado en lugar de su escudo, para que el único
+   escudo de la barra sea el de Aegis. Sin conexión segura, el candado tachado y el texto «No seguro» (DISENO §2). */
+#trust-icon-container.secure,
+#trust-icon-container.inactive:not(.insecure) {
+  list-style-image: url("iconos/escudo-https.svg") !important;
+}
+#trust-icon-container.insecure,
+#trust-icon-container.warning {
+  list-style-image: url("iconos/escudo-https-tachado.svg") !important;
+}
+
+/* ── Panel ──────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+#aegis-escudos-panel {
+  --panel-padding: 0 !important;
+}
+
+/* Entrada: fundido con un deslizamiento corto (200 ms, OutCubic) en lugar de los 70 px de Firefox. Con «reducir
+   movimiento», sin deslizamiento y --aegis-t-fade a 0 (tokens.css). */
+#aegis-escudos-panel:not([animate="false"]) {
+  transition-duration: var(--aegis-t-fade) !important;
+  transition-timing-function: var(--aegis-ease) !important;
+}
+@media (prefers-reduced-motion: no-preference) and (-moz-panel-animations) {
+  #aegis-escudos-panel {
+    transform: translateY(-8px);
+  }
+}
+#aegis-escudos-panel:is([animate="open"], [animate="false"]) {
+  transform: none;
+}
+
+.aegis-escudos {
+  width: 340px;
+  font: 13px var(--aegis-font);
+
+  & button {
+    font: inherit;
+    color: inherit;
+  }
+  & :focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: 2px;
+  }
+}
+
+.aegis-escudos-vista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-12);
+  padding: var(--aegis-s-16);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+/* Cabecera: favicon y dominio, estado del sitio y el interruptor grande. */
+.aegis-escudos-cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-12);
+}
+.aegis-escudos-favicon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.aegis-escudos-cabecera-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.aegis-escudos-dominio {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aegis-escudos-estado {
+  font-size: 12px;
+}
+
+/* Tarjetas (radio 12) y la del contador. */
+.aegis-escudos-tarjeta {
+  border-radius: var(--aegis-r-12);
+}
+.aegis-escudos-contador {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-12);
+  padding: var(--aegis-s-12) var(--aegis-s-16);
+  min-height: 44px;
+  box-sizing: border-box;
+}
+.aegis-escudos-numero {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  &[hidden] {
+    display: none;
+  }
+}
+.aegis-escudos-contador-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+.aegis-escudos-total[hidden] {
+  display: none;
+}
+
+/* «Opciones avanzadas»: etiqueta de sección (11 px, versalitas) que pliega y despliega. */
+.aegis-escudos-plegar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  margin-block: 0 calc(-1 * var(--aegis-s-4));
+  padding-inline: var(--aegis-s-4);
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  background: none;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+
+  & > img {
+    transition: transform var(--aegis-t-fade) var(--aegis-ease);
+  }
+  &[aria-expanded="true"] > img {
+    transform: rotate(180deg);
+  }
+}
+.aegis-escudos-avanzadas[hidden] {
+  display: none;
+}
+
+/* Filas de 44: glifo de línea, título con detalle y el control a la derecha; separadas por la línea, que empieza
+   después del glifo (como las filas del Centro de SecretOS). */
+.aegis-escudos-fila {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-12);
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--aegis-s-8) var(--aegis-s-12);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  text-align: start;
+  position: relative;
+
+  &:first-child {
+    border-start-start-radius: var(--aegis-r-12);
+    border-start-end-radius: var(--aegis-r-12);
+  }
+  &:last-child {
+    border-end-start-radius: var(--aegis-r-12);
+    border-end-end-radius: var(--aegis-r-12);
+  }
+  &:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    inset-inline: 40px var(--aegis-s-12);
+    height: 1px;
+  }
+  &[aria-disabled="true"] > :is(.aegis-escudos-glifo, .aegis-escudos-fila-textos, .aegis-interruptor) {
+    opacity: 0.4;
+  }
+}
+.aegis-escudos-fila-clic {
+  cursor: default;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+}
+.aegis-escudos-fila-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.aegis-escudos-fila-detalle {
+  font-size: 12px;
+
+  &:empty {
+    display: none;
+  }
+}
+.aegis-escudos-fila-fin {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-4);
+}
+.aegis-escudos-fila-cuenta {
+  font-variant-numeric: tabular-nums;
+}
+
+.aegis-escudos-glifo {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+.aegis-escudos-glifo-pequeno {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+/* Interruptor 34 × 20, radio 10, botón de 16; el de la cabecera, 42 × 24 con botón de 20 (DISENO §9). */
+.aegis-interruptor {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--aegis-r-10);
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    inset-inline-start: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transition:
+      translate var(--aegis-t-fade) var(--aegis-ease),
+      background-color var(--aegis-t-hover) var(--aegis-ease);
+  }
+  &[aria-checked="true"]::before {
+    translate: 14px 0;
+  }
+  &[aria-checked="true"]:dir(rtl)::before {
+    translate: -14px 0;
+  }
+  &:not([disabled]):active::before {
+    scale: 0.97;
+  }
+}
+.aegis-interruptor-grande {
+  width: 42px;
+  height: 24px;
+  border-radius: var(--aegis-r-12);
+
+  &::before {
+    width: 20px;
+    height: 20px;
+  }
+  &[aria-checked="true"]::before {
+    translate: 18px 0;
+  }
+  &[aria-checked="true"]:dir(rtl)::before {
+    translate: -18px 0;
+  }
+}
+
+/* Desplegable compacto: botón de 28 (radio 7) con el valor y un chevron. */
+.aegis-escudos-desplegable {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-4);
+  flex-shrink: 0;
+  height: 28px;
+  padding-inline: var(--aegis-s-8);
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+}
+
+/* Botones secundarios: dos en una fila. */
+.aegis-escudos-botones {
+  display: flex;
+  gap: var(--aegis-s-8);
+
+  & > .aegis-escudos-secundario {
+    flex: 1;
+    min-height: 34px;
+    padding: var(--aegis-s-4) var(--aegis-s-8);
+    border: 0;
+    border-radius: var(--aegis-r-8);
+    transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+    &:active {
+      scale: 0.97;
+    }
+  }
+}
+
+.aegis-escudos-pie {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Pie: el aviso y, debajo, «Cómo funcionan los Escudos» (about:escudos) como enlace de 12 px subrayado, con una zona
+   clicable de 28 de alto (DISENO §4) que no desplaza el texto. */
+.aegis-escudos-pie-caja {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--aegis-s-4);
+}
+.aegis-escudos-pie-caja > .aegis-escudos-ayuda {
+  min-height: 28px;
+  margin: calc(var(--aegis-s-4) * -1) calc(var(--aegis-s-4) * -1) 0;
+  padding: 0 var(--aegis-s-4);
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  background: none;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* Vista de detalle: lo bloqueado por categoría. */
+.aegis-escudos-subcabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-8);
+}
+.aegis-escudos-atras {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  background: none;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+}
+.aegis-escudos-subtitulo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.aegis-escudos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-12);
+  max-height: 400px;
+  overflow-y: auto;
+}
+.aegis-escudos-etiqueta {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 var(--aegis-s-4);
+  padding-inline: var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.aegis-escudos-etiqueta-cuenta {
+  font-variant-numeric: tabular-nums;
+}
+.aegis-escudos-origenes {
+  margin: 0;
+  padding: var(--aegis-s-4) 0;
+  list-style: none;
+
+  & > li {
+    padding: var(--aegis-s-4) var(--aegis-s-12);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 20px;
+  }
+}
+.aegis-escudos-vacio {
+  margin: 0;
+  padding: var(--aegis-s-24) var(--aegis-s-16);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aegis-escudos *,
+  .aegis-escudos *::before {
+    transition: none !important;
+  }
+}
+
+/* ── Colores (DISENO §2), fuera de alto contraste ───────────────────────────────────────────────────────────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  #aegis-escudos-contador {
+    background-color: var(--aegis-prim);
+    color: var(--aegis-on-prim);
+    /* Recorte de 1 px del color de la barra para separarla del uróboros. */
+    box-shadow: 0 0 0 1px var(--toolbar-field-background-color);
+  }
+  #page-action-buttons > .urlbar-page-action {
+    &:not([disabled]):hover {
+      background-color: var(--aegis-hover) !important;
+    }
+    &:not([disabled]):is([open], :hover:active) {
+      background-color: var(--aegis-control) !important;
+    }
+  }
+  /* El tachado del candado lleva el color de error; Firefox ya lo pone en «No seguro», aquí también en «aviso». */
+  #trust-icon-container.warning {
+    stroke: var(--aegis-err-fill);
+  }
+
+  .aegis-escudos {
+    color: var(--aegis-text);
+  }
+  .aegis-escudos-estado,
+  .aegis-escudos-pie,
+  .aegis-escudos-etiqueta,
+  .aegis-escudos-vacio {
+    color: var(--aegis-muted);
+  }
+  .aegis-escudos-tarjeta {
+    background-color: var(--aegis-control);
+  }
+  .aegis-escudos-pie-caja > .aegis-escudos-ayuda {
+    color: var(--aegis-sub);
+    text-decoration-color: var(--aegis-muted);
+
+    &:hover {
+      color: var(--aegis-text);
+      text-decoration-color: currentColor;
+    }
+  }
+  /* Sobre una tarjeta (control), el secundario va en --aegis-sub (regla del apagado). */
+  .aegis-escudos-contador-textos,
+  .aegis-escudos-fila-detalle,
+  .aegis-escudos-fila-cuenta,
+  .aegis-escudos-glifo,
+  .aegis-escudos-glifo-pequeno {
+    color: var(--aegis-sub);
+  }
+  /* Con .aegis-escudos delante: «.aegis-escudos button» (color: inherit) pesa más que la clase sola. */
+  .aegis-escudos .aegis-escudos-plegar {
+    color: var(--aegis-muted);
+
+    &:hover {
+      background-color: var(--aegis-hover);
+      color: var(--aegis-sub);
+    }
+  }
+  .aegis-escudos-fila:not(:last-child)::after {
+    background-color: var(--aegis-line);
+  }
+  .aegis-escudos-fila-clic:hover {
+    background-color: var(--aegis-hover);
+  }
+  .aegis-escudos-fila-clic:hover:active {
+    background-color: var(--aegis-sel);
+  }
+
+  .aegis-interruptor {
+    background-color: var(--aegis-track);
+
+    &::before {
+      background-color: var(--aegis-sub);
+    }
+    &:not([disabled], [aria-checked="true"]):hover::before {
+      background-color: var(--aegis-text);
+    }
+    &[aria-checked="true"] {
+      background-color: var(--aegis-accent);
+
+      &::before {
+        background-color: var(--aegis-on-accent);
+      }
+    }
+  }
+
+  .aegis-escudos-desplegable,
+  .aegis-escudos-secundario {
+    background-color: var(--aegis-control);
+
+    &:hover {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active,
+    &[aria-expanded="true"] {
+      background-color: var(--aegis-control-down);
+    }
+  }
+  .aegis-escudos-atras {
+    &:hover {
+      background-color: var(--aegis-hover);
+    }
+    &:hover:active {
+      background-color: var(--aegis-control);
+    }
+  }
+  .aegis-escudos-origenes > li {
+    color: var(--aegis-text);
+  }
+}
+
+/* Alto contraste: los controles propios necesitan un borde para verse (colores del sistema). */
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .aegis-interruptor,
+  .aegis-escudos-desplegable,
+  .aegis-escudos-secundario,
+  .aegis-escudos-tarjeta {
+    border: 1px solid currentColor;
+  }
+  .aegis-interruptor::before {
+    background-color: currentColor;
+  }
+  .aegis-interruptor[aria-checked="true"]::before {
+    background-color: SelectedItem;
+  }
+  #aegis-escudos-contador {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Página de aviso de Solo HTTPS (escudos.sys.mjs, pintarPanelHttps): solo la cabecera y la fila de HTTPS; lo demás
+   (contador, Caja fuerte, plegable, el resto de filas y los botones) no se puede usar en esa página. */
+#aegis-escudos-panel[solo-https] :is(.aegis-escudos-contador, .aegis-escudos-plegar, .aegis-escudos-botones),
+#aegis-escudos-panel[solo-https] #aegis-escudos-principal > .aegis-escudos-tarjeta:not(.aegis-escudos-avanzadas),
+#aegis-escudos-panel[solo-https] #aegis-escudos-avanzadas > :not(#aegis-escudos-https) {
+  display: none;
+}

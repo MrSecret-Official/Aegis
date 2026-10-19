@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Actualizaciones sin cookies ni idioma
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: la comprobación (XMLHttpRequest con principal de sistema) y la
+descarga del MAR (nsIIncrementalDownload) llevaban las cookies del
+navegador. Con las actualizaciones en github.com, eso enviaría la sesión de
+GitHub del usuario, o una cookie de visitante que reconoce la instalación en
+cada comprobación. La comprobación envía además un Accept-Language fijo, igual en todos los Aegis, también tras las redirecciones.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0400-privacidad/0001-actualizaciones-anonimas.patch
+
+diff --git a/toolkit/mozapps/update/UpdateService.sys.mjs b/toolkit/mozapps/update/UpdateService.sys.mjs
+index 164381ebc1..4a1b635e36 100644
+--- a/toolkit/mozapps/update/UpdateService.sys.mjs
++++ b/toolkit/mozapps/update/UpdateService.sys.mjs
+@@ -5642,8 +5642,13 @@ export class CheckerService {
+       return this.#getCheckFailedObject("update_url_not_available");
+     }
+ 
+-    let request = new XMLHttpRequest();
++    // Aegis: sin cookies ni el idioma del usuario. La comprobación va a
++    // github.com, donde el usuario puede tener sesión iniciada. El idioma va
++    // como cabecera de la XHR (y no del canal) para que se aplique también
++    // tras las redirecciones de GitHub; el valor es el mismo en todos los Aegis.
++    let request = new XMLHttpRequest({ mozAnon: true });
+     request.open("GET", url, true);
++    request.setRequestHeader("Accept-Language", "en-US,en;q=0.5");
+     // Prevent the request from reading from the cache.
+     request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
+     // Prevent the request from writing to the cache.
+@@ -6513,6 +6518,8 @@ class Downloader {
+         interval,
+         extraHeaders
+       );
++      // Aegis: la descarga del MAR, sin cookies (GitHub Releases).
++      this._request.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
+       this._request.start(this, null);
+     } else {
+       this._bitsActiveNotifications = this.hasDownloadListeners;

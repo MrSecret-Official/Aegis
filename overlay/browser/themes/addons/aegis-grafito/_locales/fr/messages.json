@@ -1,0 +1,10 @@
+{
+  "nombre": {
+    "message": "Graphite",
+    "description": "Nombre del tema en Complementos › Temas."
+  },
+  "descripcion": {
+    "message": "Graphite sombre avec un léger fondu vers le noir.",
+    "description": "Descripción del tema."
+  }
+}

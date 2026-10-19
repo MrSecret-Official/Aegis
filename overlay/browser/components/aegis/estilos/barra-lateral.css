@@ -1,0 +1,380 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · paneles de la barra lateral: Historial y «Personalizar barra lateral» (docs/DISENO.md), con la forma de
+   los Ajustes de SecretOS. Hoja de USUARIO (la pone barra-lateral.sys.mjs solo en sidebar-history.html y
+   sidebar-customize.html): es la única que entra en sus componentes (shadow DOM), y por eso todo lleva !important.
+   Solo var(--aegis-*); los colores, fuera de alto contraste. */
+
+/* ───────── Común: forma de Aegis en vez de las píldoras de Firefox ───────── */
+
+/* Filas y botones de icono de radio 7 y 28 px; buscador de 32 y radio 8 (DISENO §9, «Buscador de la barra
+   lateral»). Las filas de Firefox usan --border-radius-circle. */
+sidebar-history,
+sidebar-customize {
+  --border-radius-circle: var(--aegis-r-7) !important;
+  --button-border-radius: var(--aegis-r-7) !important;
+  --button-size-icon: var(--aegis-h-icon) !important;
+  --button-min-height: var(--aegis-h-icon) !important;
+  --input-text-border-radius: var(--aegis-r-8) !important;
+  --input-search-border-radius: var(--aegis-r-8) !important;
+  --input-text-min-height: 32px !important;
+  --card-border-radius: var(--aegis-r-8) !important;
+}
+
+/* Cabecera: título de sección de 15 y 600; cerrar y el resto de botones de icono, radio 7. */
+.sidebar-panel-heading {
+  font-size: 15px !important;
+}
+.sidebar-panel-heading > h4 {
+  font-weight: 600 !important;
+}
+.sidebar-panel-heading > moz-button,
+.options-container > moz-button {
+  --button-border-radius: var(--aegis-r-7) !important;
+}
+
+/* Buscador con foco: borde de 1 px con --aegis-focus, sin el anillo grueso de Firefox (DISENO §9, «Campo»). */
+input#input[type="search"]:focus-visible {
+  outline: none !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  sidebar-history,
+  sidebar-customize {
+    /* Botones sin fondo en reposo; al pasar, --aegis-hover; pulsados, --aegis-control. */
+    --button-background-color-ghost: transparent !important;
+    --button-background-color-ghost-hover: var(--aegis-hover) !important;
+    --button-background-color-ghost-active: var(--aegis-control) !important;
+    --button-text-color-ghost: var(--aegis-text) !important;
+    --button-text-color-ghost-hover: var(--aegis-text) !important;
+    --button-text-color-ghost-active: var(--aegis-text) !important;
+    /* Fila elegida: --aegis-sel (Firefox usa el botón principal, que en Aegis es blanco). */
+    --button-background-color-primary: var(--aegis-sel) !important;
+    --button-text-color-primary: var(--aegis-text) !important;
+    /* Buscador: superficie con borde de campo. */
+    --input-text-background-color: var(--aegis-surface) !important;
+    --input-text-border: 1px solid var(--aegis-field-border) !important;
+    --input-text-color: var(--aegis-text) !important;
+    /* Cajas de Firefox (tarjetas de días, listas): sin su relleno ni su borde; las tarjetas las pone Aegis. */
+    --sidebar-box-background: transparent !important;
+    --sidebar-box-border: 0 solid transparent !important;
+    --panel-separator-color: var(--aegis-line) !important;
+  }
+  input#input[type="search"]:focus-visible {
+    border-color: var(--aegis-focus) !important;
+  }
+}
+
+/* ───────── Historial (sidebar-history.html) ───────── */
+
+/* Encabezados de día y de sitio (tarjetas plegables): filas de 32 con radio 7, en 13 y 600. */
+summary[part="summary"] {
+  border-radius: var(--aegis-r-7) !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+summary[part="summary"] [part="heading"] {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+/* Estado vacío (DISENO §9): el glifo de línea del historial, la frase y el enlace a los ajustes, centrados. Sin la
+   ilustración del zorro ni la tarjeta que la rodea. */
+div[part="container"].selectedTab {
+  gap: var(--aegis-s-12) !important;
+  min-height: 0 !important;
+  margin-block-start: var(--aegis-s-8) !important;
+  padding-block: 48px !important;
+  padding-inline: var(--aegis-s-16) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+}
+div[part="image-container"] {
+  width: 32px !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 32px !important;
+  background: url("iconos/historial.svg") center / 32px no-repeat !important;
+  -moz-context-properties: fill !important;
+}
+img[part="image"] {
+  display: none !important;
+}
+h2[part="header"] {
+  margin: 0 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+p.description {
+  margin-block: var(--aegis-s-4) 0 !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+/* ───────── Personalizar barra lateral (sidebar-customize.html) ───────── */
+
+/* Secciones: etiqueta de 11 en mayúsculas y gris apagado encima de una tarjeta (como «MODO» en el Centro). */
+legend[part="label"] {
+  margin-block-end: var(--aegis-s-8) !important;
+  padding-inline-start: var(--aegis-s-4) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+}
+.customize-extensions-heading {
+  padding-inline-start: var(--aegis-s-4) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+}
+.sidebar-panel > .sidebar-panel-scrollable-content > .customize-group:not(.no-end-margin) {
+  margin-block-end: var(--aegis-s-24) !important;
+}
+
+/* Tarjetas: radio 12, filas de 44 separadas por una línea (DISENO §9). Las forman las propias filas: el contenedor
+   de Firefox (::part(inputs) del grupo) no se alcanza desde una hoja de usuario, así que se queda sin relleno ni
+   separación. Los tres primeros grupos de Firefox (pestañas verticales, abrir herramientas, posición) forman una
+   sola tarjeta bajo «Ajustes». */
+div#inputs[part~="inputs"] {
+  gap: 0 !important;
+  margin-block-start: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+}
+moz-fieldset.customize-group.medium-top-margin.no-label {
+  margin-block-start: 0 !important;
+}
+moz-fieldset.customize-group > moz-checkbox {
+  padding: var(--aegis-s-12) var(--aegis-s-16) !important;
+  border-style: solid !important;
+  border-color: transparent;
+  border-width: 1px 1px 0 !important;
+}
+/* Primera fila de una tarjeta: esquinas de arriba. Última: esquinas de abajo y su borde inferior. */
+moz-fieldset.customize-group.no-end-margin:not(.no-label) > moz-checkbox,
+moz-fieldset.customize-group.tools > moz-checkbox:first-of-type {
+  border-start-start-radius: var(--aegis-r-12) !important;
+  border-start-end-radius: var(--aegis-r-12) !important;
+}
+moz-fieldset.customize-group.no-label:not(.no-end-margin) > moz-checkbox,
+moz-fieldset.customize-group.tools > moz-checkbox:last-of-type {
+  border-block-end-width: 1px !important;
+  border-end-start-radius: var(--aegis-r-12) !important;
+  border-end-end-radius: var(--aegis-r-12) !important;
+}
+.extensions {
+  margin-block-start: var(--aegis-s-8) !important;
+  padding-inline: var(--aegis-s-16) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--aegis-r-12) !important;
+}
+.extension-item {
+  min-height: 44px !important;
+  align-items: center !important;
+  gap: var(--aegis-s-12) !important;
+  padding-block: var(--aegis-s-8) !important;
+}
+
+/* Filas: el texto (con el icono de la herramienta, alineado) a la izquierda y el interruptor a la derecha. */
+moz-checkbox[slot="nested"] {
+  margin-block-start: var(--aegis-s-12) !important;
+  padding-block: var(--aegis-s-12) 0 !important;
+  border-block-start: 1px solid transparent !important;
+}
+.label-wrapper:has(> label > input[type="checkbox"]) {
+  padding-inline-start: 0 !important;
+}
+label[part="label"]:has(> input[type="checkbox"]) {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--aegis-s-12) !important;
+  font-size: 13px !important;
+}
+label[part="label"] > .text-container {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  gap: var(--aegis-s-12) !important;
+}
+label[part="label"] > .text-container > .icon {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+label[part="label"] > .text-container > .icon + .text {
+  margin-inline-start: 0 !important;
+}
+/* Sub-opción (p. ej. «Ocultar pestañas y barra lateral»): sangrada bajo la suya, con su línea. */
+slot.nested {
+  margin-inline-start: var(--aegis-s-16) !important;
+}
+
+/* Interruptor de 34 × 20 con botón de 16 (DISENO §9): la casilla de Firefox, dibujada como interruptor. El botón es
+   un círculo pintado como fondo, que se desliza al encenderse. Con alto contraste se queda la casilla de
+   Firefox (el interruptor necesita sus colores). */
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  label[part="label"] > input#input[type="checkbox"] {
+    appearance: none !important;
+    order: 1 !important;
+    flex-shrink: 0 !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    margin: 0 !important;
+    margin-inline-start: auto !important;
+    border: 0 !important;
+    border-radius: var(--aegis-r-10) !important;
+    background-repeat: no-repeat !important;
+    background-size: 16px 16px !important;
+    background-position: 2px 50% !important;
+    transition: background-position var(--aegis-t-hover) var(--aegis-ease),
+      background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+  }
+  label[part="label"] > input#input[type="checkbox"]:checked {
+    background-position: calc(100% - 2px) 50% !important;
+  }
+  label[part="label"] > input#input[type="checkbox"]:dir(rtl) {
+    background-position: calc(100% - 2px) 50% !important;
+  }
+  label[part="label"] > input#input[type="checkbox"]:checked:dir(rtl) {
+    background-position: 2px 50% !important;
+  }
+  label[part="label"] > input#input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--aegis-focus) !important;
+    outline-offset: 2px !important;
+  }
+  label[part="label"] > input#input[type="checkbox"]:disabled {
+    opacity: 0.4 !important;
+  }
+}
+
+/* Pie: «Ajustes de Aegis» (barra-lateral.sys.mjs), una fila con el glifo de ajustes en lugar del enlace de Firefox. */
+#manage-settings {
+  display: block !important;
+  padding: var(--aegis-s-12) 0 0 !important;
+  border-block-start: 1px solid transparent !important;
+}
+#manage-settings > :is(img, a) {
+  display: none !important;
+}
+.aegis-barra-ajustes {
+  appearance: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--aegis-s-12) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+  padding-block: 0 !important;
+  padding-inline: var(--aegis-s-8) !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-8) !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  text-align: start !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+.aegis-barra-ajustes:hover:active {
+  scale: 0.97 !important;
+  transition-duration: var(--aegis-t-press) !important;
+}
+.aegis-barra-ajustes:focus-visible {
+  outline: 2px solid var(--aegis-focus) !important;
+  outline-offset: 2px !important;
+}
+.aegis-barra-ajustes-icono {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+  -moz-context-properties: fill !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* Historial: encabezados de día sin relleno; al pasar, --aegis-hover. */
+  summary[part="summary"] {
+    background-color: transparent !important;
+    color: var(--aegis-text) !important;
+  }
+  summary[part="summary"]:hover {
+    background-color: var(--aegis-hover) !important;
+  }
+
+  /* Historial vacío */
+  div[part="image-container"] {
+    fill: var(--aegis-sub) !important;
+  }
+  h2[part="header"] {
+    color: var(--aegis-text) !important;
+  }
+  p.description {
+    color: var(--aegis-sub) !important;
+  }
+  p.description > a {
+    color: var(--aegis-text) !important;
+    text-decoration-color: var(--aegis-sub) !important;
+    text-underline-offset: 2px !important;
+  }
+
+  /* Personalizar */
+  legend[part="label"],
+  .customize-extensions-heading {
+    color: var(--aegis-muted) !important;
+  }
+  moz-fieldset.customize-group > moz-checkbox,
+  .extensions {
+    background-color: var(--aegis-surface) !important;
+    border-color: var(--aegis-line) !important;
+    color: var(--aegis-text) !important;
+  }
+  moz-checkbox[slot="nested"],
+  .extension-item:not(:last-of-type) {
+    border-color: var(--aegis-line) !important;
+  }
+  label[part="label"] > .text-container > .icon {
+    fill: var(--aegis-sub) !important;
+    stroke: var(--aegis-sub) !important;
+  }
+  /* Interruptor: pista gris y botón gris; encendido, el énfasis con el botón del color que va encima. */
+  label[part="label"] > input#input[type="checkbox"] {
+    background-color: var(--aegis-track) !important;
+    background-image: radial-gradient(circle closest-side, var(--aegis-sub) 86%, transparent 100%) !important;
+  }
+  label[part="label"]:hover > input#input[type="checkbox"]:not(:disabled) {
+    background-image: radial-gradient(circle closest-side, var(--aegis-text) 86%, transparent 100%) !important;
+  }
+  label[part="label"] > input#input[type="checkbox"]:checked,
+  label[part="label"]:hover > input#input[type="checkbox"]:checked:not(:disabled) {
+    background-color: var(--aegis-accent) !important;
+    background-image: radial-gradient(circle closest-side, var(--aegis-on-accent) 86%, transparent 100%) !important;
+  }
+  .extension-item a {
+    color: var(--aegis-text) !important;
+  }
+
+  /* Pie */
+  #manage-settings {
+    border-color: var(--aegis-line) !important;
+  }
+  .aegis-barra-ajustes {
+    background-color: transparent !important;
+    color: var(--aegis-text) !important;
+  }
+  .aegis-barra-ajustes:hover {
+    background-color: var(--aegis-hover) !important;
+  }
+  .aegis-barra-ajustes:hover:active {
+    background-color: var(--aegis-control) !important;
+  }
+  .aegis-barra-ajustes-icono {
+    fill: var(--aegis-sub) !important;
+  }
+}

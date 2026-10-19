@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carga · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · rendimiento</p>
+<h1>Una página pesada</h1>
+<p>Pide 300 recursos (scripts e imágenes) a 20 sitios; un tercio, a servidores de anuncios de las listas reales. Sirve
+para medir lo que cuesta el bloqueador por petición y en la carga (tools/pruebas/escudos_rendimiento.py).</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<script>
+"use strict";
+const NORMALES = ["sitio-a.test", "sitio-b.test", "sitio-c.test", "sitio-d.test", "sitio-e.test", "sitio-f.test",
+  "sitio-g.test", "sitio-h.test", "sitio-i.test", "cdn.sitio-a.test", "www.itisatracker.org"];
+const ANUNCIOS = ["ads.pubmatic.com", "cdn.taboola.com", "static.criteo.net", "c.amazon-adsystem.com", "ib.adnxs.com",
+  "mon.snssdk.com", "cookies.truecaller.com", "omapi.fangraphs.com", "abruptroad.com"];
+(async () => {
+  const t0 = performance.now();
+  const tareas = [];
+  for (let i = 0; i < 300; i++) {
+    const anuncio = i % 3 == 0;
+    const host = anuncio ? ANUNCIOS[i % ANUNCIOS.length] : NORMALES[i % NORMALES.length];
+    const tipo = i % 2 ? "imagen" : "script";
+    const ruta = tipo == "script" ? `/static/js/modulo-${i}.js` : `/img/foto-${i}.png`;
+    tareas.push(Banco.cargar(tipo, `https://${host}${ruta}?id=${encodeURIComponent(Banco.id(`r${i}`))}&v=${i}`));
+  }
+  const r = await Promise.all(tareas);
+  const ms = performance.now() - t0;
+  const nav = performance.getEntriesByType("navigation")[0];
+  await Banco.listo({ ms, cargadas: r.filter(x => x == "carga").length, carga: nav?.loadEventEnd ?? null });
+})();
+</script>
+</body>
+</html>

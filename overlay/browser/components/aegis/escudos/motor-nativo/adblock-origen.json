@@ -1,0 +1,25 @@
+{
+  "comentario": "Origen de adblock/ (la copia propia de adblock-rust del motor de Escudos, el plan B si etp_engine cambia o desaparece; ver docs/GUIA.md, «Versión de Firefox»). Va tal cual: tools/verificar.py comprueba cada archivo contra su .cargo-checksum.json (los sha256 del crate de crates.io) y que .cargo-checksum.json es el de aquí. Un cambio imprescindible para compilar se apunta en «cambios» (ruta: {sha256, motivo}). «etp_engine» es lo comprobado del fork de Mozilla en la versión fijada: verificar.py avisa si cambia.",
+  "crate": "adblock",
+  "version": "0.12.1",
+  "licencia": "MPL-2.0",
+  "origen": {
+    "firefox": "157.0.1",
+    "ruta": "third_party/rust/adblock",
+    "tarball": "https://archive.mozilla.org/pub/firefox/releases/157.0.1/source/firefox-157.0.1.source.tar.xz",
+    "tarball_sha256": "483bedee9059df2479e4531c443b1073c6ebaed3570bda0c164eb562ee241c4c",
+    "crates_io_sha256": "698c1e831aaee3d583efe775790acc7d59fd99d8060e7385b99d2d369a5cdca8",
+    "repositorio": "https://github.com/brave/adblock-rust",
+    "commit": "b8013ec56e5b29d79c6afaf92c181b11055e5fa8"
+  },
+  "cargo_checksum_sha256": "adcfb287dc32f52bd3fbf289ccf81e5c828cb121c78dc97404a0c2b53a2a07a8",
+  "features": ["full-regex-handling", "single-thread"],
+  "cambios": {},
+  "etp_engine": {
+    "firefox": "158.0",
+    "crate": "etp_engine",
+    "version": "0.1.0",
+    "revision": "v0.12.1",
+    "sha256": "635dac14ba926c99063f9618017761c7cba50f71097760f6c4084d15b0314159"
+  }
+}

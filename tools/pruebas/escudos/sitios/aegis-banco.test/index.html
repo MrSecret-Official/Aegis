@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Aegis · banco de pruebas</p>
+<h1>Escudos, en todos los casos y modos</h1>
+<p>Cada caso es una serie de páginas en sitios de prueba (sitio-a.test, itisatracker.org, www.google.com…) que sirve
+este equipo: nada sale a Internet. Pon aquí el modo en el que está Aegis, sigue los pasos y abre el resultado: cada
+comprobación dice qué se esperaba, qué ha pasado y si está bien. Lo que solo se ve en la interfaz (el contador, el
+panel, los avisos) sale como «a mano», con lo que hay que mirar.</p>
+
+<div class="tarjeta">
+<p class="etiqueta">Modo en el que está Aegis ahora</p>
+<form id="modo" class="fila">
+<label>Rastreadores y anuncios <select name="nivel"><option value="estricto">Estricto</option><option value="normal">Normal</option></select></label>
+<label>Escudos en el sitio <select name="escudos"><option value="arriba">Arriba</option><option value="bajados">Bajados</option></select></label>
+<label>Cookies de terceros <select name="cookies"><option value="5">Bloquear rastreo</option><option value="1">Bloquear todas</option></select></label>
+<label>Huella digital <select name="huella"><option value="firefox">Básica</option><option value="equilibrada">Equilibrada</option><option value="estricta">Estricta</option><option value="caja_fuerte">Caja fuerte</option></select></label>
+<label>Ventana <select name="privada"><option value="0">Normal</option><option value="1">Privada</option></select></label>
+<label>Permiso de Caja fuerte <select name="permiso"><option value="0">No</option><option value="1">Sí</option></select></label>
+<label>Google limpio <select name="google"><option value="1">Encendido</option><option value="0">Apagado</option></select></label>
+</form>
+</div>
+
+<div id="casos"></div>
+
+<script>
+"use strict";
+const formulario = document.getElementById("modo");
+for (const [k, v] of Object.entries(Banco.modo)) {
+  if (formulario.elements[k]) {
+    formulario.elements[k].value = v;
+  }
+}
+formulario.addEventListener("change", pintar);
+
+// Pasos de cada caso: [texto, host, página, fase, extra] o [texto] (una instrucción).
+const CASOS = {
+  rastreadores: {
+    titulo: "Rastreadores",
+    porque: "Un script, una imagen, un marco, un fetch y una baliza de seis rastreadores de prueba y de un sitio normal.",
+    pasos: [
+      ["Abre la web con rastreadores", "sitio-a.test", "rastreadores.html", "pagina"],
+      ["Mira el botón de Escudos: el contador y, en el panel, «Lo bloqueado en esta página»."],
+      ["Abre una página sin rastreadores: el contador vuelve a 0", "sitio-a.test", "limpia.html", "limpia"],
+    ],
+  },
+  cookies: {
+    titulo: "Cookies de terceros",
+    porque: "Un marco de otro sitio pone y lee una cookie y localStorage; luego se mira desde los dos sitios.",
+    pasos: [
+      ["sitio-a.test con un marco de sitio-b.test que pone sus cookies", "sitio-a.test", "cookies.html", "f1", { marco: "sitio-b.test", accion: "poner" }],
+      ["sitio-b.test como sitio principal", "sitio-b.test", "cookies.html", "f2", { accion: "leer" }],
+      ["sitio-c.test con el mismo marco", "sitio-c.test", "cookies.html", "f3", { marco: "sitio-b.test", accion: "leer" }],
+      ["sitio-a.test otra vez", "sitio-a.test", "cookies.html", "f4", { marco: "sitio-b.test", accion: "leer" }],
+      ["Un rastreador dentro de sitio-a.test", "sitio-a.test", "cookies.html", "f5", { marco: "itisatracker.org", accion: "poner" }],
+      ["El rastreador como sitio principal: no debe ver lo de dentro de sitio-a", "itisatracker.org", "cookies.html", "f7", { accion: "leer" }],
+    ],
+  },
+  https: {
+    titulo: "Solo HTTPS",
+    porque: "Una dirección http:// que se pasa a https://, un sitio sin HTTPS y la excepción por sitio.",
+    pasos: [
+      ["http://sitio-a.test (tiene HTTPS)", "sitio-a.test", "https.html", "h1", {}, "http"],
+      ["http://solo-http.test (no tiene HTTPS): debe salir el aviso", "solo-http.test", "https.html", "h2", {}, "http"],
+      ["En el aviso, apaga «Pasar conexiones a HTTPS» en el panel de Escudos (o pulsa «Continuar al sitio HTTP»): se abre sin cifrar.", "solo-http.test", "https.html", "h3", {}, "http"],
+    ],
+  },
+  olvidar: {
+    titulo: "Olvidar este sitio al cerrar",
+    porque: "Cookies, localStorage, IndexedDB y caché de un sitio que se borran al cerrar; los de otro sitio, no.",
+    pasos: [
+      ["En sitio-a.test, abre el panel de Escudos y enciende «Olvidar este sitio al cerrar».", "sitio-a.test", "limpia.html", "previa"],
+      ["sitio-a.test guarda sus datos", "sitio-a.test", "olvidar.html", "o1", { accion: "poner" }],
+      ["sitio-b.test guarda los suyos", "sitio-b.test", "olvidar.html", "o2", { accion: "poner" }],
+      ["Cierra Aegis del todo y ábrelo otra vez con escudos.py --manual (mismo perfil: usa --mantener)."],
+      ["sitio-a.test: no debe quedar nada", "sitio-a.test", "olvidar.html", "o3", { accion: "leer" }],
+      ["sitio-b.test: debe estar todo", "sitio-b.test", "olvidar.html", "o4", { accion: "leer" }],
+    ],
+  },
+  huella: {
+    titulo: "Huella digital",
+    porque: "Lo que lee un script de huella, comparado con los valores reales del equipo (los midió el ejecutor al abrir el banco).",
+    pasos: [["Elige el nivel en el panel de Escudos, abre la página y mueve el ratón por ella", "sitio-a.test", "huella.html", "p"]],
+  },
+  cajafuerte: {
+    titulo: "Caja fuerte",
+    porque: "El aviso junto al botón de Escudos cuando la web saca la huella, y el permiso por sitio.",
+    pasos: [
+      ["Un recolector en sitio-d.test: debe salir el aviso", "sitio-d.test", "recolector.html", "r1", { metodo: "todo" }],
+      ["El mismo recolector en un marco de otro sitio: no debe salir", "sitio-c.test", "recolector.html", "r-marco", { metodo: "marco" }],
+      ["Pulsa «Permitir en este sitio» en el aviso de sitio-d.test y abre su huella (con «Permiso: sí»)", "sitio-d.test", "huella.html", "p-permiso"],
+    ],
+  },
+  google: {
+    titulo: "Google limpio",
+    porque: "Telemetría y anuncios de Google cortados, lo necesario dejado pasar, búsquedas limpias y enlaces directos.",
+    pasos: [
+      ["Portada de Google (simulada); luego pulsa sus enlaces", "www.google.com", "", "g-inicio"],
+      ["YouTube (simulado)", "www.youtube.com", "", "g-youtube"],
+      ["Una web con Google Analytics y anuncios", "sitio-a.test", "google-terceros.html", "g-terceros"],
+    ],
+  },
+  control: {
+    titulo: "Lo que no se debe romper",
+    porque: "Recursos propios y de su CDN, un formulario, un vídeo y un inicio de sesión.",
+    pasos: [["Página de control (luego pulsa «Entrar»)", "sitio-a.test", "control.html", "c-control"]],
+  },
+};
+
+// Un identificador por visita: cada vez que se abre el banco, los casos empiezan de cero en el registro.
+const VISITA = Date.now().toString(36);
+
+function pintar() {
+  const modo = Object.fromEntries(new FormData(formulario));
+  const contenedor = document.getElementById("casos");
+  contenedor.replaceChildren();
+  for (const [caso, c] of Object.entries(CASOS)) {
+    const run = `manual-${VISITA}-${caso}`;
+    const p = (fase, extra = {}) => new URLSearchParams({ run, caso, fase, ...modo, ...extra }).toString();
+    const tarjeta = document.createElement("div");
+    tarjeta.className = "tarjeta";
+    const h = document.createElement("h2");
+    h.textContent = c.titulo;
+    const d = document.createElement("p");
+    d.textContent = c.porque;
+    const ol = document.createElement("ol");
+    for (const [texto, host, pagina, fase, extra, esquema] of c.pasos) {
+      const li = document.createElement("li");
+      if (host) {
+        const a = document.createElement("a");
+        a.href = `${esquema ?? "https"}://${host}/${pagina}?${p(fase, extra)}`;
+        a.textContent = texto;
+        li.append(a);
+      } else {
+        li.textContent = texto;
+      }
+      ol.append(li);
+    }
+    const r = document.createElement("a");
+    r.className = "boton principal";
+    r.href = `/resultado.html?${new URLSearchParams({ run, caso, ...modo })}`;
+    r.textContent = "Ver el resultado";
+    tarjeta.append(h, d, ol, r);
+    contenedor.append(tarjeta);
+  }
+}
+pintar();
+</script>
+</body>
+</html>

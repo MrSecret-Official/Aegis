@@ -1,0 +1,45 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="92" viewBox="0 0 680 92" preserveAspectRatio="none" fill="none">
+  <defs>
+    <linearGradient id="marco" x1="0" y1="0" x2="0" y2="44" gradientUnits="userSpaceOnUse">
+      <stop class="marco-inicio" offset="0"/>
+      <stop class="marco-fin" offset="1"/>
+    </linearGradient>
+  </defs>
+  <path class="fondo" d="M0 0h680v92H0z"/>
+  <path fill="url(#marco)" d="M0 0h680v44H0z"/>
+  <rect class="pestana" x="8.5" y="6.5" width="164" height="31" rx="8"/>
+  <path class="texto" d="M24 22a2 2 0 0 1 2-2h112a2 2 0 1 1 0 4H26a2 2 0 0 1-2-2"/>
+  <path class="texto-sub" d="M196 22a2 2 0 0 1 2-2h96a2 2 0 1 1 0 4h-96a2 2 0 0 1-2-2"/>
+  <path class="barra" d="M0 44h680v48H0z"/>
+  <path class="linea-barra" d="M0 44.5h680"/>
+  <circle class="icono" cx="24" cy="68" r="6.25" stroke-width="1.5"/>
+  <circle class="icono" cx="58" cy="68" r="6.25" stroke-width="1.5"/>
+  <rect class="campo" x="96.5" y="53.5" width="456" height="29" rx="8"/>
+  <path class="texto" d="M114 68a2 2 0 0 1 2-2h240a2 2 0 1 1 0 4H116a2 2 0 0 1-2-2"/>
+  <path class="icono" stroke-linecap="round" stroke-width="1.5" d="M662.25 73.75h-12.5M662.25 67.75h-12.5M662.25 61.75h-12.5"/>
+  <style>
+    :root {
+      --marco: #18181b;
+      --marco-inicio: #26262a;
+      --marco-fin: #18181b;
+      --pestana: #26262a;
+      --barra: #18181b;
+      --campo: #222226;
+      --linea: rgba(255, 255, 255, 0.07);
+      --texto: #f4f4f5;
+    }
+    .fondo { fill: var(--marco); }
+    .marco-inicio { stop-color: var(--marco-inicio); }
+    .marco-fin { stop-color: var(--marco-fin); }
+    .pestana { fill: var(--pestana); stroke: var(--linea); }
+    .texto { fill: var(--texto); fill-opacity: .7; }
+    .texto-sub { fill: var(--texto); fill-opacity: .4; }
+    .barra { fill: var(--barra); }
+    .linea-barra { stroke: var(--linea); }
+    .campo { fill: var(--campo); stroke: var(--linea); }
+    .icono { stroke: var(--texto); stroke-opacity: .8; }
+  </style>
+</svg>

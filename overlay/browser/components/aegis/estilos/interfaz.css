@@ -1,0 +1,324 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · forma de la interfaz (docs/DISENO.md §4 y §5): tipografía, barra de direcciones, pestañas, menús y el
+   contenido como tarjeta. Solo var(--aegis-*): los valores están en tokens.css. */
+
+/* Tipografía: Inter en toda la interfaz (cargada desde el navegador, nunca instalada en el sistema). */
+:root,
+menupopup,
+panel,
+tooltip,
+menubar {
+  font-family: var(--aegis-font) !important;
+}
+
+/* Barra de direcciones (variables de Firefox 157: urlbar.css y urlbar/variables.css): 34 px, radio 8, borde de
+   1 px también con foco (Nova lo dobla). Abierta, Firefox suma al radio el desbordamiento: 8 + 4 = 12, el radio de
+   los paneles, concéntrico. */
+:root {
+  /* Como Firefox, crece con el tamaño de texto del sistema (DISENO §3). */
+  --urlbar-height: max(var(--aegis-h-field), 1.4em) !important;
+}
+/* Barra de herramientas de 44 con botones de icono de 28 (DISENO §4 y §9). Firefox hace los botones de 32 (16 + 2 × 8;
+   7 en ventanas estrechas) y la barra de 42 (el campo de 34 con 4 arriba y abajo). Las densidades compacta y táctil
+   se quedan con lo suyo; la fila de pestañas y la barra de marcadores ponen su propio relleno. */
+:root:not([uidensity]) {
+  --toolbarbutton-padding-inner: calc((var(--aegis-h-icon) - 16px) / 2) !important;
+  --urlbar-container-padding-block: calc((44px - var(--aegis-h-field)) / 2) !important;
+}
+.urlbar {
+  --urlbar-background-border-radius: var(--aegis-r-8) !important;
+  --urlbar-background-overhang-open: var(--aegis-s-4) !important;
+  --urlbar-input-container-border-width-open: var(--urlbar-input-container-border-width) !important;
+  --urlbar-background-border-focused: var(--urlbar-input-container-border-width) solid
+    var(--toolbar-field-border-color-focus) !important;
+  --urlbar-background-box-shadow-open: var(--aegis-shadow) !important;
+}
+
+/* Selector de buscadores (la lupa a la izquierda de la barra). Firefox lo pinta como una píldora gris; en Aegis es
+   un botón de icono como los de la barra (DISENO §9): sin fondo y con el icono en gris que se aclara al pasar.
+   Radio 5: el concéntrico exacto (6) no está en la escala, así que se usa el escalón inmediatamente menor (§5). */
+.searchmode-switcher {
+  --button-border-radius: var(--aegis-r-5) !important;
+  --button-padding: 0 var(--aegis-s-8) !important;
+  margin-inline-end: var(--aegis-s-4);
+}
+.searchmode-switcher > .searchmode-switcher-content {
+  gap: var(--aegis-s-4) !important;
+}
+.searchmode-switcher-dropmarker {
+  width: 8px;
+  height: 8px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .searchmode-switcher-dropmarker {
+    transition: transform var(--aegis-t-fade) var(--aegis-ease) !important;
+  }
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .searchmode-switcher {
+    --button-background-color-muted: transparent !important;
+    --button-background-color-muted-hover: var(--aegis-hover) !important;
+    --button-background-color-muted-active: var(--aegis-control) !important;
+    --button-background-color-muted-selected: var(--aegis-control) !important;
+    --button-border-color-muted: transparent !important;
+    --button-border-color-muted-hover: transparent !important;
+    --button-border-color-muted-active: transparent !important;
+    --button-border-color-muted-selected: transparent !important;
+    --button-text-color-muted: var(--aegis-sub) !important;
+    --button-text-color-muted-hover: var(--aegis-text) !important;
+    --button-text-color-muted-active: var(--aegis-text) !important;
+    --button-text-color-muted-selected: var(--aegis-text) !important;
+  }
+  /* Menú del selector: el título («Buscar con:») en gris apagado, como los encabezados de los menús de Aegis. */
+  .searchmode-switcher-panel-description {
+    color: var(--aegis-muted) !important;
+  }
+}
+/* Filas del menú: radio 7 y la misma separación que el resto de menús. */
+.searchmode-switcher-panel-list {
+  --panel-item-button-border-radius: var(--aegis-r-7) !important;
+}
+
+/* Pestañas horizontales de 36 con 4 arriba y abajo (DISENO §4): la fila sigue siendo de 44. Son los valores de Firefox
+   sin Nova; Nova las hace de 32 con 6. Los botones de la fila («+», lista de pestañas), de icono de 28, como los de la
+   barra (Firefox los iguala al alto de la pestaña). */
+@media not -moz-pref("sidebar.verticalTabs") {
+  :root:not([uidensity]) {
+    --tab-min-height: var(--aegis-h-tab) !important;
+    --tab-margin-block: var(--aegis-s-4) !important;
+  }
+  :root:not([uidensity]) #TabsToolbar {
+    --toolbarbutton-padding-inner: calc((var(--aegis-h-icon) - 16px) / 2) !important;
+  }
+}
+
+/* Pestañas: sin raya de color en la activa; radio 8. */
+.tab-background {
+  border-radius: var(--aegis-r-8) !important;
+}
+.tab-context-line {
+  display: none !important;
+}
+
+/* Menús y paneles: filas de radio 7, transición corta. */
+menupopup menuitem,
+menupopup menu,
+.subviewbutton {
+  border-radius: var(--aegis-r-7) !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+
+/* Menús de los paneles (menú principal y sus submenús): cada grupo de filas es una cápsula, y los grupos quedan
+   separados por la línea, como los grupos de ajustes de SecretOS. Las filas de un grupo van pegadas: solo la
+   primera y la última llevan el radio de la cápsula. La cápsula va a 4 px del borde del panel (radio 12), así que su
+   radio concéntrico es 8 (DISENO §5 y §9). */
+.panel-subview-body {
+  --panel-menuitem-margin-inline: var(--aegis-s-4) !important;
+  --panel-subview-body-padding-block: var(--aegis-s-4) !important;
+}
+.panel-subview-body > :is(.subviewbutton, toolbaritem) {
+  margin-block: 0 !important;
+  border-radius: 0 !important;
+}
+/* Todas las filas de 32: Firefox deja en 31 las que solo llevan texto y en 32 las que llevan icono o flecha. */
+.panel-subview-body > .subviewbutton {
+  min-height: 32px;
+}
+.panel-subview-body
+  > :is(.subviewbutton, toolbaritem):is(:first-child, toolbarseparator + *, toolbarseparator + [hidden] + *) {
+  border-start-start-radius: var(--aegis-r-8) !important;
+  border-start-end-radius: var(--aegis-r-8) !important;
+}
+.panel-subview-body
+  > :is(.subviewbutton, toolbaritem):is(:last-child, :has(+ toolbarseparator), :has(+ [hidden] + toolbarseparator)) {
+  border-end-start-radius: var(--aegis-r-8) !important;
+  border-end-end-radius: var(--aegis-r-8) !important;
+}
+.panel-subview-body > toolbarseparator {
+  margin-block: var(--aegis-s-8) !important;
+}
+/* Sin cuenta de Mozilla (identity.fxaccounts.enabled = false), Firefox esconde la línea que cierra el bloque de la
+   cuenta, pero las filas de perfiles («Crear un perfil nuevo», el perfil actual) siguen encima de ella: sin la línea,
+   su cápsula quedaba pegada a la de «Nueva pestaña». Vuelve cuando hay alguna, como las demás separaciones. */
+:root[fxadisabled="true"]
+  #appMenu-mainView:has(:is(#appMenu-create-profile-button, #appMenu-profiles-button):not([hidden]))
+  #appMenu-fxa-separator {
+  display: flex !important;
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* La cápsula es un control sobre el menú (§6): se ve igual en claro y en oscuro. */
+  .panel-subview-body > :is(.subviewbutton, toolbaritem):not([hidden]) {
+    background-color: var(--aegis-control) !important;
+  }
+  .panel-subview-body > .subviewbutton:not([disabled]):hover {
+    background-color: var(--aegis-control-hover) !important;
+  }
+  .panel-subview-body > .subviewbutton:not([disabled]):hover:active {
+    background-color: var(--aegis-control-down) !important;
+  }
+  /* La línea «zap» (tras la cuenta y los perfiles) lleva un degradado: el de la marca de Firefox o, con Nova, el filo
+     de la pestaña activa. Aquí, la línea de las demás separaciones (--panel-separator-color, DISENO §9 y §11). */
+  toolbarseparator.proton-zap::before {
+    border-image: none !important;
+  }
+}
+
+/* Avisos de la página (barras de mensaje sobre el contenido): tarjeta flotante a 8 px del borde, radio 12, como un
+   widget de SecretOS. El botón principal usa la «destacada» (blanco). */
+.notificationbox-stack > notification-message {
+  margin: var(--aegis-s-8) var(--aegis-s-8) 0 !important;
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .notificationbox-stack > notification-message {
+    box-shadow: var(--aegis-shadow);
+  }
+  /* Los avisos de estado (aviso, error, éxito) redefinen su fondo y su borde en el propio elemento: también la
+     superficie y la línea. El color queda solo en el icono (§5: nunca bordes de color). */
+  :is(moz-message-bar, notification-message) {
+    --message-bar-background-color-warning: var(--aegis-surface) !important;
+    --message-bar-background-color-critical: var(--aegis-surface) !important;
+    --message-bar-background-color-success: var(--aegis-surface) !important;
+    --message-bar-border-color: var(--aegis-line) !important;
+  }
+}
+
+/* Ventana privada (modo incógnito): el fantasma de Aegis en lugar de la máscara de Firefox. */
+.private-browsing-indicator-icon,
+.private-browsing-indicator-button,
+.private-browsing-info-icon {
+  list-style-image: url("iconos/privado.svg") !important;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+/* El icono interior del botón tiene su propio fill violeta en Firefox: también en el color del texto. */
+.private-browsing-indicator-button > .toolbarbutton-icon {
+  fill: currentColor !important;
+}
+/* El botón del indicador (diseño Nova) lleva un contorno y un fondo violetas: la línea y el control de Aegis (con
+   alto contraste, los de Firefox, en el color del sistema). */
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .private-browsing-indicator-button {
+    --toolbarbutton-outline: var(--border-width) solid var(--aegis-line) !important;
+  }
+  .private-browsing-indicator-button > .toolbarbutton-icon {
+    background-color: var(--aegis-control) !important;
+    outline-color: var(--aegis-line) !important;
+    border-color: var(--aegis-line) !important;
+  }
+}
+
+/* Navegador controlado por un programa (pruebas automáticas, Marionette): el robot de Aegis en línea y las rayas de
+   la barra de direcciones en grises, en lugar del robot de color y las rayas rojas de Firefox. */
+:root[remotecontrol] #remote-control-icon {
+  list-style-image: url("iconos/automatizado.svg") !important;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  :root[remotecontrol] .urlbar-background {
+    background-image: repeating-linear-gradient(-45deg, var(--aegis-control) 0 12px, transparent 12px 24px) !important;
+  }
+}
+
+/* Botón «Modo» de Aegis (Estándar / Workflow). */
+#aegis-modo-button {
+  list-style-image: url("iconos/modo.svg");
+}
+
+/* Botones de la barra: transición corta al pasar el ratón. */
+.toolbarbutton-1 > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-badge-stack {
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+
+/* Contenido web como tarjeta: a 8 px del marco, radio 12 y borde de 1 px (DISENO §4). Los colores, fuera de alto
+   contraste. */
+#tabbrowser-tabpanels {
+  padding: 0 var(--aegis-s-8) var(--aegis-s-8) !important;
+}
+/* En Firefox 157 cada pestaña es un .browserSidebarContainer con position: absolute e inset: 0 (content-area.css):
+   el relleno de arriba no lo aparta del borde, así que el margen se le da con inset. Los paneles de la vista dividida
+   van en el flujo (position: relative): a ellos los aparta el relleno. */
+#tabbrowser-tabpanels > .browserSidebarContainer:not(.split-view-panel-active) {
+  inset: 0 var(--aegis-s-8) var(--aegis-s-8) !important;
+}
+/* Firefox (Nova) separa el contenido de la barra, y de la barra lateral, con un borde de 1 px en .browserContainer.
+   En Aegis la separación es el margen y el contorno de la tarjeta: ese borde, transparente, solo la desplazaría 1 px
+   del margen de 8. */
+#tabbrowser-tabpanels > :not(.split-view-panel) .browserContainer {
+  border-width: 0 !important;
+}
+.browserStack {
+  border-radius: var(--aegis-r-12) !important;
+  clip-path: inset(0 round var(--aegis-r-12));
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* El margen alrededor de la tarjeta es del color del marco: el de Aegis o, con un tema elegido, el de su barra. */
+  :root:not([lwtheme]) :is(#tabbrowser-tabbox, #tabbrowser-tabpanels) {
+    background-color: var(--aegis-bg) !important;
+  }
+  :root[lwtheme] :is(#tabbrowser-tabbox, #tabbrowser-tabpanels) {
+    background-color: var(--toolbar-background-color) !important;
+  }
+  .browserStack {
+    outline: 1px solid var(--aegis-line);
+    outline-offset: -1px;
+  }
+  /* Márgenes de letterboxing (Aegis ya no los pone; solo si alguien los enciende en about:config): del color del
+     marco, no del gris de Firefox (--tabpanel-background-color). */
+  :root:not([lwtheme]) #tabbrowser-tabpanels.letterboxing {
+    --letterboxing-bgcolor: var(--aegis-bg);
+  }
+  :root[lwtheme] #tabbrowser-tabpanels.letterboxing {
+    --letterboxing-bgcolor: var(--toolbar-background-color);
+  }
+}
+
+/* Caja fuerte puesta (huella.sys.mjs marca la raíz): marcas de corte en las cuatro esquinas de la web, en el margen
+   de 8 px que la rodea (arriba también, solo en este modo), y el borde de la tarjeta un poco más claro. Fijas: nada
+   animado en reposo. Con alto contraste, solo el margen de arriba (el borde lo pone el sistema). */
+:root[aegis-caja-fuerte]:not([inFullscreen], [inDOMFullscreen]) #tabbrowser-tabpanels {
+  padding-top: var(--aegis-s-8) !important;
+}
+:root[aegis-caja-fuerte]:not([inFullscreen], [inDOMFullscreen])
+  #tabbrowser-tabpanels
+  > .browserSidebarContainer:not(.split-view-panel-active) {
+  inset-block-start: var(--aegis-s-8) !important;
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  :root[aegis-caja-fuerte]:not([inFullscreen], [inDOMFullscreen]) #tabbrowser-tabpanels {
+    --aegis-marca: color-mix(in oklch, var(--aegis-text) 55%, transparent);
+    --aegis-marca-trazo: linear-gradient(var(--aegis-marca), var(--aegis-marca));
+    background-image:
+      var(--aegis-marca-trazo), var(--aegis-marca-trazo), var(--aegis-marca-trazo), var(--aegis-marca-trazo),
+      var(--aegis-marca-trazo), var(--aegis-marca-trazo), var(--aegis-marca-trazo), var(--aegis-marca-trazo);
+    background-repeat: no-repeat;
+    /* Cada esquina, una L de 14 × 14 y 1 de trazo, a 3 px del borde. El trazo vertical empieza un píxel después del
+       horizontal: si se solaparan, el vértice (dos capas semitransparentes) saldría más claro que los brazos. */
+    background-size: 14px 1px, 1px 13px, 14px 1px, 1px 13px, 14px 1px, 1px 13px, 14px 1px, 1px 13px;
+    background-position:
+      left 3px top 3px, left 3px top 4px,
+      right 3px top 3px, right 3px top 4px,
+      left 3px bottom 3px, left 3px bottom 4px,
+      right 3px bottom 3px, right 3px bottom 4px;
+  }
+  :root[aegis-caja-fuerte]:not([inFullscreen], [inDOMFullscreen]) .browserStack {
+    outline-color: color-mix(in oklch, var(--aegis-text) 24%, var(--aegis-line));
+  }
+}
+
+/* A pantalla completa (vídeo, F11), el contenido ocupa todo: sin margen ni tarjeta. */
+:root:is([inFullscreen], [inDOMFullscreen]) #tabbrowser-tabpanels {
+  padding: 0 !important;
+}
+:root:is([inFullscreen], [inDOMFullscreen]) #tabbrowser-tabpanels > .browserSidebarContainer {
+  inset: 0 !important;
+}
+:root:is([inFullscreen], [inDOMFullscreen]) .browserStack {
+  border-radius: 0 !important;
+  clip-path: none;
+  outline: none;
+}

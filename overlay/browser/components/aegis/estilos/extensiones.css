@@ -1,0 +1,377 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · panel de extensiones de la barra (la pieza de puzle). Lo pone complementos.sys.mjs en cada ventana del
+   navegador. Dos partes: el estado vacío (sin ninguna extensión) y el panel al estilo de Chrome y Brave (más abajo).
+
+   Firefox enseña una ilustración de colores (el zorro con piezas) y, sin extensiones, «A few extensions go a long way»
+   y «We've got recommendations…». Aquí, el estado vacío de DISENO §9: el glifo de línea de Aegis, una frase y un
+   botón que abre la tienda de complementos. Firefox marca el caso «sin ninguna extensión» con la clase
+   .extensions-onboardingpanel-state en la imagen; el bloque .aegis-extensiones-vacio (complementos.sys.mjs) solo se
+   ve entonces. En los otros casos (extensiones desactivadas o no permitidas en ventanas privadas) se quedan los textos
+   de Firefox, que no prometen nada, con el mismo glifo. */
+
+#unified-extensions-empty-state > img {
+  content: url("iconos/extensiones.svg") !important;
+  align-self: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  max-width: none !important;
+  aspect-ratio: auto !important;
+  margin: var(--aegis-s-24) auto var(--aegis-s-12) !important;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+/* Sin ninguna extensión: el texto de Firefox (recomendaciones que Aegis no tiene) deja sitio al de Aegis. */
+#unified-extensions-empty-state:has(> img.extensions-onboardingpanel-state) > :is(h2, description) {
+  display: none !important;
+}
+#unified-extensions-empty-state:not(:has(> img.extensions-onboardingpanel-state)) > .aegis-extensiones-vacio {
+  display: none;
+}
+
+.aegis-extensiones-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--aegis-s-4);
+  padding: 0 var(--aegis-s-16) var(--aegis-s-16);
+  text-align: center;
+  font: 13px var(--aegis-font);
+}
+.aegis-extensiones-vacio-titulo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.aegis-extensiones-vacio-texto {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+/* Botón secundario (DISENO §9), con la altura de los del panel de Escudos. */
+.aegis-extensiones-vacio-boton {
+  min-width: 112px;
+  min-height: 34px;
+  margin-block-start: var(--aegis-s-12);
+  padding: var(--aegis-s-4) var(--aegis-s-16);
+  border: 0;
+  border-radius: var(--aegis-r-8);
+  font: inherit;
+  color: inherit;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  &:focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: 2px;
+  }
+  &:active {
+    scale: 0.97;
+  }
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  #unified-extensions-empty-state > img {
+    fill: var(--aegis-sub);
+  }
+  .aegis-extensiones-vacio-texto {
+    color: var(--aegis-sub);
+  }
+  .aegis-extensiones-vacio-boton {
+    background-color: var(--aegis-control);
+
+    &:hover {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active {
+      background-color: var(--aegis-control-down);
+    }
+  }
+}
+
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .aegis-extensiones-vacio-boton {
+    border: 1px solid currentColor;
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aegis-extensiones-vacio-boton {
+    transition: none;
+
+    &:active {
+      scale: none;
+    }
+  }
+}
+
+/* ── Panel al estilo de Chrome y Brave ─────────────────────────────────────────────────────────────────────────────
+   Arriba, «En la barra» (#aegis-ext-barra): las extensiones fijadas, que Firefox no enseña en el panel. Debajo, la
+   lista de Firefox («En este panel»). Cada fila con botón lleva la chincheta (.aegis-ext-fijar): fijar en la barra o
+   quitar de ella. Filas de 44 con resalte de radio 7 e iconos de 24; en el pie, «Gestionar extensiones» y «Añadir
+   extensiones» como botones secundarios de 34 con radio 8 (DISENO §4, §5 y §9). */
+
+/* Las filas de Firefox, como las de Aegis: icono de 24, nombre de 13 y al menos 44 de alto, planas (sin el relleno
+   de cápsula de los menús; al pasar, --aegis-hover) y con el «…» como botón de icono de 28. --aegis-ext-menu es el
+   ancho que ocupa el «…» (4 de separación y 28): las chinchetas de «En la barra», que no tienen «…», lo dejan libre
+   para quedar en la misma columna que las de la lista. */
+#unified-extensions-panel {
+  --uei-icon-size: 24px;
+  --aegis-ext-menu: 32px;
+}
+#unified-extensions-panel .unified-extensions-item-action-button.subviewbutton {
+  min-height: 44px;
+}
+#unified-extensions-panel .unified-extensions-item-name {
+  font-size: 13px;
+}
+#unified-extensions-panel .unified-extensions-item-menu-button.subviewbutton {
+  align-self: center;
+  padding: 0;
+  padding-inline-start: var(--aegis-s-4);
+
+  & > .toolbarbutton-icon {
+    padding: 5px;
+  }
+}
+
+/* Etiquetas de sección (11 px, 600, mayúsculas, apagado), alineadas con el icono de las filas. */
+.aegis-ext-etiqueta {
+  margin: var(--aegis-s-8) calc(var(--aegis-s-8) + var(--panel-menuitem-padding-inline)) var(--aegis-s-4);
+  font: 600 11px var(--aegis-font);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+#aegis-ext-barra > .aegis-ext-etiqueta {
+  margin-block-start: var(--aegis-s-4);
+}
+/* «En este panel» solo separa: se ve si hay filas en la barra y también en la lista de Firefox. */
+#aegis-ext-etiqueta-panel {
+  display: none;
+}
+#aegis-ext-barra:not([hidden])
+  + #aegis-ext-etiqueta-panel:has(
+    ~ :is(#overflowed-extensions-list, #unified-extensions-area, .unified-extensions-list) > :not([hidden])
+  ) {
+  display: block;
+  margin-block-start: var(--aegis-s-12);
+}
+
+/* Fila fijada: la acción (icono, nombre) y la chincheta, como las filas de Firefox (8 a cada lado, 2 entre filas). Si
+   debajo hay filas de Firefox, su chincheta deja libre la columna del «…» para quedar alineada con las de ellas. */
+.aegis-ext-fila {
+  margin: 2px var(--aegis-s-8);
+}
+#unified-extensions-view:has(:is(#unified-extensions-area, #overflowed-extensions-list) > toolbaritem:not([hidden]))
+  .aegis-ext-fila
+  > .aegis-ext-fijar {
+  margin-inline-end: calc(var(--aegis-s-4) + var(--aegis-ext-menu));
+}
+.aegis-ext-accion {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: var(--aegis-s-4) var(--panel-menuitem-padding-inline);
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  background: none;
+  color: inherit;
+  font: 13px var(--aegis-font);
+  list-style-image: var(--aegis-ext-icono, url("iconos/extensiones.svg"));
+  -moz-context-properties: fill;
+  fill: currentColor;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  :root[lwt-popup="dark"] & {
+    list-style-image: var(--aegis-ext-icono-oscuro, var(--aegis-ext-icono, url("iconos/extensiones.svg")));
+  }
+  & > .toolbarbutton-icon {
+    width: 24px;
+    height: 24px;
+    margin-inline-end: var(--aegis-s-12);
+  }
+  & > .toolbarbutton-text {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+    text-align: start;
+  }
+  &[disabled] {
+    opacity: 0.4;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: -2px;
+  }
+}
+
+/* Chincheta: botón de icono de 28 con radio 7 y el glifo de 16. Fijada: relleno elegido y borde de línea fuerte, como
+   la herramienta abierta del lanzador (no depende solo del relleno). */
+.aegis-ext-fijar {
+  appearance: none;
+  flex-shrink: 0;
+  align-self: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  margin: 0;
+  margin-inline: var(--aegis-s-4);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-7);
+  background: none;
+  color: inherit;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  transition:
+    background-color var(--aegis-t-hover) var(--aegis-ease),
+    border-color var(--aegis-t-hover) var(--aegis-ease);
+
+  & > .toolbarbutton-icon {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+  }
+  & > .toolbarbutton-text {
+    display: none;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: 0;
+  }
+  &:active {
+    scale: 0.97;
+  }
+}
+/* En la barra, el nodo de la extensión es su botón: ahí la chincheta no pinta nada. */
+toolbaritem.unified-extensions-item:not([overflowedItem="true"], [cui-areatype="panel"]) .aegis-ext-fijar {
+  display: none;
+}
+
+/* Pie: los dos botones a lo ancho; el de Firefox («Manage extensions») se oculta, el de Aegis hace lo mismo. */
+#unified-extensions-view:has(> #aegis-ext-pie) > #unified-extensions-manage-extensions {
+  display: none !important;
+}
+#aegis-ext-pie {
+  gap: var(--aegis-s-8);
+  padding: var(--aegis-s-4) var(--aegis-s-8) var(--aegis-s-8);
+}
+.aegis-ext-pie-boton {
+  appearance: none;
+  /* Crecen por igual a partir de su texto (no a partes iguales): así caben también los textos largos («Erweiterungen
+     verwalten», «Ajouter des extensions») sin recortarse. Con 8 de relleno, el par más largo (alemán) deja margen. */
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
+  min-height: 34px;
+  margin: 0;
+  padding: var(--aegis-s-4) var(--aegis-s-8);
+  border: 0;
+  border-radius: var(--aegis-r-8);
+  color: inherit;
+  font: 13px var(--aegis-font);
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  & > .toolbarbutton-icon {
+    display: none;
+  }
+  & > .toolbarbutton-text {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: 2px;
+  }
+  &:active {
+    scale: 0.97;
+  }
+}
+/* Sin ninguna extensión, el estado vacío ya tiene «Buscar extensiones»: en el pie queda solo «Gestionar extensiones». */
+#unified-extensions-view:has(#unified-extensions-empty-state:not([hidden]) > img.extensions-onboardingpanel-state)
+  #aegis-ext-anadir {
+  display: none;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  #unified-extensions-panel .unified-extensions-item {
+    --button-background-color-menu: transparent;
+    --button-background-color-menu-hover: var(--aegis-hover);
+    --button-background-color-menu-active: var(--aegis-control);
+    --uei-button-bgcolor: transparent;
+    --uei-button-hover-bgcolor: var(--aegis-hover);
+    --uei-button-active-bgcolor: var(--aegis-control);
+  }
+  .aegis-ext-etiqueta {
+    color: var(--aegis-muted);
+  }
+  .aegis-ext-accion:not([disabled]):hover {
+    background-color: var(--aegis-hover);
+  }
+  .aegis-ext-accion:not([disabled]):hover:active {
+    background-color: var(--aegis-control);
+  }
+  .aegis-ext-fijar {
+    color: var(--aegis-sub);
+
+    &:hover {
+      background-color: var(--aegis-hover);
+      color: var(--aegis-text);
+    }
+    &:hover:active {
+      background-color: var(--aegis-control);
+    }
+    &[fijada] {
+      background-color: var(--aegis-sel);
+      border-color: var(--aegis-line-strong);
+      color: var(--aegis-text);
+    }
+    &[fijada]:hover {
+      background-color: var(--aegis-control-hover);
+    }
+  }
+  .aegis-ext-pie-boton {
+    background-color: var(--aegis-control);
+
+    &:hover {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active {
+      background-color: var(--aegis-control-down);
+    }
+  }
+}
+
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .aegis-ext-accion:not([disabled]):hover,
+  .aegis-ext-fijar:hover {
+    background-color: SelectedItem;
+    color: SelectedItemText;
+  }
+  .aegis-ext-fijar[fijada] {
+    border-color: currentColor;
+  }
+  .aegis-ext-pie-boton {
+    border: 1px solid currentColor;
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.aegis-ext-accion, .aegis-ext-fijar, .aegis-ext-pie-boton) {
+    transition: none;
+
+    &:active {
+      scale: none;
+    }
+  }
+}

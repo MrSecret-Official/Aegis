@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Huella digital · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+<script src="/sondas.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · huella digital</p>
+<h1>Lo que esta web lee de tu navegador</h1>
+<p>Las mismas lecturas que hace un script de huella: pantalla, ventana, fuentes, tarjeta gráfica, audio, voces, hora,
+idioma, relojes, lienzo… Mueve el ratón por la página: también se mira dónde dice el navegador que está.</p>
+<div class="tarjeta"><p id="estado-fase">Midiendo…</p><div id="siguiente"></div></div>
+<div class="fila"><span class="porque">Un marco de otro sitio (sitio-b.test) mide lo suyo:</span><div id="marcos"></div></div>
+<div class="tarjeta"><pre class="mono" id="detalle"></pre></div>
+<script>
+"use strict";
+(async () => {
+  const marcoHost = Banco.q.get("marco") || "sitio-b.test";
+  const delMarco = new Promise(ok => {
+    addEventListener("message", e => {
+      if (e.data?.banco === "huella-marco" && e.origin === `https://${marcoHost}`) {
+        ok(e.data.valores);
+      }
+    });
+    setTimeout(() => ok(null), 15000);
+  });
+  const f = document.createElement("iframe");
+  f.title = "marco de otro sitio";
+  f.src = `https://${marcoHost}/huella-marco.html?${Banco.parametros({ fase: Banco.fase })}`;
+  document.getElementById("marcos").append(f);
+
+  const ajustes = await Banco.json("/__/ajustes");
+  // Una petición a otro sitio: el servidor ve con qué idioma, Referer y señal GPC llega.
+  fetch(`https://sitio-b.test/__/eco?id=${encodeURIComponent(Banco.id("cabeceras"))}`, { mode: "no-cors" }).catch(() => {});
+  // Espera a un movimiento del ratón (como mucho 6 s): el ejecutor mueve el ratón de verdad.
+  await Promise.race([
+    new Promise(r => addEventListener("mousemove", r, { once: true })),
+    Banco.espera(6000),
+  ]);
+  const valores = await Sondas.medir({ fuentes: ajustes.fuentes ?? [] });
+  const marco = await delMarco;
+  document.getElementById("detalle").textContent = JSON.stringify({ valores, marco }, null, 1);
+  await Banco.listo({ valores, marco, host: location.host });
+})();
+</script>
+</body>
+</html>

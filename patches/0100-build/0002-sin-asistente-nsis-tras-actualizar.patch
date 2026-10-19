@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Sin el asistente NSIS tras actualizar
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: en Windows, al terminar una actualización, el updater lanza
+uninstall\helper.exe /PostUpdate /DesktopLauncher (updater_append.ini →
+updater.ini). Ese asistente es el del instalador NSIS de Firefox: escribe en
+HKCU su propia entrada de «Aplicaciones instaladas» («Aegis <versión> (x64
+…)», con helper.exe como desinstalador), registra otra vez el navegador
+(StartMenuInternet, clases de URL con el hash de la carpeta), limpia claves
+de Software\Mozilla, toca accesos directos y puede añadir el lanzador del
+escritorio. Aegis se instala con su propio instalador (packaging/instalador),
+que ya hace ese registro a su manera y sin acceso en el escritorio de serie:
+el asistente lo duplicaría o lo pisaría en cada actualización. Además es un
+ejecutable más sin firmar lanzado en cada actualización. Sin la sección
+[PostUpdateWin], el updater no lanza nada (lo apunta en su registro y sigue).
+helper.exe sigue en el paquete: Firefox lo usa para otras cosas (por
+ejemplo, «Hacer predeterminado»).
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0100-build/0002-sin-asistente-nsis-tras-actualizar.patch
+
+diff --git a/browser/installer/windows/nsis/updater_append.ini b/browser/installer/windows/nsis/updater_append.ini
+index af7742c12c..7f10cf8dd3 100644
+--- a/browser/installer/windows/nsis/updater_append.ini
++++ b/browser/installer/windows/nsis/updater_append.ini
+@@ -1,12 +1,7 @@
+ 
+ ; IMPORTANT: This file should always start with a newline in case a locale
+ ; provided updater.ini does not end with a newline.
+-; Application to launch after an update has been successfully applied. This
+-; must be in the same directory or a sub-directory of the directory of the
+-; application executable that initiated the software update.
+-[PostUpdateWin]
+-; ExeRelPath is the path to the PostUpdateWin executable relative to the
+-; application executable.
+-ExeRelPath=uninstall\helper.exe
+-; ExeArg is the argument to pass to the PostUpdateWin exe
+-ExeArg=/PostUpdate
++; Aegis: sin [PostUpdateWin]. El updater no lanza uninstall\helper.exe
++; /PostUpdate (el asistente NSIS de Firefox) tras actualizar: Aegis se instala
++; con su propio instalador (packaging/instalador), que es quien registra el
++; navegador en Windows.

@@ -1,0 +1,328 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · aspecto común de los diálogos propios: el de la contraseña principal (contrasena-principal.xhtml; DISENO §9,
+   «Diálogo de la contraseña principal»), el de los códigos de verificación (autenticador.xhtml, que añade lo suyo en
+   autenticador.css) y los de la transferencia de contraseñas (transferencia-*.xhtml, con transferencia.css). Densidad de la interfaz: cuerpo de 13 px, título de 16 px 600, secundario de 12 px en --aegis-sub.
+   Icono de línea de 20 en un círculo de 40 sobre --aegis-control; campos de 34 (radio 7) con el botón de mostrar de
+   30 a 2 px del borde (radio 5: 7 − 2); medidor de cuatro tramos de 4 (radio 2); aviso de que no se puede recuperar
+   en una tarjeta de superficie (radio 12, relleno 12); botones de 34 con radio 8, el principal en 600 y de 112 como
+   mínimo. Ancho fijo de 440: SubDialog mide el cuerpo para dar tamaño al marco. Solo var(--aegis-*); los colores,
+   fuera de alto contraste. Nada se mueve en reposo; con reducir movimiento, nada se anima. */
+
+:root {
+  color-scheme: light dark;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  box-sizing: border-box;
+  /* Sin max-width: SubDialog mide el cuerpo cuando el marco aún es estrecho y lo dejaría en ese ancho. */
+  width: 440px;
+  padding: var(--aegis-s-24);
+  font: 13px/1.5 var(--aegis-font);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ───────── Cabecera ───────── */
+
+.cabecera {
+  margin-block-end: var(--aegis-s-16);
+}
+.icono {
+  width: 40px;
+  height: 40px;
+  margin-block-end: var(--aegis-s-12);
+  border-radius: 50%;
+  background: url("contrasena-principal-llave.svg") center / 20px no-repeat;
+  -moz-context-properties: fill;
+}
+.cabecera > h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.explicacion {
+  margin: var(--aegis-s-4) 0 0;
+}
+
+/* ───────── Campos (DISENO §9, «Campo») ───────── */
+
+/* SubDialog añade a cada diálogo la hoja común de Firefox (in-content/common-shared.css) después de las nuestras: sus
+   reglas de campos, botones, títulos y etiquetas ganarían a un «input», «h1» o «label» sueltos. Por eso aquí van
+   siempre con su contenedor (.caja > input, .cabecera > h1, .campo > label…), que pesa más. */
+
+.campo + .campo {
+  margin-block-start: var(--aegis-s-12);
+}
+.campo > label {
+  display: block;
+  margin-block-end: var(--aegis-s-4);
+}
+.caja {
+  position: relative;
+}
+.caja > input {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--aegis-h-field);
+  margin: 0;
+  /* A la derecha, el sitio del botón de mostrar (30 + 2 + 4). */
+  padding-block: 0;
+  padding-inline: 10px 36px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-7);
+  font: inherit;
+  appearance: none;
+
+  &:focus-visible {
+    outline: none;
+  }
+  /* Visible, en monoespaciada: para distinguir «l», «1» e «I» (como la contraseña en el panel). */
+  &[type="text"] {
+    font-family: var(--aegis-font-mono);
+  }
+}
+
+/* Mostrar u ocultar: botón de icono dentro del campo. */
+.ver {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-end: 2px;
+  width: 30px;
+  height: 30px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--aegis-r-5);
+  background: url("contrasena-principal-ojo.svg") center / 16px no-repeat;
+  -moz-context-properties: fill;
+  cursor: pointer;
+  appearance: none;
+
+  &[aria-pressed="true"] {
+    background-image: url("contrasena-principal-ojo-tachado.svg");
+  }
+}
+
+/* Medidor: cuatro tramos (insuficiente, aceptable, fuerte, muy fuerte). Lo dice también el texto de debajo. */
+.medidor {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--aegis-s-4);
+  margin-block-start: var(--aegis-s-8);
+
+  & span {
+    height: 4px;
+    border-radius: var(--aegis-r-2);
+  }
+}
+
+.nota,
+.error,
+.limites,
+.aviso p {
+  margin: var(--aegis-s-4) 0 0;
+  font-size: 12px;
+}
+.nota {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ───────── Aviso y límites ───────── */
+
+.aviso {
+  margin-block-start: var(--aegis-s-16);
+  padding: var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+
+  & > h2 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+.limites {
+  margin-block-start: var(--aegis-s-12);
+}
+
+/* ───────── Botones ───────── */
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--aegis-s-8);
+  margin-block-start: var(--aegis-s-24);
+
+  & button {
+    min-height: 34px;
+    margin: 0;
+    padding: 0 var(--aegis-s-16);
+    border: 1px solid transparent;
+    border-radius: var(--aegis-r-8);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    appearance: none;
+
+    &:disabled {
+      opacity: 0.28;
+      cursor: default;
+    }
+  }
+}
+/* Con .acciones delante: la hoja común de Firefox pinta los botones de envío (type="submit") con su color de acento. */
+.acciones .primario {
+  min-width: 112px;
+  font-weight: 600;
+}
+.acciones .secundario {
+  font-weight: 400;
+}
+
+:focus-visible {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: 2px;
+}
+
+/* ───────── Colores ───────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  body {
+    background-color: var(--aegis-dialog);
+    color: var(--aegis-text);
+  }
+  .icono {
+    background-color: var(--aegis-control);
+    fill: var(--aegis-text);
+  }
+  .explicacion,
+  .nota,
+  .limites,
+  .aviso p {
+    color: var(--aegis-sub);
+  }
+  .error {
+    color: var(--aegis-err);
+  }
+  /* Campo: relleno al 4 % (7 % con foco), borde al 10 % y, con foco, el del foco (DISENO §2, «Campos»). */
+  .caja > input {
+    background-color: var(--aegis-hover);
+    border-color: var(--aegis-field-border);
+    color: var(--aegis-text);
+
+    &:focus {
+      background-color: var(--aegis-control);
+      border-color: var(--aegis-focus);
+    }
+    &[aria-invalid] {
+      border-color: var(--aegis-err-fill);
+    }
+  }
+  .ver {
+    background-color: transparent;
+    fill: var(--aegis-sub);
+
+    &:hover {
+      background-color: var(--aegis-control);
+      fill: var(--aegis-text);
+    }
+    &:hover:active {
+      background-color: var(--aegis-control-down);
+    }
+  }
+  .medidor span {
+    background-color: var(--aegis-track);
+  }
+  /* Insuficiente: el primer tramo en gris; desde aceptable, el énfasis (como el progreso, DISENO §2). */
+  .medidor[data-nivel="1"] span:nth-child(-n + 1) {
+    background-color: var(--aegis-sub);
+  }
+  .medidor[data-nivel="2"] span:nth-child(-n + 2),
+  .medidor[data-nivel="3"] span:nth-child(-n + 3),
+  .medidor[data-nivel="4"] span {
+    background-color: var(--aegis-accent);
+  }
+  .aviso {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+  /* Con :is(…, :disabled) pesa más que «html|button[type=submit]:disabled» de la hoja común, que lo pintaría con su
+     acento. */
+  .acciones .primario:is(*, :disabled) {
+    background-color: var(--aegis-prim);
+    color: var(--aegis-on-prim);
+
+    &:hover:not(:disabled) {
+      background-color: var(--aegis-prim-hover);
+    }
+    &:hover:active:not(:disabled) {
+      background-color: var(--aegis-prim-down);
+    }
+  }
+  .acciones .secundario:is(*, :disabled) {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+
+    &:hover:not(:disabled) {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active:not(:disabled) {
+      background-color: var(--aegis-control-down);
+    }
+  }
+}
+
+/* Alto contraste: colores y controles del sistema, bordes visibles. */
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .caja > input,
+  .aviso,
+  .acciones button {
+    border-color: currentColor;
+  }
+  .icono,
+  .ver {
+    fill: currentColor;
+  }
+  .medidor span {
+    border: 1px solid currentColor;
+  }
+  .medidor[data-nivel="1"] span:nth-child(-n + 1),
+  .medidor[data-nivel="2"] span:nth-child(-n + 2),
+  .medidor[data-nivel="3"] span:nth-child(-n + 3),
+  .medidor[data-nivel="4"] span {
+    background-color: currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .caja > input,
+  .ver,
+  .medidor span {
+    transition:
+      background-color var(--aegis-t-hover) var(--aegis-ease),
+      border-color var(--aegis-t-hover) var(--aegis-ease);
+  }
+  .acciones button {
+    transition:
+      background-color var(--aegis-t-hover) var(--aegis-ease),
+      transform var(--aegis-t-press) var(--aegis-ease);
+
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+  }
+}

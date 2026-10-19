@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solo HTTPS · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · Solo HTTPS</p>
+<h1>¿Con qué se ha abierto esta página?</h1>
+<p>Se abre con una dirección <code>http://</code>. Con Solo HTTPS, el navegador la pide cifrada (<code>https://</code>)
+sin mandar antes nada sin cifrar. Si el sitio no tiene HTTPS, avisa en vez de abrirla.</p>
+<div class="tarjeta"><p id="protocolo" class="mono"></p><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<script>
+"use strict";
+document.getElementById("protocolo").textContent = `${location.protocol}//${location.host}`;
+Banco.listo({ protocolo: location.protocol, host: location.host });
+</script>
+</body>
+</html>

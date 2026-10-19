@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rastreadores · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · rastreadores</p>
+<h1>Una web con rastreadores</h1>
+<p>Esta página pide a seis rastreadores (y a un sitio normal, de control) un script, una imagen, un marco, un
+<code>fetch</code> y una baliza. El servidor del banco apunta lo que le llega: lo bloqueado no llega.</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<div class="tarjeta"><table><thead><tr><th>Sitio</th><th>Categoría</th><th>Script</th><th>Imagen</th><th>Marco</th><th>Fetch</th><th>Baliza</th></tr></thead><tbody id="tabla"></tbody></table></div>
+<div id="marcos" class="fila"></div>
+<script>
+"use strict";
+// Mismo orden y categorías que casos.js (HOSTS_RASTREO).
+const HOSTS = [
+  ["itisatracker.org", "rastreadores"],
+  ["www.itisatracker.org", "rastreadores"],
+  ["trackertest.org", "rastreadores"],
+  // Una red social que está en la lista de rastreo (como las de social-track-digest256): se bloquea también en Normal.
+  ["red-social-rastreo.test", "rastreadores"],
+  ["rastreador-social.test", "sociales"],
+  ["recolector-huella.test", "huella"],
+  ["criptominero.test", "criptomineros"],
+  ["sitio-b.test", "control"],
+];
+const TIPOS = { script: "/__/js", imagen: "/__/px", marco: "/__/marco", fetch: "/__/eco", baliza: "/__/b" };
+
+(async () => {
+  const senales = {};
+  const tareas = [];
+  for (const [host] of HOSTS) {
+    for (const [tipo, ruta] of Object.entries(TIPOS)) {
+      const ident = Banco.id(`${host}.${tipo}`);
+      tareas.push(Banco.cargar(tipo, `https://${host}${ruta}?id=${encodeURIComponent(ident)}`).then(v => (senales[ident] = v)));
+    }
+  }
+  await Promise.all(tareas);
+  const llegadas = await Banco.estabilizar(`${Banco.run}.${Banco.fase}.`);
+  const recibidos = new Set(llegadas.map(p => new URL(p.url).searchParams.get("id")));
+  const tabla = document.getElementById("tabla");
+  for (const [host, cat] of HOSTS) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="mono"></td><td></td>`;
+    tr.children[0].textContent = host;
+    tr.children[1].textContent = cat;
+    for (const tipo of Object.keys(TIPOS)) {
+      const td = document.createElement("td");
+      const llego = recibidos.has(Banco.id(`${host}.${tipo}`));
+      td.textContent = llego ? "llega" : "bloqueado";
+      td.className = llego ? "" : "ok";
+      tr.append(td);
+    }
+    tabla.append(tr);
+  }
+  await Banco.listo({ hosts: HOSTS, tipos: Object.keys(TIPOS), senales });
+})();
+</script>
+</body>
+</html>

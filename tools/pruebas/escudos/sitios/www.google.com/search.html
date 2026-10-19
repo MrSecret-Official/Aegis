@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resultados (simulados) · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · Google limpio</p>
+<h1>Resultados de búsqueda (simulados)</h1>
+<p>Google limpio quita de la dirección los parámetros de rastreo (ved, ei, oq, sxsrf…) y, si la búsqueda sale del
+navegador, pide «solo resultados web» (udm=14).</p>
+<div class="tarjeta"><p id="direccion" class="mono"></p><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<script>
+"use strict";
+document.getElementById("direccion").textContent = location.href;
+Banco.listo({ consulta: location.search });
+</script>
+</body>
+</html>

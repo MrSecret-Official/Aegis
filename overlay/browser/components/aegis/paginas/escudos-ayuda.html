@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- Aegis · about:escudos, «Cómo funcionan los Escudos» (escudos-ayuda.sys.mjs). Estática y sin scripts: los textos los
+     pone Fluent (locales/<idioma>/escudos-ayuda.ftl) y las hojas, AegisArranque (tokens.css, comun.css y
+     escudos-ayuda.css). La CSP solo deja cargar archivos del propio navegador: ninguna conexión. Cada sección lleva un
+     id para los enlaces del panel de Escudos y de Ajustes (about:escudos#huella…); si se cambia uno, cambiarlo también
+     en escudos.sys.mjs y ajustes.sys.mjs. -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src resource: chrome:; font-src resource: chrome:; img-src resource: chrome:; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title data-l10n-id="escudos-ayuda-pestana"></title>
+    <link rel="icon" href="chrome://branding/content/icon32.png" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="escudos-ayuda.ftl" />
+  </head>
+  <body>
+    <div class="ayuda">
+      <nav class="ayuda-indice" aria-labelledby="ayuda-indice-titulo">
+        <h2 class="ayuda-etiqueta" id="ayuda-indice-titulo" data-l10n-id="escudos-ayuda-indice"></h2>
+        <ol>
+          <li><a href="#escudos" data-l10n-id="escudos-ayuda-escudos-titulo"></a></li>
+          <li><a href="#sitio" data-l10n-id="escudos-ayuda-sitio-titulo"></a></li>
+          <li><a href="#nivel" data-l10n-id="escudos-ayuda-nivel-titulo"></a></li>
+          <li><a href="#lista" data-l10n-id="escudos-ayuda-lista-titulo"></a></li>
+          <li><a href="#molestias" data-l10n-id="escudos-ayuda-molestias-titulo"></a></li>
+          <li><a href="#excepciones" data-l10n-id="escudos-ayuda-excepciones-titulo"></a></li>
+          <li><a href="#listas" data-l10n-id="escudos-ayuda-listas-titulo"></a></li>
+          <li><a href="#https" data-l10n-id="escudos-ayuda-https-titulo"></a></li>
+          <li><a href="#scripts" data-l10n-id="escudos-ayuda-scripts-titulo"></a></li>
+          <li><a href="#huella" data-l10n-id="escudos-ayuda-huella-titulo"></a></li>
+          <li><a href="#cookies" data-l10n-id="escudos-ayuda-cookies-titulo"></a></li>
+          <li><a href="#olvidar" data-l10n-id="escudos-ayuda-olvidar-titulo"></a></li>
+          <li><a href="#oscuro" data-l10n-id="escudos-ayuda-oscuro-titulo"></a></li>
+          <li><a href="#google" data-l10n-id="escudos-ayuda-google-titulo"></a></li>
+          <li><a href="#limites" data-l10n-id="escudos-ayuda-limites-titulo"></a></li>
+          <li><a href="#pronto" data-l10n-id="escudos-ayuda-pronto-titulo"></a></li>
+        </ol>
+      </nav>
+
+      <main class="ayuda-contenido">
+        <header class="ayuda-cabecera">
+          <h1 data-l10n-id="escudos-ayuda-titulo"></h1>
+          <p class="ayuda-entradilla" data-l10n-id="escudos-ayuda-entradilla"></p>
+        </header>
+
+        <section class="ayuda-seccion" id="escudos" aria-labelledby="escudos-titulo">
+          <h2 id="escudos-titulo" data-l10n-id="escudos-ayuda-escudos-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-escudos-que"></p>
+          <p data-l10n-id="escudos-ayuda-escudos-panel"></p>
+          <h3 id="contador" data-l10n-id="escudos-ayuda-contador-titulo"></h3>
+          <p data-l10n-id="escudos-ayuda-contador-que"></p>
+          <p data-l10n-id="escudos-ayuda-contador-no"></p>
+          <p data-l10n-id="escudos-ayuda-contador-total"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="sitio" aria-labelledby="sitio-titulo">
+          <h2 id="sitio-titulo" data-l10n-id="escudos-ayuda-sitio-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-sitio-que"></p>
+          <p data-l10n-id="escudos-ayuda-sitio-recuerda"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-cuando"></h3>
+          <p data-l10n-id="escudos-ayuda-sitio-cuando"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-falla"></h3>
+          <p data-l10n-id="escudos-ayuda-sitio-falla"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="nivel" aria-labelledby="nivel-titulo">
+          <h2 id="nivel-titulo" data-l10n-id="escudos-ayuda-nivel-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-nivel-que"></p>
+          <ul>
+            <li data-l10n-id="escudos-ayuda-nivel-normal"></li>
+            <li data-l10n-id="escudos-ayuda-nivel-estricto"></li>
+            <li data-l10n-id="escudos-ayuda-nivel-estricto-mas"></li>
+            <li data-l10n-id="escudos-ayuda-nivel-personalizado"></li>
+          </ul>
+          <p data-l10n-id="escudos-ayuda-nivel-recarga"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-cuando"></h3>
+          <p data-l10n-id="escudos-ayuda-nivel-cuando"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-falla"></h3>
+          <p data-l10n-id="escudos-ayuda-nivel-falla"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="lista" aria-labelledby="lista-titulo">
+          <h2 id="lista-titulo" data-l10n-id="escudos-ayuda-lista-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-lista-que"></p>
+          <p data-l10n-id="escudos-ayuda-lista-listas"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-falla"></h3>
+          <p data-l10n-id="escudos-ayuda-lista-falla"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="molestias" aria-labelledby="molestias-titulo">
+          <h2 id="molestias-titulo" data-l10n-id="escudos-ayuda-molestias-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-molestias-que"></p>
+          <p data-l10n-id="escudos-ayuda-molestias-donde"></p>
+          <p data-l10n-id="escudos-ayuda-molestias-cookies"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-falla"></h3>
+          <p data-l10n-id="escudos-ayuda-molestias-falla"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="excepciones" aria-labelledby="excepciones-titulo">
+          <h2 id="excepciones-titulo" data-l10n-id="escudos-ayuda-excepciones-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-excepciones-que"></p>
+          <p data-l10n-id="escudos-ayuda-excepciones-todo"></p>
+          <p data-l10n-id="escudos-ayuda-excepciones-grupos"></p>
+          <p data-l10n-id="escudos-ayuda-excepciones-herencia"></p>
+          <p data-l10n-id="escudos-ayuda-excepciones-guardado"></p>
+          <p data-l10n-id="escudos-ayuda-excepciones-rastreadores"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="listas" aria-labelledby="listas-titulo">
+          <h2 id="listas-titulo" data-l10n-id="escudos-ayuda-listas-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-listas-que"></p>
+          <p data-l10n-id="escudos-ayuda-listas-copia"></p>
+          <p data-l10n-id="escudos-ayuda-listas-actualizar"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="https" aria-labelledby="https-titulo">
+          <h2 id="https-titulo" data-l10n-id="escudos-ayuda-https-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-https-que"></p>
+          <p data-l10n-id="escudos-ayuda-https-sitio"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-cuando"></h3>
+          <p data-l10n-id="escudos-ayuda-https-cuando"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-falla"></h3>
+          <p data-l10n-id="escudos-ayuda-https-falla"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="scripts" aria-labelledby="scripts-titulo">
+          <h2 id="scripts-titulo" data-l10n-id="escudos-ayuda-scripts-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-scripts-que"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="huella" aria-labelledby="huella-titulo">
+          <h2 id="huella-titulo" data-l10n-id="escudos-ayuda-huella-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-huella-que"></p>
+          <p data-l10n-id="escudos-ayuda-huella-donde"></p>
+          <h3 id="niveles-huella" data-l10n-id="escudos-ayuda-huella-niveles"></h3>
+          <ul>
+            <li data-l10n-id="escudos-ayuda-huella-basica"></li>
+            <li data-l10n-id="escudos-ayuda-huella-equilibrada"></li>
+            <li data-l10n-id="escudos-ayuda-huella-estricta"></li>
+            <li data-l10n-id="escudos-ayuda-huella-caja"></li>
+          </ul>
+          <h3 id="caja-fuerte" data-l10n-id="escudos-ayuda-caja-titulo"></h3>
+          <p data-l10n-id="escudos-ayuda-caja-aviso"></p>
+          <p data-l10n-id="escudos-ayuda-caja-permiso"></p>
+          <p data-l10n-id="escudos-ayuda-caja-limites"></p>
+          <p data-l10n-id="escudos-ayuda-caja-salir"></p>
+          <h3 id="que-ven" data-l10n-id="escudos-ayuda-ven-titulo"></h3>
+          <ul>
+            <li data-l10n-id="escudos-ayuda-ven-ip"></li>
+            <li data-l10n-id="escudos-ayuda-ven-navegador"></li>
+            <li data-l10n-id="escudos-ayuda-ven-resto"></li>
+            <li data-l10n-id="escudos-ayuda-ven-ocultar"></li>
+            <li data-l10n-id="escudos-ayuda-ven-bajados"></li>
+          </ul>
+          <h3 data-l10n-id="escudos-ayuda-h-cuando"></h3>
+          <p data-l10n-id="escudos-ayuda-huella-cuando"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-falla"></h3>
+          <p data-l10n-id="escudos-ayuda-huella-falla"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="cookies" aria-labelledby="cookies-titulo">
+          <h2 id="cookies-titulo" data-l10n-id="escudos-ayuda-cookies-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-cookies-que"></p>
+          <ul>
+            <li data-l10n-id="escudos-ayuda-cookies-rastreo"></li>
+            <li data-l10n-id="escudos-ayuda-cookies-todas"></li>
+          </ul>
+          <h3 data-l10n-id="escudos-ayuda-h-cuando"></h3>
+          <p data-l10n-id="escudos-ayuda-cookies-cuando"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-falla"></h3>
+          <p data-l10n-id="escudos-ayuda-cookies-falla"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="olvidar" aria-labelledby="olvidar-titulo">
+          <h2 id="olvidar-titulo" data-l10n-id="escudos-ayuda-olvidar-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-olvidar-que"></p>
+          <p data-l10n-id="escudos-ayuda-olvidar-privada"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-cuando"></h3>
+          <p data-l10n-id="escudos-ayuda-olvidar-cuando"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-falla"></h3>
+          <p data-l10n-id="escudos-ayuda-olvidar-falla"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="oscuro" aria-labelledby="oscuro-titulo">
+          <h2 id="oscuro-titulo" data-l10n-id="escudos-ayuda-oscuro-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-oscuro-que"></p>
+          <h3 data-l10n-id="escudos-ayuda-h-falla"></h3>
+          <p data-l10n-id="escudos-ayuda-oscuro-falla"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="google" aria-labelledby="google-titulo">
+          <h2 id="google-titulo" data-l10n-id="escudos-ayuda-google-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-google-que"></p>
+          <p data-l10n-id="escudos-ayuda-google-busqueda"></p>
+          <p data-l10n-id="escudos-ayuda-google-pasa"></p>
+          <h3 data-l10n-id="escudos-ayuda-google-limites-titulo"></h3>
+          <p data-l10n-id="escudos-ayuda-google-limites"></p>
+        </section>
+
+        <section class="ayuda-seccion" id="limites" aria-labelledby="limites-titulo">
+          <h2 id="limites-titulo" data-l10n-id="escudos-ayuda-limites-titulo"></h2>
+          <ul>
+            <li data-l10n-id="escudos-ayuda-limites-ip"></li>
+            <li data-l10n-id="escudos-ayuda-limites-detectable"></li>
+            <li data-l10n-id="escudos-ayuda-limites-tor"></li>
+            <li data-l10n-id="escudos-ayuda-limites-cuenta"></li>
+          </ul>
+        </section>
+
+        <section class="ayuda-seccion" id="pronto" aria-labelledby="pronto-titulo">
+          <h2 id="pronto-titulo" data-l10n-id="escudos-ayuda-pronto-titulo"></h2>
+          <p data-l10n-id="escudos-ayuda-pronto-que"></p>
+          <ul>
+            <li data-l10n-id="escudos-ayuda-pronto-motor"></li>
+            <li data-l10n-id="escudos-ayuda-pronto-scripts"></li>
+          </ul>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

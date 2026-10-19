@@ -1,0 +1,66 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · barra de marcadores vacía (docs/DISENO.md). Hoja de autor de la ventana (la pone barra-lateral.sys.mjs).
+   El aviso de Firefox («Para un acceso rápido, coloca tus marcadores aquí…») lleva a la derecha «Ahora no»; pulsado
+   (pref aegis.marcadores.aviso_oculto), la barra no se muestra mientras el aviso esté a la vista, es decir, mientras
+   no haya marcadores en ella. Con el primero, Firefox oculta el aviso y la barra vuelve sola. Solo var(--aegis-*). */
+
+/* Aviso: el texto y, separado, el botón; centrados en la barra de 32. */
+#personal-toolbar-empty {
+  align-items: center;
+  gap: var(--aegis-s-8);
+}
+#personal-toolbar-empty-description {
+  margin-block: 0;
+}
+
+/* «Ahora no»: botón de texto discreto de 28 de alto (zona clicable mínima) y radio 7, como los de la barra. */
+.aegis-aviso-cerrar {
+  appearance: none;
+  min-height: var(--aegis-h-icon);
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--aegis-s-8);
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease), color var(--aegis-t-hover) var(--aegis-ease);
+}
+.aegis-aviso-cerrar:hover:active {
+  scale: 0.97;
+  transition-duration: var(--aegis-t-press);
+}
+.aegis-aviso-cerrar:focus-visible {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: 2px;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-aviso-cerrar {
+    background-color: transparent;
+    color: var(--aegis-sub);
+  }
+  .aegis-aviso-cerrar:hover {
+    background-color: var(--aegis-hover);
+    color: var(--aegis-text);
+  }
+  .aegis-aviso-cerrar:hover:active {
+    background-color: var(--aegis-control);
+  }
+}
+
+/* Aviso descartado: sin barra mientras esté vacía. Se pliega como la barra «collapsed» de Firefox (visibility y
+   alto), no con display: none, para que Firefox siga montando la lista de marcadores y sepa cuándo hay uno. En
+   «Personalizar barra» se ve siempre. */
+@media -moz-pref("aegis.marcadores.aviso_oculto") {
+  #PersonalToolbar:not([customizing]):has(> #personal-toolbar-empty:not([hidden])) {
+    visibility: collapse;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden;
+  }
+}

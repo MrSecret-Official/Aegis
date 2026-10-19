@@ -1,0 +1,12 @@
+# mardor (la biblioteca de Mozilla para crear y firmar MAR) y sus dependencias, fijadas con hash.
+# Este código carga la clave privada de firma de las actualizaciones: nada sin verificar.
+# Se instala con: pip install --require-hashes --only-binary :all: --no-deps -r tools/requisitos-mar.txt
+# Hashes de las wheels de Linux x86_64 con Python 3.14 (cffi es la única que depende de la versión
+# de Python). Para cambiar una versión: `pip download --only-binary :all: mar==X` y `sha256sum`.
+mar==3.2.1 --hash=sha256:4b79574df873dfed73bb7ffda0c312594dc252d24973f5a00976b2616fd2439a
+cffi==2.1.1 --hash=sha256:b0431303acaea1089ad4b3e9ce4e6518193def1118d4073ca848635ee4ea2e96
+click==8.5.0 --hash=sha256:255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360
+construct==2.10.70 --hash=sha256:c80be81ef595a1a821ec69dc16099550ed22197615f4320b57cc9ce2a672cb30
+cryptography==50.0.2 --hash=sha256:9dab55f57c74c3cad24c323bacbbd04be4705ba6eb0d92e920b1fc4837ed5079
+pycparser==3.11 --hash=sha256:51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80
+six==1.17.0 --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274

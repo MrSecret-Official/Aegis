@@ -1,0 +1,12 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · el buscador de la nueva pestaña y de navegación privada (content-search-handoff-ui), por dentro de su
+   shadow DOM. Hoja de USUARIO (la pone AegisPaginasChild solo en esas páginas). El buscador es un <button>, y el
+   navegador da a los botones la letra de los controles del sistema (MS Shell Dlg, Tahoma en Windows): sin esto, el
+   texto «Buscar con… o escribir una dirección» no sale en Inter (DISENO §3). */
+
+.search-handoff-button {
+  font-family: var(--aegis-font) !important;
+}

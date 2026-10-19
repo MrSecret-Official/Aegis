@@ -1,0 +1,10 @@
+# Todo en LF salvo los scripts de Windows (Windows PowerShell 5.1 necesita BOM y CRLF).
+* text=auto eol=lf
+*.patch -text
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.png binary
+*.ico binary
+*.woff2 binary
+*.xpi binary
+*.der binary

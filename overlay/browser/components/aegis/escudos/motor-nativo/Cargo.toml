@@ -1,0 +1,24 @@
+# Aegis · motor de Escudos: adblock-rust (de Brave, MPL-2.0; desde Firefox 158, su fork etp_engine, que Firefox trae
+# en toolkit/components/content-classifier/etp_engine para su ContentClassifierService) detrás de un servicio XPCOM
+# fino. Lo enlaza gkrust (parche 0600-escudos/0001: una línea en toolkit/library/rust/shared/Cargo.toml, otra en su
+# lib.rs y la entrada de Cargo.lock). Sin crates nuevos: todo lo que usa ya está en el árbol.
+[package]
+name = "aegis_escudos_motor"
+version = "1.0.0"
+edition = "2021"
+license = "MPL-2.0"
+publish = false
+
+[dependencies]
+# Las mismas features con las que Gecko compila el crate (content_classifier_engine/Cargo.toml). Sin el resolvedor
+# de dominios incrustado: se le da uno con la lista de sufijos de Gecko (src/lib.rs, Resolvedor). etp_engine es
+# adblock-rust 0.12.1 con la misma API y el mismo formato .dat; se importa con el nombre «adblock» (src/lib.rs igual).
+adblock = { package = "etp_engine", path = "../../../../../toolkit/components/content-classifier/etp_engine", features = [
+    "full-regex-handling", "single-thread"], default-features = false }
+moz_task = { path = "../../../../../xpcom/rust/moz_task" }
+nserror = { path = "../../../../../xpcom/rust/nserror" }
+nsstring = { path = "../../../../../xpcom/rust/nsstring" }
+# Leer recursos.json (formato Resource de adblock-rust) y dar el cosmético en JSON.
+serde_json = "1"
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
+xpcom = { path = "../../../../../xpcom/rust/xpcom" }

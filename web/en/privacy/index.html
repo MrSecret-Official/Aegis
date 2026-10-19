@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="dark light">
+  <title>Privacy policy · Aegis</title>
+  <meta name="description" content="Aegis privacy policy: no data collection, no telemetry, and every connection it makes on its own has its own switch.">
+  <link rel="canonical" href="https://mrsecret-official.github.io/Aegis/en/privacy/">
+  <link rel="alternate" hreflang="es" href="https://mrsecret-official.github.io/Aegis/privacidad/">
+  <link rel="alternate" hreflang="en" href="https://mrsecret-official.github.io/Aegis/en/privacy/">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icono-256.png">
+  <link rel="stylesheet" href="../../estilo.css">
+</head>
+<body>
+  <a class="saltar" href="#content">Skip to content</a>
+
+  <header class="cabecera">
+    <div class="contenedor">
+      <a class="marca" href="../"><img src="../../favicon.svg" alt="" width="28" height="28">Aegis</a>
+      <nav class="navegacion" aria-label="Main">
+        <ul>
+          <li><a href="../">Home</a></li>
+          <li><a href="./" aria-current="page">Privacy</a></li>
+          <li><a href="../legal/">Legal notice</a></li>
+          <li><a href="../../privacidad/" lang="es" hreflang="es">Español</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="content" class="contenedor">
+    <h1>Privacy policy</h1>
+    <p class="entradilla">Aegis is a browser that doesn’t collect data from the people who use it. This policy explains,
+      first briefly and then in detail, what is stored on your device, who the browser may connect to and what you can
+      decide.</p>
+    <p class="vigencia">Effective October 17, 2026 · Version 1.0</p>
+
+    <section class="tarjeta" aria-labelledby="summary">
+      <h2 class="etiqueta" id="summary">In short</h2>
+      <ul class="resumen">
+        <li><strong>Aegis doesn’t collect your data.</strong> There are no Aegis servers: the browser doesn’t send us
+          information about you or about how you use it. All we see are the overall figures provided by the Microsoft
+          Store and GitHub (<a href="#data">section 2</a>).</li>
+        <li><strong>There’s no telemetry.</strong> Aegis sends no usage statistics, no studies and no crash reports of
+          its own. Windows may send Microsoft crash reports for any app, depending on its settings.</li>
+        <li><strong>Nothing goes out before you decide.</strong> In our measurements with a new profile, Aegis doesn’t
+          connect to anything on its own until you choose what to allow on the welcome page, “You decide what
+          connects”.</li>
+        <li><strong>Every connection can be turned off.</strong> The few connections Aegis makes on its own (updates,
+          security and blocking lists, video codecs…) have their own switch. Those that depend on something you do, such
+          as installing an add-on or letting a website know your location, are explained below one by one, with how to
+          turn them off.</li>
+        <li><strong>Your passwords are encrypted on your device.</strong> They stay in your profile, protected by a
+          primary password that only you know, and they aren’t sent anywhere.</li>
+        <li><strong>The websites you visit do see you.</strong> As with any browser, every website receives your IP
+          address. Aegis reduces what they can learn about you, but it doesn’t make you anonymous: it isn’t Tor
+          Browser.</li>
+      </ul>
+    </section>
+
+    <nav class="tarjeta indice" aria-labelledby="contents">
+      <h2 class="etiqueta" id="contents">Contents</h2>
+      <ol>
+        <li><a href="#controller">Who is responsible</a></li>
+        <li><a href="#data">Personal data we process</a></li>
+        <li><a href="#device">What is stored on your device</a></li>
+        <li><a href="#first-time">The first time: you decide</a></li>
+        <li><a href="#connections">Connections Aegis may make</a></li>
+        <li><a href="#no-connection">What Aegis doesn’t connect</a></li>
+        <li><a href="#store">The Microsoft Store and Windows</a></li>
+        <li><a href="#websites">What the websites you visit see</a></li>
+        <li><a href="#children">Children</a></li>
+        <li><a href="#rights">Your rights</a></li>
+        <li><a href="#this-website">This website</a></li>
+        <li><a href="#changes">Changes to this policy</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="controller">1. Who is responsible</h2>
+    <p>Aegis is developed and published by Secret Studios, the name under which an independent developer works. On the
+      Microsoft Store it appears as “Aegis Browser”, published by Secret Studios.</p>
+    <p>For any question about this policy, you can write to
+      <a href="mailto:mrsecret_official@protonmail.com">mrsecret_official@protonmail.com</a>.</p>
+
+    <h2 id="data">2. Personal data we process</h2>
+    <p><strong>Through the browser, none.</strong> Aegis has no user accounts, no servers and no analytics, and it
+      doesn’t send Secret Studios any information about you, your device or the websites you visit.</p>
+    <p><strong>What we see through the distribution channels.</strong> Because of how Aegis is distributed, we receive
+      the following. It doesn’t include your name or account, although a memory dump may contain fragments of what
+      Aegis had open at the time:</p>
+    <ul>
+      <li><strong>Microsoft Store.</strong> Partner Center, Microsoft’s dashboard for Store publishers, shows us
+        aggregated acquisition and usage statistics for the Store version. It also shows us the crash reports Windows
+        sends to Microsoft (Windows Error Reporting) when Aegis crashes, depending on the diagnostic data level set in
+        Windows. They may include stack traces and, on Windows Insider devices, memory dumps. You can adjust this in
+        Windows Settings › Privacy &amp; security › Diagnostics &amp; feedback.</li>
+      <li><strong>GitHub.</strong> It shows how many times each file of the published releases has been downloaded.
+        Since every update check downloads a small file (<code>update.xml</code>), that number is also a rough count of
+        update checks. It doesn’t show who downloads or from where.</li>
+    </ul>
+    <p>When Aegis connects to a third-party service (for example, to find out whether there’s a new version), the
+      connection goes straight from your device to that third party; we aren’t involved and don’t see its contents. Who
+      they are, what they receive and how to avoid it is explained in <a href="#connections">section 5</a>.</p>
+    <p><strong>If you write to us.</strong> If you send us an email, we receive your address, your name if you include
+      it and whatever you tell us. We use it only to reply to you and we don’t share it with anyone. Messages stay in
+      the mailbox until they’re deleted; you can ask us to delete yours. Our email service is provided by Proton AG
+      (Switzerland), which stores the messages on our behalf.</p>
+    <p><strong>If you visit this website,</strong> see <a href="#this-website">section 11</a>.</p>
+
+    <h2 id="device">3. What is stored on your device</h2>
+    <p>Like any browser, Aegis stores on your device, in your profile, what it needs to work: your history, bookmarks,
+      cookies and website data, the cache, the permissions you give each site and your settings. None of it is sent to
+      Secret Studios or anyone else, and you can delete it whenever you want from the browser’s privacy settings.</p>
+    <ul>
+      <li><strong>Passwords.</strong> They’re stored encrypted in your profile. Before saving the first one, Aegis asks
+        you to create a primary password, without which they can’t be decrypted. Nobody else has that key: if you forget
+        it, it can’t be recovered.</li>
+      <li><strong>Two-step verification codes</strong> you add: encrypted with the same key as your passwords.</li>
+      <li><strong>Moving your passwords to another Aegis</strong> creates an encrypted file, wherever you choose, that
+        only opens with a six-word code. Unless you untick the box, it also carries your two-step verification codes.
+        It doesn’t go through any server: you carry the file yourself.</li>
+      <li><strong>Tor</strong> (optional). If you download it, the program and its state stay in your profile’s local
+        folder until you press “Delete”.</li>
+      <li><strong>Where your profile is.</strong> In the GitHub version, in the <code>%APPDATA%\Aegis</code> and
+        <code>%LOCALAPPDATA%\Aegis</code> folders. In the Microsoft Store version, Windows keeps new profile data in a
+        folder of the app’s own and deletes it when you uninstall the app. If you used the GitHub version before, your
+        profile in <code>%APPDATA%\Aegis</code> isn’t deleted.</li>
+    </ul>
+
+    <h2 id="first-time">4. The first time: you decide</h2>
+    <p>With a new profile, Aegis doesn’t connect to anything on its own. The first window shows the page “You decide
+      what connects”, with a switch for each group of connections. Until you press “Accept”, nothing goes out; if you
+      press “Not now”, everything stays closed. You can come back to that page whenever you like from Settings ›
+      Privacy › Connections, and changes apply right away, without restarting.</p>
+    <p>What you do yourself doesn’t depend on that page: opening a website you type or click (see
+      <a href="#websites">section 8</a>), installing an add-on or letting a website know your location (see
+      <a href="#connections">section 5</a>).</p>
+    <p>We check this rule by measuring Aegis’s traffic with a new profile: in ten minutes without touching anything, it
+      made no connection attempts. If we find a connection that doesn’t follow it, we treat it as a bug and fix it.</p>
+    <p class="nota">We recommend leaving at least updates and security lists turned on: without them, Aegis falls behind
+      on security.</p>
+
+    <h2 id="connections">5. Connections Aegis may make</h2>
+    <p>This is the complete list of connections Aegis makes without you browsing: those with a switch on the “You
+      decide what connects” page and, at the end, those that depend on something you do. Each one receives, at a
+      minimum, your IP address and the browser’s generic identifier (the “User-Agent”: the system and version, the same
+      one millions of people use; it never says “Aegis”). The names in quotation marks are those of the switches on the
+      “You decide what connects” page.</p>
+
+    <section class="tarjeta" aria-labelledby="c-updates">
+      <h3 id="c-updates">“Aegis updates”</h3>
+      <p class="nota">GitHub version only. In the Microsoft Store version, updates are handled by the Store
+        (<a href="#store">section 7</a>).</p>
+      <dl class="ficha">
+        <dt>With whom</dt>
+        <dd>GitHub (<code>github.com</code> and its file download servers).</dd>
+        <dt>When</dt>
+        <dd>Only if you allow it. One check when you accept; after that, once a day while the browser is open and each
+          time you open “About Aegis” or the settings. If there’s a new version, it’s downloaded from there. The “Check
+          for updates” button always checks, because you ask for it.</dd>
+        <dt>What it receives</dt>
+        <dd>Your IP, the User-Agent and the type of system (64-bit Windows, and whether the processor is x64 or ARM64),
+          without cookies and with a fixed language, the same in every copy of Aegis. When a new version is downloaded,
+          GitHub also receives your browser’s language.</dd>
+        <dt>What for</dt>
+        <dd>To know whether there’s a new version and install it.</dd>
+        <dt>How to turn it off</dt>
+        <dd>With its switch. Without it, you’ll have to check for updates yourself.</dd>
+      </dl>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="c-security">
+      <h3 id="c-security">“Security lists”</h3>
+      <dl class="ficha">
+        <dt>With whom</dt>
+        <dd>Mozilla, through its Remote Settings service (<code>services.mozilla.com</code> and its file servers).</dd>
+        <dt>When</dt>
+        <dd>Only if you allow it. When you accept and then once a day. With “Website notifications” on, also at startup
+          and when the server announces a change.</dd>
+        <dt>What it receives</dt>
+        <dd>Your IP and the User-Agent, without cookies and with a fixed language. Only lists that are the same for
+          everyone are requested.</dd>
+        <dt>What for</dt>
+        <dd>To know which website certificates have been revoked and which add-ons or graphics drivers are
+          dangerous.</dd>
+        <dt>How to turn it off</dt>
+        <dd>With its switch. Bear in mind that, without these lists, to know whether a website’s certificate has been
+          revoked, Aegis asks the authority that issued it every time you open a new website (<a href="#websites">section
+          8</a>): turning them off means more of those checks, not fewer.</dd>
+      </dl>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="c-protection">
+      <h3 id="c-protection">“Protection lists”</h3>
+      <dl class="ficha">
+        <dt>With whom</dt>
+        <dd>Mozilla (Remote Settings), for the tracking protection lists, based on Disconnect’s. And the authors of the
+          filter lists used by Shields, Aegis’s blocker: uBlock Origin (GitHub servers and, if they fail, Cloudflare’s),
+          EasyList (<code>easylist.to</code> and <code>easylist-downloads.adblockplus.org</code>, run by eyeo), AdGuard
+          (<code>filters.adtidy.org</code>) and Brave (GitHub servers).</dd>
+        <dt>When</dt>
+        <dd>Only if you allow it. Mozilla’s, once a day. The filter lists: the browser looks once a day and requests only
+          the ones that have expired (some daily and, by default, the rest every four days); and all of them when you
+          press “Update now” in Settings › Shields.</dd>
+        <dt>What it receives</dt>
+        <dd>Your IP and the User-Agent, without cookies, without saying which website it comes from and with a fixed
+          language. To avoid downloading what hasn’t changed, the browser sends each list’s server back the version tag
+          that server gave it; in theory, that server could use it to recognize the same browser even if its IP
+          changes.</dd>
+        <dt>What for</dt>
+        <dd>So that Shields recognize new ads and trackers.</dd>
+        <dt>How to turn it off</dt>
+        <dd>With its switch. Without it, Shields block using the copy of the lists that comes with Aegis, which gets out
+          of date, and tracking protection doesn’t recognize trackers by name.</dd>
+      </dl>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="c-codecs">
+      <h3 id="c-codecs">“Video codecs”</h3>
+      <dl class="ficha">
+        <dt>With whom</dt>
+        <dd>Mozilla (<code>aus5.mozilla.org</code>, which says which version to use), Cisco (OpenH264 download) and,
+          only if you turn on protected video, Google (Widevine).</dd>
+        <dt>When</dt>
+        <dd>Only if you allow it: when you accept and then at most once a day, at startup. Widevine, only if a website
+          asks for protected video (DRM) and you turn it on in its prompt.</dd>
+        <dt>What it receives</dt>
+        <dd>Your IP, the User-Agent and, in the request address, the Aegis version, its language, the channel and the
+          Windows version; in the Microsoft Store version, also that it’s the Store’s Aegis. No cookies and no identifier
+          for you or your device.</dd>
+        <dt>What for</dt>
+        <dd>Video calls with H.264 (OpenH264) and protected video, such as that of paid streaming services
+          (Widevine).</dd>
+        <dt>How to turn it off</dt>
+        <dd>With its switch; protected video, also in Settings › General.</dd>
+      </dl>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="c-translation">
+      <h3 id="c-translation">“Page translation”</h3>
+      <dl class="ficha">
+        <dt>With whom</dt>
+        <dd>Mozilla (Remote Settings).</dd>
+        <dt>When</dt>
+        <dd>Only if you allow it. The list of languages, once a day; a language’s model, only when you ask to translate a
+          page or download that language.</dd>
+        <dt>What it receives</dt>
+        <dd>Your IP and the User-Agent, without cookies and with a fixed language. From the models requested, the server
+          knows which languages you translate between. <strong>The text of the pages never leaves your device:</strong>
+          translation happens on it.</dd>
+        <dt>What for</dt>
+        <dd>Translating websites without sending them to anyone.</dd>
+        <dt>How to turn it off</dt>
+        <dd>With its switch. Without it, the option to translate doesn’t appear.</dd>
+      </dl>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="c-push">
+      <h3 id="c-push">“Website notifications”</h3>
+      <p class="nota">Off by default.</p>
+      <dl class="ficha">
+        <dt>With whom</dt>
+        <dd>Mozilla (<code>push.services.mozilla.com</code>).</dd>
+        <dt>When</dt>
+        <dd>Only if you turn it on: a connection kept open while the browser is open.</dd>
+        <dt>What it receives</dt>
+        <dd>Your IP, the User-Agent, your browser’s language, an identifier for this browser assigned by the server, and
+          the subscriptions of the websites you allow to send you notifications.</dd>
+        <dt>What for</dt>
+        <dd>So those websites can notify you even when they aren’t open.</dd>
+        <dt>How to turn it off</dt>
+        <dd>With its switch.</dd>
+      </dl>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="c-addons">
+      <h3 id="c-addons">Add-on updates</h3>
+      <p class="nota">Only if you install an add-on. It has no switch on “You decide what connects”.</p>
+      <dl class="ficha">
+        <dt>With whom</dt>
+        <dd>Mozilla (<code>versioncheck-bg.addons.mozilla.org</code>, its add-ons store service;
+          <code>versioncheck.addons.mozilla.org</code> if you check by hand) or, if the add-on names its own update server
+          (those distributed outside that store), that server, run by its author.</dd>
+        <dt>When</dt>
+        <dd>Once a day, as long as you have an add-on installed.</dd>
+        <dt>What it receives</dt>
+        <dd>Your IP, the User-Agent and, in the request address, the identifier and version of each installed add-on,
+          the browser version, the operating system and the language. Your list of add-ons can make your request stand
+          out from others. If it’s the add-on author’s server, it receives your IP, the User-Agent and whatever the
+          address set by that author asks for.</dd>
+        <dt>What for</dt>
+        <dd>Installing new versions of your add-ons, which often fix security issues.</dd>
+        <dt>How to turn it off</dt>
+        <dd>In <code>about:config</code>, by setting <code>extensions.update.enabled</code> to <code>false</code>; your
+          add-ons will stop being updated. The “Update Add-ons Automatically” option in the gear menu of the add-ons page
+          (<code>about:addons</code>) only decides whether new versions install by themselves: the check still
+          happens.</dd>
+      </dl>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="c-safebrowsing">
+      <h3 id="c-safebrowsing">“Google Safe Browsing”: not available</h3>
+      <p>Aegis doesn’t use Google’s service that warns about scam websites and dangerous downloads: this version has no
+        key for it, so there’s no connection at all. It also means Aegis won’t warn you about those websites using
+        Google’s lists.</p>
+    </section>
+
+    <h3>What only happens if you ask for it</h3>
+    <ul>
+      <li><strong>Checking for updates yourself</strong>: the same as “Aegis updates”, with GitHub.</li>
+      <li><strong>Downloading Tor</strong> (Settings › Privacy › Tor): the program is downloaded from the Tor Project’s
+        servers, without cookies; the Tor Project sees that your IP downloads Tor. After that, the private window with
+        Tor connects to the Tor network only while it’s open. If you choose bridges, your IP is seen by their operators
+        (obfs4) or, with Snowflake, by a content delivery network, public STUN servers and the volunteers who act as
+        proxies.</li>
+      <li><strong>Your location</strong>, only if a website asks for it and you allow it: it’s provided by the Windows
+        location service (Microsoft’s), according to your Windows location settings. Aegis uses no network location
+        service.</li>
+      <li><strong>“Use the site’s logo”</strong>, on a New Tab shortcut: requests the page and its icon from that
+        website, without cookies and without saying where the request comes from.</li>
+      <li><strong>Searching</strong>: your search goes to the search engine you choose (DuckDuckGo by default), with
+        your IP, as in any browser. Suggestions as you type are off by default; if you turn them on, what you type in the
+        address bar goes to the search engine as you type it.</li>
+    </ul>
+
+    <h2 id="no-connection">6. What Aegis doesn’t connect</h2>
+    <ul>
+      <li><strong>Passwords, verification codes and passkeys.</strong> Everything happens on your device: the password
+        manager, code generation and QR code reading don’t connect to anything. Passkeys are kept by Windows Hello; Aegis
+        doesn’t sync them.</li>
+      <li><strong>Importing data from other browsers.</strong> It reads the other browser’s files on your device,
+        without connecting to anything.</li>
+      <li><strong>Dark websites.</strong> It works inside the browser, with what the page has already loaded.</li>
+      <li><strong>What Aegis turns off in the code it’s built from:</strong> telemetry and crash reports, studies and
+        experiments, promotional messages, New Tab content and ads, add-on recommendations, Mozilla accounts and sync
+        and their breach alerts, captive portal checks, man-in-the-middle checks on certificate error pages, country
+        detection by IP, and link prefetching.</li>
+    </ul>
+
+    <h2 id="store">7. The Microsoft Store and Windows</h2>
+    <p>On the Microsoft Store, Aegis appears as “Aegis Browser”, published by Secret Studios. It works the same as the
+      GitHub version, with these differences:</p>
+    <ul>
+      <li><strong>Updates are downloaded by the Store, not by Aegis.</strong> Aegis’s own updater doesn’t connect. It’s
+        the Windows Microsoft Store service that talks to Microsoft, as with any Store app.</li>
+      <li><strong>Microsoft knows which account installed Aegis.</strong> Windows and the Store see, on their own, the
+        installation and use of apps on the system. That depends on Microsoft, its privacy statement and your Windows
+        privacy settings, not on Aegis. Microsoft shows us aggregated statistics and crash reports
+        (<a href="#data">section 2</a>).</li>
+      <li><strong>No attribution check.</strong> The code Aegis is built from asked the Store, at every startup, which
+        campaign it had been installed from. Aegis doesn’t make that request.</li>
+      <li><strong>No Windows App SDK.</strong> In this version and the GitHub one, Aegis doesn’t load those Windows
+        components, which include Microsoft telemetry.</li>
+      <li><strong>When you uninstall it, Windows deletes the profile data</strong> (bookmarks, passwords, settings) it
+        kept in the app’s own folder. If you want to keep it, make a copy first or move it to another Aegis. If you used
+        the GitHub version before, your profile in <code>%APPDATA%\Aegis</code> isn’t deleted.</li>
+    </ul>
+    <p><strong>In both versions, Windows makes its own connections.</strong> When you open the installer or the file
+      downloaded from GitHub, SmartScreen and Windows Smart App Control ask Microsoft whether the file can be trusted.
+      And if Aegis crashes, Windows may send Microsoft a crash report, depending on its diagnostic settings. That’s done
+      by Windows, not by Aegis.</p>
+
+    <h2 id="websites">8. What the websites you visit see</h2>
+    <p>When you browse, Aegis connects directly to each website you open. As with any browser, that website
+      receives:</p>
+    <ul>
+      <li><strong>Your IP address</strong> and, with it, your approximate country and city.</li>
+      <li><strong>The User-Agent</strong>, the same one millions of people use; it never says “Aegis”.</li>
+      <li>Your language and time zone (except at the highest level of fingerprinting protection), your screen
+        resolution, your window size and whether you use the light or dark theme.</li>
+      <li>Whatever you send it: forms, sign-ins, searches. If you sign in to a service, that service knows who you are,
+        as in any browser.</li>
+    </ul>
+    <p>Aegis reduces the rest: it keeps each website’s cookies separate, blocks ads and trackers, limits fingerprinting
+      and removes tracking parameters from links. It also sends every website the Global Privacy Control signal, which
+      asks them not to sell or share your data and has legal weight in some countries.</p>
+    <p><strong>Certificate checks.</strong> When you open a secure website (https) whose certificate isn’t covered by the
+      “Security lists”, Aegis asks the authority that issued that certificate whether it’s still valid. That authority
+      thus learns which website you’re opening, and the request is often unencrypted. With “Security lists” on, that
+      request is rarely needed. It can be turned off entirely in <code>about:config</code>
+      (<code>security.OCSP.enabled</code> set to <code>0</code>), but we don’t recommend it: Aegis would stop checking
+      whether a website’s certificate has been revoked.</p>
+    <p><strong>What Aegis can’t prevent.</strong> Your internet provider, or whoever runs your network, can see which
+      websites you connect to. Hiding some data is also a signal: very few people browse with this much protection, and a
+      determined website can tell you apart. What each website does with what it receives depends on that website and
+      its own privacy policy.</p>
+    <p><strong>Aegis isn’t Tor Browser.</strong> The private window with Tor hides your IP from websites, but your
+      internet provider sees that you use Tor, and Aegis is easier to tell apart than Tor Browser. If your safety depends
+      on anonymity, use Tor Browser.</p>
+
+    <h2 id="children">9. Children</h2>
+    <p>Aegis doesn’t collect data from anyone, including children. It’s a general-purpose browser that gives
+      unrestricted access to the internet and includes no content filters or parental controls. We recommend that
+      children use it under adult supervision.</p>
+
+    <h2 id="rights">10. Your rights</h2>
+    <ul>
+      <li><strong>With us.</strong> The browser sends us nothing, and the statistics and crash reports in
+        <a href="#data">section 2</a> don’t let us know whose they are: we hold no data about you to access, correct or
+        delete, and have no way to identify you. If you’ve written to us, you can ask us for access to your
+        correspondence, or ask us to correct or delete it, by writing to the same address.</li>
+      <li><strong>On your device.</strong> What Aegis stores is yours: you can view and delete it from the browser’s
+        settings, or by deleting your profile.</li>
+      <li><strong>With third parties.</strong> What the services in <a href="#connections">section 5</a> and sections 7
+        and 8 receive is processed by them, each under its own privacy policy: GitHub, Mozilla, Cisco, Google, Microsoft,
+        Cloudflare, AdGuard, EasyList, eyeo, the Tor Project, the search engine you choose, certificate authorities and
+        the authors of the add-ons you install. The same goes for Proton, which holds our email. That’s where you can
+        exercise your rights, and the simplest way to avoid it is to turn off the corresponding connection.</li>
+      <li><strong>Complaints.</strong> If you believe your rights haven’t been respected, you can complain to the data
+        protection authority in your country.</li>
+    </ul>
+
+    <h2 id="this-website">11. This website</h2>
+    <p>This website uses no cookies, no analytics, no scripts and no third-party resources: even the typeface is served
+      from it. It’s hosted on GitHub Pages, a GitHub service that, as GitHub explains, logs the IP address of visitors
+      for security purposes. That log belongs to GitHub; we have no access to it. Links to other websites lead to sites
+      with their own policies.</p>
+
+    <h2 id="changes">12. Changes to this policy</h2>
+    <p>If Aegis changes what it connects to or adds features that process data (for example, the planned encrypted sync
+      with your own cloud), we’ll update this policy before releasing that version, change the date and version number
+      here and explain what changed. Previous versions remain in the history of this website’s repository.</p>
+    <p class="nota">This English version is a translation. If it differs from the Spanish version, the Spanish one
+      prevails.</p>
+
+    <h2 id="contact">13. Contact</h2>
+    <p>Secret Studios · <a href="mailto:mrsecret_official@protonmail.com">mrsecret_official@protonmail.com</a></p>
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor">
+      <p>Aegis · Secret Studios · <a href="mailto:mrsecret_official@protonmail.com">mrsecret_official@protonmail.com</a></p>
+      <p>This website uses no cookies, no analytics and no third-party resources.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Marco de huella · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/sondas.js"></script>
+</head>
+<body>
+<p class="porque">Marco de otro sitio: mide</p>
+<script>
+"use strict";
+Sondas.medirMarco().then(valores => window.top.postMessage({ banco: "huella-marco", valores }, "*"));
+</script>
+</body>
+</html>

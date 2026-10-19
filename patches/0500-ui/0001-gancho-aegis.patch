@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: =?UTF-8?q?Gancho=20del=20c=C3=B3digo=20de=20Aegis?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: el código propio de Aegis vive en browser/components/aegis (overlay):
+hay que compilarlo (DIRS) y llamarlo al arrancar y en cada ventana. Se usan las
+categorías de arranque de Firefox (BrowserComponents.manifest), sin tocar código.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0500-ui/0001-gancho-aegis.patch
+
+diff --git a/browser/components/BrowserComponents.manifest b/browser/components/BrowserComponents.manifest
+index d3b32a07ec..a52f750b2f 100644
+--- a/browser/components/BrowserComponents.manifest
++++ b/browser/components/BrowserComponents.manifest
+@@ -250,3 +250,7 @@ category search-service-notification moz-src:///browser/components/search/Search
+ 
+ category browser-newtab-external-component moz-src:///browser/components/search/SearchUIUtils.sys.mjs SearchNewTabComponentsRegistrant
+ category browser-newtab-external-component moz-src:///browser/components/urlbar/UrlbarNewTabComponentRegistrant.sys.mjs UrlbarNewTabComponentRegistrant
++
++# Aegis: tema, protección estricta y buscador de serie (browser/components/aegis).
++category browser-before-ui-startup resource:///modules/aegis/AegisArranque.sys.mjs AegisArranque.inicio
++category browser-window-delayed-startup resource:///modules/aegis/AegisArranque.sys.mjs AegisArranque.ventana
+diff --git a/browser/components/moz.build b/browser/components/moz.build
+index 8a1611d5d1..238e3dc2f5 100644
+--- a/browser/components/moz.build
++++ b/browser/components/moz.build
+@@ -28,6 +28,7 @@ DIRS += [
+     "about",
+     "aboutlogins",
+     "aboutwelcome",
++    "aegis",
+     "aiwindow",
+     "asrouter",
+     "attribution",

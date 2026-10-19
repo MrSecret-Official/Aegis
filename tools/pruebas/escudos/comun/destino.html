@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Destino · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · destino de un enlace</p>
+<h1>Has llegado al destino</h1>
+<p>La página de destino de un enlace (por ejemplo, un resultado de Google). Apunta con qué dirección se ha abierto.</p>
+<div class="tarjeta"><p id="direccion" class="mono"></p><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<script>
+"use strict";
+document.getElementById("direccion").textContent = location.href;
+Banco.listo({ direccion: location.href, consulta: location.search, referer: document.referrer });
+</script>
+</body>
+</html>

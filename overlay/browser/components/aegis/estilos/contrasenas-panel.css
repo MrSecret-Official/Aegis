@@ -1,0 +1,506 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · panel «Contraseñas» de la barra lateral (megalist de Firefox), con la forma del resto de paneles de Aegis
+   (docs/DISENO.md). Hoja de USUARIO (la pone contrasenas-panel.sys.mjs solo en chrome://global/content/megalist/):
+   es la única que entra en sus componentes (shadow DOM), y por eso todo lleva !important. Solo var(--aegis-*); los
+   colores, fuera de alto contraste.
+
+   Ojo: la lista es virtual y calcula la altura de cada tarjeta con constantes (PasswordCard: 215 + 13 px). Aquí no se
+   cambia ninguna altura ni ningún margen vertical de las tarjetas, solo colores, radios, bordes y letra. */
+
+/* ───────── Común: forma de Aegis en vez de las píldoras de Firefox ───────── */
+
+megalist-alpha {
+  /* Botones: radio 8, sin borde (el de Firefox es una línea clara alrededor de la píldora), texto de 400; el
+     principal, de 600 (DISENO §9). */
+  --button-border: 1px solid transparent !important;
+  --button-border-radius: var(--aegis-r-8) !important;
+  --button-font-weight: 400 !important;
+  /* Campos y buscador: radio 7 y 8 (DISENO §9). */
+  --input-text-border-radius: var(--aegis-r-7) !important;
+  --input-search-border-radius: var(--aegis-r-8) !important;
+  --input-text-min-height: 32px !important;
+  /* Tarjetas: radio 12 y, dentro, las filas con radio 8 a 4 px (concéntricas, DISENO §5). */
+  --card-border-radius: var(--aegis-r-12) !important;
+  --border-radius-medium: var(--aegis-r-12) !important;
+  --border-radius-circle: var(--aegis-r-7) !important;
+  --focus-outline-offset: 2px !important;
+}
+
+/* Botón secundario (DISENO §9): relleno de control, radio 8, alto 38; el principal, blanco. */
+moz-button:not([type~="icon"]) {
+  --button-min-height: 38px !important;
+  --button-font-size: 14px !important;
+}
+moz-button[type="primary"] {
+  --button-font-weight: 600 !important;
+}
+/* Botones de icono (cerrar, «⋯», ver contraseña): 28 × 28, radio 7, sin fondo. */
+moz-button[type~="icon"] {
+  --button-border-radius: var(--aegis-r-7) !important;
+  --button-size-icon: var(--aegis-h-icon) !important;
+  --button-min-height: var(--aegis-h-icon) !important;
+}
+.button-background {
+  transition:
+    background-color var(--aegis-t-hover) var(--aegis-ease),
+    scale var(--aegis-t-press) var(--aegis-ease) !important;
+}
+button:hover:active:not(:disabled) > .button-background {
+  scale: 0.97 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .button-background {
+    transition: none !important;
+  }
+  button:hover:active:not(:disabled) > .button-background {
+    scale: none !important;
+  }
+}
+
+/* Cabecera: título de sección de 15 y 600 (como Historial y Marcadores). */
+.sidebar-panel-heading {
+  font-size: 15px !important;
+}
+.sidebar-panel-heading > h4 {
+  font-weight: 600 !important;
+}
+
+/* Buscador con foco: borde de 1 px con --aegis-focus, sin el anillo grueso de Firefox (DISENO §9, «Campo»). */
+input#input[type="search"] {
+  font-size: 13px !important;
+}
+input#input[type="search"]:focus-visible {
+  outline: none !important;
+}
+
+/* «Todas» y «Alertas»: Aegis no tiene avisos de filtraciones (Mozilla Monitor apagado), así que el filtro sobra. */
+.second-row {
+  display: none !important;
+}
+.first-row {
+  margin-block-end: var(--aegis-s-8) !important;
+}
+
+/* Menú «⋯»: radio 12, filas de 32 con resalte de radio 7 (DISENO §9). «Ayuda» lleva a la web de Mozilla: fuera. */
+panel-item[action="open-help"],
+a[is="moz-support-link"] {
+  display: none !important;
+}
+
+/* ───────── Tarjetas de la lista (password-card y sus filas) ───────── */
+
+/* Etiquetas («Sitio», «Usuario», «Contraseña»): 11 px, sin mayúsculas (Firefox las pone en mayúsculas a 7 px, por
+   debajo del mínimo de DISENO §3). */
+.input-label {
+  font-size: 11px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+.input-field {
+  font-size: 13px !important;
+}
+/* El sitio no va subrayado: es un enlace por su icono y su resalte. */
+.input-field[type="text"] {
+  text-decoration: none !important;
+}
+input.input-field[type="password"] {
+  font-family: var(--aegis-font-mono) !important;
+}
+/* Filas: resalte de radio 8 dentro de la tarjeta de 12 (a 3–4 px del borde: concéntrico). */
+.line-container {
+  border-radius: var(--aegis-r-8) !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+/* «Editar»: secundario compacto (30 de alto, radio 7, 13 px), como «Quitar» en Ajustes. Con moz-button delante para
+   ganar a «moz-button:not([type~="icon"])» (38 y 14 px). */
+moz-button.edit-button {
+  --button-min-height: 30px !important;
+  --button-border-radius: var(--aegis-r-7) !important;
+  --button-font-size: 13px !important;
+}
+
+/* ───────── Estado vacío y «escribe tu contraseña principal» ───────── */
+
+/* El zorro sobre el cofre, fuera: en su lugar, el glifo de la llave de 32 (DISENO §9, «Estado vacío»). */
+img[src$="cpm-fox-illustration.svg"] {
+  content: url("iconos/llave.svg") !important;
+  width: 32px !important;
+  height: 32px !important;
+  max-width: none !important;
+  margin-block: var(--aegis-s-8) var(--aegis-s-4) !important;
+  -moz-context-properties: fill !important;
+}
+.no-logins-card-content,
+.reauth-card-content {
+  align-items: center !important;
+  gap: var(--aegis-s-8) !important;
+  text-align: center !important;
+}
+.no-logins-card-heading {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+.no-logins-card-content > p {
+  margin-block: 0 var(--aegis-s-8) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+.no-logins-card-buttons {
+  align-self: stretch !important;
+  gap: var(--aegis-s-8) !important;
+}
+
+/* ───────── Aviso «Sin contraseña principal» (contrasenas-panel.sys.mjs) ───────── */
+
+/* Aviso de DISENO §9: superficie, borde de línea, radio 12; el texto avisa y el botón es secundario. */
+.aegis-aviso-principal {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--aegis-s-8) !important;
+  /* A 3 px de los lados, como las tarjetas de la lista (el relleno de su contenedor). */
+  margin: 0 3px var(--aegis-s-8) !important;
+  padding: var(--aegis-s-12) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--aegis-r-12) !important;
+}
+.aegis-aviso-principal-texto {
+  margin: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+.aegis-aviso-principal-boton {
+  appearance: none !important;
+  min-height: 30px !important;
+  margin: 0 !important;
+  padding-block: 0 !important;
+  padding-inline: var(--aegis-s-12) !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-7) !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+.aegis-aviso-principal-boton:focus-visible {
+  outline: 2px solid var(--aegis-focus) !important;
+  outline-offset: 2px !important;
+}
+.aegis-aviso-principal-boton:disabled {
+  opacity: 0.28 !important;
+}
+
+/* ───────── Formulario (añadir y editar) ───────── */
+
+login-form moz-card,
+.remove-login-card {
+  --card-border-radius: var(--aegis-r-12) !important;
+}
+.field-description {
+  font-size: 12px !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  megalist-alpha {
+    /* Tarjetas: superficie con borde de línea. */
+    --sidebar-box-background: var(--aegis-surface) !important;
+    --sidebar-box-color: var(--aegis-text) !important;
+    --sidebar-box-border: 1px solid var(--aegis-line) !important;
+    --sidebar-box-border-color: var(--aegis-line) !important;
+    --card-border-color: var(--aegis-line) !important;
+    /* Botones de icono y filas: sin fondo en reposo; al pasar, --aegis-hover; pulsados, --aegis-control. */
+    --button-background-color-ghost: transparent !important;
+    --button-background-color-ghost-hover: var(--aegis-hover) !important;
+    --button-background-color-ghost-active: var(--aegis-control) !important;
+    --button-text-color-ghost: var(--aegis-text) !important;
+    --button-text-color-ghost-hover: var(--aegis-text) !important;
+    --button-text-color-ghost-active: var(--aegis-text) !important;
+    --button-border-color: transparent !important;
+    --button-border-color-hover: transparent !important;
+    --button-border-color-active: transparent !important;
+    --button-border-color-primary: transparent !important;
+    --button-border-color-primary-hover: transparent !important;
+    --button-border-color-primary-active: transparent !important;
+    /* Campos y buscador: superficie con borde de campo. */
+    --input-text-background-color: var(--aegis-surface) !important;
+    --input-text-border: 1px solid var(--aegis-field-border) !important;
+    --input-text-border-color: var(--aegis-field-border) !important;
+    --input-text-color: var(--aegis-text) !important;
+    --link-color: var(--aegis-text) !important;
+    --icon-color: var(--aegis-sub) !important;
+    --color-accent-attention: var(--aegis-ok) !important;
+  }
+  input#input[type="search"]:focus-visible {
+    border-color: var(--aegis-focus) !important;
+  }
+  .input-label,
+  .field-description {
+    color: var(--aegis-sub) !important;
+  }
+  img[src$="cpm-fox-illustration.svg"] {
+    fill: var(--aegis-sub) !important;
+  }
+  .no-logins-card-content > p {
+    color: var(--aegis-sub) !important;
+  }
+  .aegis-aviso-principal {
+    background-color: var(--aegis-surface) !important;
+    border-color: var(--aegis-line) !important;
+  }
+  .aegis-aviso-principal-texto {
+    color: var(--aegis-text) !important;
+  }
+  .aegis-aviso-principal-boton {
+    background-color: var(--aegis-control) !important;
+    color: var(--aegis-text) !important;
+  }
+  .aegis-aviso-principal-boton:hover:not(:disabled) {
+    background-color: var(--aegis-control-hover) !important;
+  }
+  .aegis-aviso-principal-boton:hover:active:not(:disabled) {
+    background-color: var(--aegis-control-down) !important;
+  }
+}
+
+/* ───────── Códigos de verificación y Passkeys (autenticador/panel.sys.mjs) ───────── */
+
+/* DISENO §9, «Panel de contraseñas: códigos y passkeys». Encima de la lista, a 3 px de los lados como las tarjetas:
+   una tarjeta de superficie (borde de línea, radio 12, relleno 4) con dos filas plegables de 36 (glifo de 16, título
+   de 13 px 600, la cuenta en 12 px tabulares y el chevron). Dentro, filas de código: el sitio y la cuenta en 12 px
+   (--aegis-sub), el código en JetBrains Mono de 15 px 600 tabular («••• •••» si está oculto) con los segundos que le
+   quedan en 12 px, y tres botones de icono de 28 (radio 7: ver, copiar, cambiar). Textos de 12 px, botón compacto
+   (30, radio 7). Nada se mueve en reposo: la cuenta atrás solo corre con un código a la vista. */
+.aegis-extra {
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 3px var(--aegis-s-8) !important;
+  padding: var(--aegis-s-4) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--aegis-r-12) !important;
+  font-size: 13px !important;
+}
+.aegis-extra-grupo + .aegis-extra-grupo {
+  border-block-start: 1px solid transparent !important;
+}
+.aegis-plegable {
+  appearance: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--aegis-s-8) !important;
+  width: 100% !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 var(--aegis-s-8) 0 var(--aegis-s-8) !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-8) !important;
+  background-color: transparent;
+  /* Plegada, el chevron hacia el lado; desplegada, hacia abajo. */
+  background-image: url("iconos/escudo-chevron.svg") !important;
+  background-repeat: no-repeat !important;
+  background-position: right var(--aegis-s-8) center !important;
+  background-size: 16px !important;
+  -moz-context-properties: fill !important;
+  font: inherit !important;
+  font-weight: 600 !important;
+  text-align: start !important;
+  cursor: pointer !important;
+}
+.aegis-plegable::before {
+  content: "" !important;
+  flex-shrink: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  background-size: 16px !important;
+  -moz-context-properties: fill !important;
+}
+.aegis-glifo-codigos::before {
+  background-image: url("chrome://browser/content/aegis/autenticador-icono.svg") !important;
+}
+.aegis-glifo-passkeys::before {
+  background-image: url("iconos/passkey.svg") !important;
+}
+.aegis-plegable[aria-expanded="true"] {
+  background-image: url("iconos/escudo-desplegar.svg") !important;
+}
+.aegis-plegable-titulo {
+  flex: 1 !important;
+}
+.aegis-plegable-cuenta {
+  margin-inline-end: 24px !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.aegis-plegable:focus-visible,
+.aegis-icono:focus-visible,
+.aegis-compacto:focus-visible {
+  outline: 2px solid var(--aegis-focus) !important;
+  outline-offset: 2px !important;
+}
+.aegis-extra-cuerpo {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--aegis-s-8) !important;
+  padding: var(--aegis-s-4) var(--aegis-s-8) var(--aegis-s-12) !important;
+}
+.aegis-extra-cuerpo[hidden] {
+  display: none !important;
+}
+.aegis-extra-texto {
+  margin: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+.aegis-extra-texto[hidden] {
+  display: none !important;
+}
+.aegis-codigo-fila {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--aegis-s-4) !important;
+  min-height: 44px !important;
+}
+.aegis-codigo-textos {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+.aegis-codigo-sitio {
+  overflow: hidden !important;
+  font-size: 12px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.aegis-codigo-linea {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: var(--aegis-s-8) !important;
+}
+.aegis-codigo-valor {
+  font-family: var(--aegis-font-mono) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: 0.5px !important;
+}
+.aegis-codigo-restante {
+  font-size: 12px !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.aegis-codigo-restante[hidden] {
+  display: none !important;
+}
+.aegis-icono {
+  appearance: none !important;
+  flex-shrink: 0 !important;
+  width: 28px !important;
+  height: 28px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-7) !important;
+  background-color: transparent;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 16px !important;
+  -moz-context-properties: fill !important;
+  cursor: pointer !important;
+}
+.aegis-icono:disabled {
+  opacity: 0.28 !important;
+}
+.aegis-icono-ver {
+  background-image: url("chrome://browser/content/aegis/contrasena-principal-ojo.svg") !important;
+}
+.aegis-icono-ver[aria-pressed="true"] {
+  background-image: url("chrome://browser/content/aegis/contrasena-principal-ojo-tachado.svg") !important;
+}
+.aegis-icono-copiar {
+  background-image: url("iconos/copiar.svg") !important;
+}
+.aegis-icono-editar {
+  background-image: url("iconos/editar.svg") !important;
+}
+.aegis-compacto {
+  appearance: none !important;
+  align-self: flex-start !important;
+  min-height: 30px !important;
+  margin: 0 !important;
+  padding: 0 var(--aegis-s-12) !important;
+  border: 0 !important;
+  border-radius: var(--aegis-r-7) !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  cursor: pointer !important;
+}
+.aegis-compacto:disabled {
+  opacity: 0.28 !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-extra {
+    background-color: var(--aegis-surface) !important;
+    border-color: var(--aegis-line) !important;
+    color: var(--aegis-text) !important;
+  }
+  .aegis-extra-grupo + .aegis-extra-grupo {
+    border-block-start-color: var(--aegis-line) !important;
+  }
+  .aegis-plegable,
+  .aegis-plegable::before {
+    color: var(--aegis-text) !important;
+    fill: var(--aegis-sub) !important;
+  }
+  .aegis-plegable:hover,
+  .aegis-icono:hover:not(:disabled) {
+    background-color: var(--aegis-hover) !important;
+  }
+  .aegis-icono:hover:active:not(:disabled) {
+    background-color: var(--aegis-control) !important;
+  }
+  .aegis-plegable-cuenta,
+  .aegis-extra-texto,
+  .aegis-codigo-sitio,
+  .aegis-codigo-restante {
+    color: var(--aegis-sub) !important;
+  }
+  .aegis-icono {
+    fill: var(--aegis-sub) !important;
+  }
+  .aegis-icono:hover:not(:disabled) {
+    fill: var(--aegis-text) !important;
+  }
+  .aegis-compacto {
+    background-color: var(--aegis-control) !important;
+    color: var(--aegis-text) !important;
+  }
+  .aegis-compacto:hover:not(:disabled) {
+    background-color: var(--aegis-control-hover) !important;
+  }
+  .aegis-compacto:hover:active:not(:disabled) {
+    background-color: var(--aegis-control-down) !important;
+  }
+}
+
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .aegis-extra,
+  .aegis-compacto {
+    border: 1px solid currentColor !important;
+  }
+  .aegis-plegable,
+  .aegis-plegable::before,
+  .aegis-icono {
+    fill: currentColor !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aegis-plegable,
+  .aegis-icono,
+  .aegis-compacto {
+    transition: background-color var(--aegis-t-hover) var(--aegis-ease) !important;
+  }
+}

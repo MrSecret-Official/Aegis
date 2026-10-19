@@ -1,0 +1,15 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += ["content", "locales"]
+
+DIST_SUBDIR = "browser"
+export("DIST_SUBDIR")
+
+include("../branding-common.mozbuild")
+FirefoxBranding()
+
+# Las prefs de Aegis (settings/prefs) las añade tools/aegis.py al final de pref/firefox-branding.js en el árbol:
+# ese archivo sí está en browser/installer/package-manifest.in (un archivo nuevo de prefs no se empaquetaría) y se
+# lee después de firefox.js, así que gana (Preferences.cpp, pref_ReadDefaultPrefs: orden alfabético inverso).

@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · hoja de AGENTE de los diálogos propios (la cargan contrasena-principal.mjs y autenticador.mjs con
+   windowUtils.loadSheetUsingURIString(…, AGENT_SHEET)). En los documentos chrome, el motor pone en cada campo de
+   contraseña su propio botón de mostrar (::-moz-reveal), que solo se puede ocultar desde una hoja de agente: los
+   diálogos ya tienen el suyo (.ver, con su etiqueta y accesible con el teclado), y dos ojos en el mismo campo
+   confunden. */
+
+input::-moz-reveal {
+  display: none !important;
+}

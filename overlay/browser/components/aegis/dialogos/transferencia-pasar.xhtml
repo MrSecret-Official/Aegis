@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- Aegis · «Pasar a otro Aegis» (contrasenas/transferencia/transferencia.sys.mjs, abrirPasar): crea el paquete cifrado
+     con las contraseñas (y, si se deja marcado, los códigos de verificación) y enseña UNA vez el código de 6 palabras
+     que lo abre. Lo abre Ajustes › Contraseñas y autorrelleno. La lógica, en transferencia-pasar.mjs; el aspecto,
+     dialogo.css (común) y transferencia.css. Textos: aegis.ftl («aegis-pasar-*», «aegis-transferencia-*»).
+     La CSP no deja cargar nada salvo los scripts, las hojas y los glifos del propio navegador, ni conectar con nada
+     (connect-src 'none') ni enviar el formulario a ninguna parte. -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src chrome:; style-src chrome: resource:; img-src chrome:; font-src chrome:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title data-l10n-id="aegis-pasar-ventana"></title>
+    <link rel="stylesheet" href="resource:///modules/aegis/estilos/tokens.css" />
+    <link rel="stylesheet" href="chrome://browser/content/aegis/dialogo.css" />
+    <link rel="stylesheet" href="chrome://browser/content/aegis/transferencia.css" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="aegis.ftl" />
+    <script type="module" src="chrome://browser/content/aegis/transferencia-pasar.mjs"></script>
+  </head>
+  <body>
+    <form id="formulario" class="principal" novalidate="novalidate" autocomplete="off">
+      <header class="cabecera">
+        <div class="icono" aria-hidden="true"></div>
+        <h1 id="titulo" data-l10n-id="aegis-pasar-titulo"></h1>
+        <p id="explicacion" class="explicacion" data-l10n-id="aegis-pasar-explicacion"></p>
+      </header>
+
+      <!-- Paso 1: qué se lleva y la advertencia. -->
+      <div id="paso-preparar">
+        <p id="resumen" class="nota" aria-live="polite"></p>
+        <label id="fila-codigos" class="casilla" hidden="hidden">
+          <input type="checkbox" id="incluir-codigos" checked="checked" aria-describedby="aviso-codigos" />
+          <span id="incluir-codigos-texto"></span>
+        </label>
+        <section class="aviso" aria-labelledby="aviso-titulo">
+          <h2 id="aviso-titulo" data-l10n-id="aegis-pasar-aviso-titulo"></h2>
+          <p data-l10n-id="aegis-pasar-aviso-texto"></p>
+          <p id="aviso-codigos" data-l10n-id="aegis-pasar-aviso-codigos" hidden="hidden"></p>
+        </section>
+        <p class="limites" data-l10n-id="aegis-pasar-limites"></p>
+      </div>
+
+      <!-- Paso 2: el código, una sola vez. -->
+      <div id="paso-codigo" hidden="hidden">
+        <ol id="palabras" class="palabras" lang="en" aria-labelledby="titulo"></ol>
+        <div class="copiar">
+          <button type="button" id="copiar" class="compacto" data-l10n-id="aegis-pasar-copiar"></button>
+          <p id="estado-copia" class="nota" aria-live="polite"></p>
+        </div>
+        <section class="aviso" aria-labelledby="una-vez-titulo">
+          <h2 id="una-vez-titulo" data-l10n-id="aegis-pasar-una-vez-titulo"></h2>
+          <p data-l10n-id="aegis-pasar-una-vez-texto"></p>
+        </section>
+        <p id="guardado" class="limites"></p>
+      </div>
+
+      <p id="error-general" class="error" role="alert" hidden="hidden"></p>
+      <footer class="acciones">
+        <button type="button" id="cancelar" class="secundario" data-l10n-id="aegis-transferencia-cancelar"></button>
+        <button type="submit" id="crear" class="primario" disabled="disabled" data-l10n-id="aegis-pasar-crear"></button>
+        <button type="button" id="hecho" class="primario" hidden="hidden" data-l10n-id="aegis-transferencia-hecho"></button>
+      </footer>
+    </form>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preparar el vídeo · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · preparación</p>
+<h1>Vídeo de prueba</h1>
+<p>El banco no trae vídeos ni los descarga: el propio navegador graba dos segundos de una animación (WebM) y los
+deja en el servidor local. La página de control los reproduce luego como un vídeo cualquiera.</p>
+<div class="tarjeta"><p id="estado-fase">Grabando…</p><div id="siguiente"></div></div>
+<canvas id="lienzo" width="320" height="180"></canvas>
+<script>
+"use strict";
+(async () => {
+  const c = document.getElementById("lienzo");
+  const ctx = c.getContext("2d");
+  let n = 0;
+  const pintar = () => {
+    ctx.fillStyle = `hsl(${(n * 7) % 360} 40% 40%)`;
+    ctx.fillRect(0, 0, 320, 180);
+    ctx.fillStyle = "#fff";
+    ctx.font = "32px sans-serif";
+    ctx.fillText(`Aegis ${n++}`, 20, 100);
+  };
+  pintar();
+  const flujo = c.captureStream(30);
+  const grabadora = new MediaRecorder(flujo, { mimeType: "video/webm" });
+  const trozos = [];
+  grabadora.ondataavailable = e => trozos.push(e.data);
+  const listo = new Promise(r => (grabadora.onstop = r));
+  grabadora.start(250);
+  const t = setInterval(pintar, 33);
+  await Banco.espera(2200);
+  grabadora.stop();
+  clearInterval(t);
+  await listo;
+  const blob = new Blob(trozos, { type: "video/webm" });
+  const r = await (await fetch("/__/video", { method: "POST", body: blob })).json();
+  await Banco.listo({ bytes: r.bytes });
+})();
+</script>
+</body>
+</html>

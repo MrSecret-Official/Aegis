@@ -1,0 +1,131 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Escudos: el motor del bloqueador en gkrust, con adblock-rust propio
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: variante (plan B) de 0600-escudos/0001-motor-en-gkrust.patch para
+cuando etp_engine, el fork de adblock-rust que Mozilla lleva en
+toolkit/components/content-classifier/etp_engine, cambie su API, se recorte
+(ya quitó css-validation y el resolvedor incrustado) o desaparezca. El motor de
+Escudos usa entonces nuestra copia de adblock-rust 0.12.1, tal cual del
+third_party/rust de Firefox 157.0.1 (overlay:
+browser/components/aegis/escudos/motor-nativo/adblock/, con su
+adblock-origen.json), con las mismas features y el mismo src/lib.rs. Se elige
+con upstream.json › escudos › motor = "propio": tools/aegis.py aplica este
+archivo en lugar del de patches/series y pone Cargo.toml.propio como
+Cargo.toml del motor. Frente al de serie: la copia sale del workspace de Cargo
+(una línea en exclude del Cargo.toml raíz; si no, Cargo pediría sus
+dependencias opcionales y de pruebas, que no están vendorizadas) y la entrada
+de Cargo.lock es la de adblock en lugar de etp_engine (las mismas
+dependencias, todas ya en third_party/rust). No es el de serie porque
+duplicaría el código del motor en xul.dll: gkrust sigue enlazando etp_engine
+para el ContentClassifierService.
+Bug upstream: ninguno
+Origen: Aegis (adblock-rust 0.12.1 de Brave, MPL-2.0)
+
+Aegis-Parche: 0600-escudos/0001-motor-en-gkrust.patch
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 63ca9ea9a7..d07930f6eb 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -26,6 +26,29 @@ dependencies = [
+  "xpcom",
+ ]
+ 
++[[package]]
++name = "adblock"
++version = "0.12.1"
++dependencies = [
++ "arrayvec",
++ "base64 0.22.1",
++ "bitflags 2.10.0",
++ "flatbuffers",
++ "idna",
++ "itertools 0.13.0",
++ "memchr",
++ "once_cell",
++ "percent-encoding",
++ "precomputed-hash",
++ "regex",
++ "rustc-hash 1.999.999",
++ "seahash",
++ "serde",
++ "serde_json",
++ "thiserror 1.999.999",
++ "url",
++]
++
+ [[package]]
+ name = "adler2"
+ version = "2.0.1"
+@@ -56,6 +79,19 @@ dependencies = [
+  "viaduct-dev",
+ ]
+ 
++[[package]]
++name = "aegis_escudos_motor"
++version = "1.0.0"
++dependencies = [
++ "adblock",
++ "moz_task",
++ "nserror",
++ "nsstring",
++ "serde_json",
++ "thin-vec",
++ "xpcom",
++]
++
+ [[package]]
+ name = "aho-corasick"
+ version = "1.1.0"
+@@ -2995,6 +3031,7 @@ version = "0.1.0"
+ dependencies = [
+  "aa-stroke",
+  "abridged_certs",
++ "aegis_escudos_motor",
+  "app_collator_glue",
+  "audio_thread_priority",
+  "audioipc2-client",
+diff --git a/Cargo.toml b/Cargo.toml
+index b8749208d2..2097a6a976 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -83,6 +83,10 @@ members = [
+ # Excluded crates may be built as dependencies, but won't be considered members
+ # of the workspace and their dev-dependencies won't be included.
+ exclude = [
++  # Aegis: la copia propia de adblock-rust del motor de Escudos (motor «propio»): solo es dependencia;
++  # fuera del workspace, Cargo no pide sus dependencias opcionales ni las de pruebas.
++  "browser/components/aegis/escudos/motor-nativo/adblock",
++
+   # Exclude third-party code vendored into mozilla-central.
+   "servo",
+   "third_party/rust",
+diff --git a/toolkit/library/rust/shared/Cargo.toml b/toolkit/library/rust/shared/Cargo.toml
+index eec4e9adb7..4c80e41b10 100644
+--- a/toolkit/library/rust/shared/Cargo.toml
++++ b/toolkit/library/rust/shared/Cargo.toml
+@@ -17,6 +17,8 @@ nserror = { path = "../../../../xpcom/rust/nserror" }
+ nsstring = { path = "../../../../xpcom/rust/nsstring" }
+ netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }
+ xpcom = { path = "../../../../xpcom/rust/xpcom" }
++# Aegis: el motor de Escudos (overlay de Aegis: adblock-rust propio tras un servicio XPCOM).
++aegis_escudos_motor = { path = "../../../../browser/components/aegis/escudos/motor-nativo" }
+ xdg_alerts = { path = "../../../system/gnome/rust", optional = true }
+ prefs_parser = { path = "../../../../modules/libpref/parser" }
+ static_prefs = { path = "../../../../modules/libpref/init/static_prefs" }
+diff --git a/toolkit/library/rust/shared/lib.rs b/toolkit/library/rust/shared/lib.rs
+index 3896586042..2083304a19 100644
+--- a/toolkit/library/rust/shared/lib.rs
++++ b/toolkit/library/rust/shared/lib.rs
+@@ -61,6 +61,7 @@ extern crate static_prefs;
+ extern crate storage;
+ extern crate webrender_bindings;
+ extern crate xpcom;
++extern crate aegis_escudos_motor;
+ 
+ extern crate audio_thread_priority;
+ 

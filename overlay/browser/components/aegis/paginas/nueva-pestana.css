@@ -1,0 +1,743 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · nueva pestaña (about:newtab y about:home) con el diseño Nova de Firefox 157, a la manera de Brave: sin
+   logotipo, los accesos arriba, el buscador debajo (ancho moderado) y «Personalizar» discreto arriba a la derecha.
+   Monocromo (docs/DISENO.md): radio 12 en buscador y accesos, sin sombras ni violeta. Los colores de base vienen de
+   comun.css; aquí, las variables --newtab-* y los selectores propios de la página (content-src/components/Base,
+   Search, TopSites y CustomizeMenu de browser/extensions/newtab). */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+
+:root {
+  --newtab-background-color: var(--aegis-bg) !important;
+  --newtab-background-color-secondary: var(--aegis-surface) !important;
+  --newtab-background-card: var(--aegis-surface) !important;
+  --newtab-text-primary-color: var(--aegis-text) !important;
+  --newtab-contextual-text-primary-color: var(--aegis-text) !important;
+  --newtab-text-secondary-text: var(--aegis-sub) !important;
+  --newtab-text-secondary-color: var(--aegis-sub) !important;
+  --newtab-contextual-text-secondary-color: var(--aegis-sub) !important;
+  --newtab-text-topic-label-color: var(--aegis-sub) !important;
+  --newtab-wordmark-color: var(--aegis-text) !important;
+  --newtab-primary-action-background: var(--aegis-prim) !important;
+  --newtab-primary-action-background-dimmed: transparent !important;
+  --newtab-primary-action-background-pocket: var(--aegis-prim) !important;
+  --newtab-primary-element-hover-pocket-color: var(--aegis-prim-hover) !important;
+  --newtab-primary-element-active-color: var(--aegis-prim-down) !important;
+  --newtab-primary-element-text-color: var(--aegis-on-prim) !important;
+  --newtab-element-hover-color: var(--aegis-hover) !important;
+  --newtab-element-active-color: var(--aegis-control) !important;
+  --newtab-element-secondary-color: var(--aegis-control) !important;
+  --newtab-element-secondary-hover-color: var(--aegis-control-hover) !important;
+  --newtab-element-secondary-active-color: var(--aegis-control-down) !important;
+  --newtab-button-background: var(--aegis-control) !important;
+  --newtab-button-hover-background: var(--aegis-control-hover) !important;
+  --newtab-button-active-background: var(--aegis-control-down) !important;
+  --newtab-button-static-background: var(--aegis-control) !important;
+  --newtab-button-static-hover-background: var(--aegis-control-hover) !important;
+  --newtab-button-static-active-background: var(--aegis-control-down) !important;
+  --newtab-button-text: var(--aegis-text) !important;
+  --newtab-button-focus-border: var(--aegis-focus) !important;
+  --newtab-overlay-color: var(--aegis-bg) !important;
+  --newtab-layout-panel-background: var(--aegis-surface) !important;
+  --newtab-section-card-box-shadow-color: transparent !important;
+  --newtab-inner-box-shadow-color: transparent !important;
+}
+
+/* Fondo liso de Aegis, también bajo un tema o un fondo de pantalla anterior. */
+:root body {
+  background-color: var(--aegis-bg);
+}
+
+/* Personalizar: el menú lateral, con las superficies y la línea de Aegis. */
+.customize-menu {
+  background-color: var(--aegis-dialog);
+  border-color: var(--aegis-line);
+  box-shadow: var(--aegis-shadow);
+}
+}
+
+/* ── Sin logotipo ni nombre ─────────────────────────────────────────────────────────────────────────────────── */
+
+.logo-and-wordmark-wrapper,
+.logo-and-wordmark {
+  display: none !important;
+}
+
+/* ── Orden de Brave: accesos arriba, buscador debajo ────────────────────────────────────────────────────────── */
+
+/* .content es una rejilla y cada hijo ocupa una fila entera; .top-sites es display: contents, así que se ordenan
+   sus hijos. El bloque empieza a un sexto de la altura, como en Brave. Sin separación entre filas (la marca de
+   «buscador pegado» y el formulario de editar accesos también son filas): la da el margen del buscador. */
+.nova-enabled .content {
+  margin-block-start: clamp(var(--aegis-s-24), 10vh, 120px);
+  row-gap: 0;
+}
+
+.nova-enabled .content > .top-sites > .top-sites-list-wrapper {
+  order: -2;
+}
+
+.nova-enabled .content > .top-sites > .edit-topsites-wrapper {
+  order: -1;
+}
+
+/* El buscador no se queda pegado arriba al desplazar (y sin la franja que Nova pinta entonces). La separación de los
+   accesos, abajo (Personalizar › Diseño). */
+.nova-enabled .search-wrapper {
+  position: static !important;
+  padding-block: 0 !important;
+  margin-block: 0;
+}
+
+.nova-outer-wrapper.stuck-search::before {
+  display: none !important;
+}
+
+/* ── Buscador: ancho moderado, radio 12, superficie con borde de línea y sin sombra ──────────────────────────── */
+
+/* El ancho se elige en Personalizar › Diseño (--aegis-np-ancho, de 416 —el de Brave— a 600); en una ventana estrecha
+   nunca pasa del de la página. */
+.nova-enabled .search-wrapper .search-inner-wrapper {
+  width: min(var(--aegis-np-ancho, 600px), 100%) !important;
+  height: 44px;
+}
+
+.search-wrapper content-search-handoff-ui {
+  --content-search-handoff-ui-background-color: var(--aegis-surface) !important;
+  --content-search-handoff-ui-color: var(--aegis-text) !important;
+  --content-search-handoff-ui-fill: var(--aegis-sub) !important;
+  --content-search-handoff-ui-caret-color: var(--aegis-text) !important;
+  --content-search-handoff-ui-border-radius: var(--aegis-r-12) !important;
+  --content-search-handoff-ui-unfocused-border-color: var(--aegis-line-strong) !important;
+  --content-search-handoff-ui-fakefocus-border-color: var(--aegis-focus) !important;
+  --content-search-handoff-ui-fakefocus-box-shadow-inner: transparent !important;
+  --content-search-handoff-ui-fakefocus-box-shadow-outer: transparent !important;
+  /* La sombra del campo (box-shadow: var(--box-shadow-level-3) dentro de su shadow DOM). */
+  --box-shadow-level-3: none;
+}
+
+/* ── Accesos directos: losetas de radio 12, sin sombra ni crecimiento al pasar el ratón ──────────────────────── */
+
+.nova-enabled .top-sites-list {
+  column-gap: var(--aegis-s-8);
+  row-gap: var(--aegis-s-12);
+}
+
+.nova-enabled .top-site-outer .tile,
+.nova-enabled .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :has(.top-site-inner:hover), :has(.top-site-inner :focus-visible)) .tile {
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--aegis-line);
+  border-radius: var(--aegis-r-12);
+  background: var(--aegis-surface);
+  box-shadow: none;
+  transition: border-color var(--aegis-t-hover) var(--aegis-ease), background-color var(--aegis-t-hover) var(--aegis-ease);
+}
+
+.nova-enabled .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :has(.top-site-inner:hover), :has(.top-site-inner :focus-visible)) .tile {
+  border-color: var(--aegis-line-strong);
+  background: var(--aegis-menu);
+}
+
+.nova-enabled .top-site-outer .top-site-inner > a:focus-visible .tile {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: 2px;
+}
+
+.nova-enabled .top-site-outer .tile .top-site-icon,
+.nova-enabled .top-site-outer .tile .icon-wrapper {
+  border-radius: var(--aegis-r-8);
+}
+
+/* Acceso sin icono: la inicial sobre gris, no sobre un color al azar (TopSite.jsx lo pone en style). */
+.top-site-outer .tile .icon-wrapper.letter-fallback {
+  border-radius: var(--aegis-r-8);
+  background-color: var(--aegis-control) !important;
+  color: var(--aegis-text);
+}
+
+/* Acceso con la inicial cuyo favicon sí está guardado para una dirección equivalente (otro esquema, con o sin «www»,
+   redirecciones; paginas/logos.sys.mjs): el favicon en lugar de la letra, como pinta Firefox los suyos (llenando la
+   caja del icono, sin el gris de la inicial). */
+.top-site-outer[aegis-logo] .tile .icon-wrapper.letter-fallback {
+  background: var(--aegis-logo) center / contain no-repeat !important;
+  color: transparent;
+}
+
+/* Logo negro y monocromo con fondo transparente (paginas/logos.sys.mjs marca con aegis-logo-oscuro el elemento que
+   pinta la imagen, solo ese): en el tema oscuro, en blanco, para que se vea sobre la loseta (como pinta Brave el de
+   GitHub). */
+@media (prefers-color-scheme: dark) {
+  .top-site-outer .tile [aegis-logo-oscuro] {
+    filter: invert(1);
+  }
+}
+
+.top-site-outer[aegis-logo] .tile .icon-wrapper.letter-fallback::before,
+.top-site-outer[aegis-logo] .tile .icon-wrapper.letter-fallback::after {
+  visibility: hidden;
+}
+
+/* Diálogo de añadir o editar un acceso (DISENO §3, §9): cuerpo de 14 px (Firefox, 15), título de 600 (Firefox, 700),
+   campos con el borde de campo (no el de las casillas), botones de 14 px. */
+.topsite-form {
+  font-size: 14px;
+}
+.topsite-form .section-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.topsite-form .form-wrapper :is(label, .field, .field input[type="text"]) {
+  font-size: 14px;
+}
+/* Los campos usan --border-color-interactive, que en las páginas es el borde de las casillas (comun.css). */
+.topsite-form .field {
+  --border-color-interactive: var(--aegis-field-border) !important;
+}
+.topsite-form .field input[type="text"]:focus {
+  border-color: var(--aegis-focus);
+}
+.topsite-form moz-button {
+  --button-font-size: 14px;
+}
+/* Pie: «Usar una imagen personalizada», «Usar el logo de la web» y los botones, separados 12; si no caben (de, fr,
+   it), bajan de línea y los botones se quedan a la derecha. */
+.topsite-form-footer {
+  flex-wrap: wrap;
+  column-gap: var(--aegis-s-12);
+  row-gap: var(--aegis-s-8);
+}
+.topsite-form-footer > .actions {
+  margin-inline-start: auto;
+}
+
+/* «Usar el logo de la web» (un enlace como «Usar una imagen personalizada») y una línea de estado (buscando, o qué
+   ha fallado). */
+.topsite-form-footer .aegis-logo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--aegis-s-4) var(--aegis-s-12);
+}
+
+.topsite-form-footer .aegis-logo-boton {
+  background: none;
+  font: inherit;
+  color: var(--link-color);
+  text-decoration: underline;
+}
+
+.topsite-form-footer .aegis-logo-boton:hover {
+  color: var(--link-color-hover);
+  text-decoration: none;
+}
+
+.topsite-form-footer .aegis-logo-boton:active {
+  color: var(--link-color-active);
+}
+
+.topsite-form-footer .aegis-logo-boton:focus-visible {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: 2px;
+  border-radius: var(--aegis-r-5);
+}
+
+.topsite-form-footer .aegis-logo-boton:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.topsite-form-footer .aegis-logo-estado {
+  font-size: 12px;
+  color: var(--aegis-sub);
+}
+
+.top-site-outer .title {
+  font-family: var(--aegis-font);
+  font-size: 12px;
+  color: var(--aegis-sub);
+}
+
+/* Una sola línea con puntos suspensivos (Firefox parte el nombre a mitad de palabra en dos), del ancho del acceso. */
+.nova-enabled .top-site-outer .top-site-button {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.top-sites-list .top-site-outer .title .title-label {
+  width: 100%;
+  min-height: 1lh;
+  padding-inline: var(--aegis-s-4);
+  -webkit-line-clamp: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-sites-list:not(.dnd-active) .top-site-outer:is(:hover, .active) .title {
+  color: var(--aegis-text);
+}
+
+.nova-enabled .top-site-outer .context-menu-button {
+  border-radius: var(--aegis-r-7);
+  background-color: var(--aegis-menu);
+  border-color: var(--aegis-line);
+}
+
+/* Añadir acceso: una loseta vacía con «+», sin el círculo de color. */
+.add-button {
+  --button-background-color-primary: transparent;
+  --button-background-color-primary-hover: var(--aegis-hover);
+  --button-background-color-primary-active: var(--aegis-control);
+  --button-text-color-primary: var(--aegis-sub);
+  --button-text-color-primary-hover: var(--aegis-text);
+  --button-text-color-primary-active: var(--aegis-text);
+  --button-border-color-primary: var(--aegis-line);
+  --button-border-radius: var(--aegis-r-12);
+  --button-icon-fill: currentColor;
+  /* Del tamaño de las losetas (64), alineado con ellas. */
+  --button-size-icon: 64px;
+  --button-min-height: 64px;
+}
+
+/* Personalizar › Apariencia: el selector de temas de Firefox (muestras de color y «See more themes», que lleva a
+   addons.mozilla.org) no tiene pref que lo apague en la nueva pestaña. Los temas de Aegis están en Complementos. */
+.customize-menu .appearance-section {
+  display: none !important;
+}
+
+/* ── Personalizar: un engranaje discreto arriba a la derecha (como Brave), no el lápiz de color abajo ────────── */
+
+.personalizeButtonWrapper {
+  inset-block: var(--aegis-s-16) auto !important;
+  inset-inline-end: var(--aegis-s-16) !important;
+}
+
+.open-customization-button {
+  /* El icono es un <img> dentro del shadow DOM de moz-button; moz-button.css le pone «content: var(--button-icon-content)». */
+  --button-icon-content: url("chrome://global/skin/icons/settings.svg");
+  --button-icon-fill: currentColor;
+  --button-background-color-primary: transparent;
+  --button-background-color-primary-hover: var(--aegis-hover);
+  --button-background-color-primary-active: var(--aegis-control);
+  --button-text-color-primary: var(--aegis-sub);
+  --button-text-color-primary-hover: var(--aegis-text);
+  --button-text-color-primary-active: var(--aegis-text);
+  --button-border-color-primary: transparent;
+  --button-border-radius: var(--aegis-r-8);
+}
+
+/* ── Posición, orden y separación (Personalizar › Diseño; prefs aegis.nuevapestana.*, personalizar.sys.mjs) ────── */
+
+/* La separación (--aegis-np-espaciado, de 36 a 64 en la rejilla de 4) se mide desde el borde de las losetas de 64:
+   los nombres de los accesos quedan dentro. Bajo cada loseta, Firefox deja --aegis-np-nombres para el nombre (con
+   solo «+», sin accesos, la fila reserva más); encima, --aegis-np-sobre-losetas de relleno. */
+:root {
+  --aegis-np-nombres: 23px;
+  --aegis-np-sobre-losetas: 11px;
+}
+:root:not(:has(.top-site-outer:not(.add-button-tile))) {
+  --aegis-np-nombres: 40px;
+}
+
+/* Accesos encima del buscador (de serie, como Brave). */
+.nova-enabled .search-wrapper {
+  margin-block-start: max(0px, calc(var(--aegis-np-espaciado, 64px) - var(--aegis-np-nombres)));
+}
+
+/* Accesos debajo del buscador. */
+:root[aegis-np-accesos="abajo"] .nova-enabled .content > .search-wrapper {
+  order: -3;
+  margin-block-start: 0;
+}
+:root[aegis-np-accesos="abajo"] .nova-enabled .content > .top-sites > .top-sites-list-wrapper {
+  margin-block-start: max(0px, calc(var(--aegis-np-espaciado, 64px) - var(--aegis-np-sobre-losetas)));
+}
+
+/* Más arriba: el bloque empieza arriba (a unos 40 px del borde, con el relleno de la página), no en el tercio. */
+:root[aegis-np-posicion="arriba"] .nova-enabled .content {
+  grid-row-start: 1;
+  margin-block-start: var(--aegis-s-16);
+}
+
+/* ── Fondo (Personalizar › Fondo) ───────────────────────────────────────────────────────────────────────────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  :root[aegis-np-fondo="degradado"] body {
+    background-image: linear-gradient(135deg, var(--aegis-grad-desde), var(--aegis-grad-hasta) 70%);
+    background-attachment: fixed;
+  }
+  :root[aegis-np-fondo="enfasis"] body {
+    background-image: radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--aegis-accent) 16%, var(--aegis-bg)),
+      var(--aegis-bg) 75%);
+    background-attachment: fixed;
+  }
+  /* Imagen propia: un velo del color del fondo para que se lean el buscador y los accesos. */
+  :root[aegis-np-fondo="imagen"] body {
+    background-image: linear-gradient(color-mix(in srgb, var(--aegis-bg) 30%, transparent),
+      color-mix(in srgb, var(--aegis-bg) 30%, transparent)), var(--aegis-np-imagen, none);
+    background-position: center;
+    background-size: cover;
+    background-attachment: fixed;
+  }
+  /* Sobre una imagen, el nombre del acceso va en una etiqueta del color del fondo (opaca: sin translucidez, §6). */
+  :root[aegis-np-fondo="imagen"] .top-site-outer .title .title-label {
+    width: fit-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-inline: auto;
+    border-radius: var(--aegis-r-5);
+    background-color: var(--aegis-bg);
+  }
+  /* Y el «+» lleva la superficie de las losetas, para verse sobre la imagen. */
+  :root[aegis-np-fondo="imagen"] .add-button {
+    --button-background-color-primary: var(--aegis-surface);
+  }
+}
+
+/* ── Personalizar: las secciones de Aegis (Fondo, Énfasis y Diseño) ──────────────────────────────────────────── */
+
+.aegis-np {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-24);
+  font-family: var(--aegis-font);
+}
+.aegis-np-etiqueta {
+  margin: 0 0 var(--aegis-s-8);
+  padding-inline: var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.aegis-np-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-16);
+  padding: var(--aegis-s-16);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+}
+/* Solo para los lectores de pantalla (el nombre de cada muestra). */
+.aegis-np-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* El radio de cada opción no se ve (la opción entera es el control), pero sigue ahí para el teclado y los lectores. */
+.aegis-np :is(.aegis-np-opcion, .aegis-np-muestra, .aegis-np-segmento) {
+  position: relative;
+}
+.aegis-np :is(.aegis-np-opcion, .aegis-np-muestra, .aegis-np-segmento) > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Fondo: cuatro miniaturas de radio 8 con su nombre debajo. */
+.aegis-np-fondos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--aegis-s-8);
+}
+.aegis-np-opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  font-size: 12px;
+  text-align: center;
+}
+.aegis-np-miniatura {
+  width: 100%;
+  height: 48px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-8);
+  background-position: center;
+  background-size: cover;
+}
+.aegis-np-opcion:has(> input:checked) .aegis-np-miniatura {
+  outline: 2px solid;
+  outline-offset: 2px;
+}
+.aegis-np-opcion:has(> input:focus-visible) {
+  outline: 2px solid;
+  outline-offset: 2px;
+  border-radius: var(--aegis-r-8);
+}
+.aegis-np-imagen {
+  display: flex;
+}
+.aegis-np-imagen[hidden],
+.aegis-np-error:empty {
+  display: none;
+}
+.aegis-np-boton {
+  min-height: var(--aegis-h-icon);
+  padding: 0 var(--aegis-s-12);
+  border: none;
+  border-radius: var(--aegis-r-7);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.aegis-np-error {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Énfasis: muestras redondas (círculo de 24 en una zona de 32), como SecretOS; arriba Monocromo y los automáticos,
+   debajo los siete temas, y el nombre del elegido al final. */
+.aegis-np-muestras {
+  display: grid;
+  grid-template-columns: repeat(7, 32px);
+  justify-content: space-between;
+  row-gap: var(--aegis-s-8);
+}
+.aegis-np-muestra:nth-child(4) {
+  grid-column-start: 1;
+}
+.aegis-np-muestra {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.aegis-enfasis-circulo {
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 50%;
+}
+.aegis-np-muestra:has(> input:checked),
+.aegis-np-muestra:has(> input:focus-visible) {
+  outline: 2px solid;
+  outline-offset: 0;
+}
+.aegis-np-elegido {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Diseño: filas con el interruptor, segmentos y el deslizador. */
+.aegis-np-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aegis-s-12);
+  font-size: 13px;
+  cursor: pointer;
+}
+.aegis-np-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-8);
+}
+.aegis-np-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.aegis-np-rotulo {
+  font-size: 13px;
+}
+.aegis-np-valor {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+/* Interruptor de 34 × 20, radio 10, botón de 16 (DISENO §4 y §9). */
+.aegis-np-interruptor {
+  appearance: none;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: var(--aegis-r-10);
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: 2px 50%;
+  cursor: pointer;
+}
+.aegis-np-interruptor:checked {
+  background-position: calc(100% - 2px) 50%;
+}
+/* Segmentos: contenedor de radio 10 con opciones de radio 8 (concéntricos, a 2 px), alto 30. */
+.aegis-np-segmentos {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--aegis-s-4);
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-10);
+}
+.aegis-np-segmento {
+  display: grid;
+  place-items: center;
+  min-height: 24px;
+  padding-inline: var(--aegis-s-8);
+  border-radius: var(--aegis-r-8);
+  font-size: 12px;
+  text-align: center;
+}
+.aegis-np-segmento:has(> input:checked) {
+  font-weight: 600;
+}
+.aegis-np-segmento:has(> input:focus-visible) {
+  outline: 2px solid;
+  outline-offset: 1px;
+}
+/* Deslizador: pista de 4 (radio 2) y botón de 16. */
+.aegis-np-deslizador {
+  appearance: none;
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+}
+.aegis-np-deslizador::-moz-range-track,
+.aegis-np-deslizador::-moz-range-progress {
+  height: 4px;
+  border-radius: var(--aegis-r-2);
+}
+.aegis-np-deslizador::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 50%;
+}
+.aegis-np-deslizador:focus-visible {
+  outline: none;
+}
+.aegis-np-deslizador:focus-visible::-moz-range-thumb {
+  outline: 2px solid;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aegis-np-interruptor {
+    transition: background-position var(--aegis-t-hover) var(--aegis-ease);
+  }
+  .aegis-np-segmento,
+  .aegis-np-boton {
+    transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+  }
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-np {
+    color: var(--aegis-text);
+  }
+  .aegis-np-etiqueta {
+    color: var(--aegis-muted);
+  }
+  .aegis-np-tarjeta {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+  .aegis-np :is(.aegis-np-elegido, .aegis-np-valor, .aegis-np-opcion) {
+    color: var(--aegis-sub);
+  }
+  .aegis-np-opcion:has(> input:checked) {
+    color: var(--aegis-text);
+  }
+  .aegis-np-error {
+    color: var(--aegis-err);
+  }
+  .aegis-np-miniatura {
+    border-color: var(--aegis-line);
+  }
+  .aegis-np-miniatura[aegis-np-miniatura="liso"] {
+    background-color: var(--aegis-bg);
+  }
+  .aegis-np-miniatura[aegis-np-miniatura="degradado"] {
+    background-image: linear-gradient(135deg, var(--aegis-grad-desde), var(--aegis-grad-hasta) 70%);
+  }
+  .aegis-np-miniatura[aegis-np-miniatura="enfasis"] {
+    background-image: radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--aegis-accent) 30%, var(--aegis-bg)),
+      var(--aegis-bg) 80%);
+  }
+  .aegis-np-miniatura[aegis-np-miniatura="imagen"] {
+    background-color: var(--aegis-control);
+    background-image: var(--aegis-np-imagen, none);
+  }
+  /* La opción elegida: el énfasis, que siempre llega a 3:1 sobre la superficie (cMarca, DISENO §2). */
+  .aegis-np-opcion:has(> input:checked) .aegis-np-miniatura,
+  .aegis-np-muestra:has(> input:checked) {
+    outline-color: var(--aegis-accent);
+  }
+  .aegis-np-opcion:has(> input:focus-visible),
+  .aegis-np-muestra:has(> input:focus-visible),
+  .aegis-np-segmento:has(> input:focus-visible),
+  .aegis-np-deslizador:focus-visible::-moz-range-thumb {
+    outline-color: var(--aegis-focus);
+  }
+  .aegis-enfasis-circulo {
+    background-color: var(--aegis-accent);
+    border-color: var(--aegis-line-strong);
+  }
+  .aegis-np-boton {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+  }
+  .aegis-np-boton:hover {
+    background-color: var(--aegis-control-hover);
+  }
+  .aegis-np-boton:hover:active {
+    background-color: var(--aegis-control-down);
+  }
+  .aegis-np-interruptor {
+    background-image: radial-gradient(closest-side, var(--aegis-sub) 96%, transparent);
+    background-color: var(--aegis-track);
+  }
+  .aegis-np-interruptor:checked {
+    background-image: radial-gradient(closest-side, var(--aegis-on-accent) 96%, transparent);
+    background-color: var(--aegis-accent);
+  }
+  .aegis-np-interruptor:focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: 2px;
+  }
+  .aegis-np-segmentos {
+    border-color: var(--aegis-field-border);
+  }
+  /* Sin elegir, el relleno de control (5 %; DISENO §2, «Campos»), más claro al pasar el ratón: como en Ajustes y en
+     Complementos. */
+  .aegis-np-segmento {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+  }
+  .aegis-np-segmento:hover {
+    background-color: var(--aegis-control-hover);
+  }
+  /* El segmento elegido es la «cápsula» del énfasis (en Monocromo, la acción principal: DISENO §9). */
+  .aegis-np-segmento:has(> input:checked) {
+    background-color: var(--aegis-accent);
+    color: var(--aegis-on-accent);
+  }
+  .aegis-np-deslizador::-moz-range-track {
+    background-color: var(--aegis-track);
+  }
+  .aegis-np-deslizador::-moz-range-progress {
+    background-color: var(--aegis-accent);
+  }
+  .aegis-np-deslizador::-moz-range-thumb {
+    background-color: var(--aegis-prim);
+    border-color: var(--aegis-line-strong);
+  }
+}

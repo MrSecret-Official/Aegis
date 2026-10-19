@@ -1,0 +1,12 @@
+<!-- Aegis · icono de la navegación privada para 16–32 px: el fantasma con la cerradura simplificada (un punto y un
+     trazo), para distinguirlo del normal también en pequeño. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="7" fill="#0a0a0b"/>
+  <path fill="#f4f4f5" d="M7 14a9 9 0 0 1 18 0v11a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0z"/>
+  <g fill="#0a0a0b">
+    <ellipse cx="12.6" cy="13" rx="1.6" ry="2.3"/>
+    <ellipse cx="19.4" cy="13" rx="1.6" ry="2.3"/>
+    <circle cx="16" cy="18.2" r="1.7"/>
+    <path d="M15.2 19h1.6l.6 3.6h-2.8z"/>
+  </g>
+</svg>

@@ -1,0 +1,60 @@
+// Aegis Setup · tokens de color y medidas (docs/DISENO.md §2 y la paleta de la bienvenida de SecretOS).
+// Oscuro es la referencia; claro, el de DISENO.md (apagado #5f5f67 para llegar a AA en todas las superficies).
+// El resto de la interfaz no lleva colores fijos: todo sale de aquí.
+
+export global T {
+    in-out property <bool> oscuro: true;
+    // «Mostrar animaciones» de Windows (DISENO §7: con el movimiento reducido, cambios instantáneos).
+    in-out property <bool> movimiento: true;
+
+    out property <color> bg: oscuro ? bg-oscuro : bg-claro;
+    out property <color> surface: oscuro ? surface-oscuro : surface-claro;
+    out property <color> line: fg(oscuro ? 0.07 : 0.08);
+    // Borde de un control elevado (segmento elegido, tarjeta al pasar el ratón): --aegis-line-strong.
+    out property <color> line-strong: fg(0.16);
+    // Opción elegida (tarjetas, como las «Tarjetas de nivel»): --aegis-sel.
+    out property <color> sel: fg(oscuro ? 0.075 : 0.065);
+    out property <color> text: oscuro ? #f4f4f5 : #0a0a0b;
+    out property <color> sub: oscuro ? #a1a1aa : #5f5f67;
+    out property <color> muted: oscuro ? #85858e : #5f5f67;
+    // Botón secundario: reposo, encima y pulsado.
+    out property <color> control: fg(oscuro ? 0.07 : 0.05);
+    out property <color> control-hover: fg(oscuro ? 0.10 : 0.08);
+    out property <color> control-down: fg(oscuro ? 0.14 : 0.12);
+    out property <color> track: fg(oscuro ? 0.14 : 0.13);
+    // Fila o botón de icono al pasar el ratón (--aegis-hover).
+    out property <color> hover: fg(oscuro ? 0.04 : 0.035);
+    // Acción principal.
+    out property <color> prim: oscuro ? #ececee : #1c1c1e;
+    out property <color> prim-hover: oscuro ? #ffffff : #000000;
+    out property <color> prim-down: oscuro ? #d4d4d8 : #3a3a3d;
+    out property <color> on-prim: oscuro ? #0b0b0c : #ffffff;
+    // Foco: el texto al 55 %.
+    out property <color> focus: oscuro ? rgba(244, 244, 245, 0.55) : rgba(10, 10, 11, 0.55);
+    // Segmento elegido (como en la bienvenida de SecretOS).
+    out property <color> seg-sel: oscuro ? #2a2a2e : #ffffff;
+    // Campo de texto (DISENO §2, «Campos»): relleno al 4 % (7 % con foco) y borde al 10 %; selección del texto.
+    out property <color> campo: fg(0.04);
+    out property <color> campo-foco: fg(0.07);
+    out property <color> campo-borde: fg(0.10);
+    out property <color> seleccion: fg(0.30);
+    // Casilla sin marcar (≥ 3:1).
+    out property <color> casilla: oscuro ? rgba(255, 255, 255, 0.35) : rgba(0, 0, 0, 0.45);
+
+    // Fondo y superficie fijos de cada tema, para dibujar un navegador oscuro o claro sea cual sea el del
+    // instalador (miniaturas del paso «Elige el aspecto»).
+    out property <color> bg-oscuro: #0a0a0b;
+    out property <color> bg-claro: #f5f5f7;
+    out property <color> surface-oscuro: #151517;
+    out property <color> surface-claro: #ffffff;
+
+    // Duración de una animación, o ninguna con el movimiento reducido.
+    public pure function dur(d: duration) -> duration {
+        return movimiento ? d : 0ms;
+    }
+
+    // Tinta de superficies y líneas: blanco en oscuro, negro en claro.
+    public pure function fg(a: float) -> color {
+        return oscuro ? rgba(255, 255, 255, a) : rgba(0, 0, 0, a);
+    }
+}

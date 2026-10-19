@@ -1,0 +1,212 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · diálogos de la transferencia de contraseñas a otro Aegis (transferencia-pasar.xhtml y
+   transferencia-recibir.xhtml; DISENO §9, «Diálogos de la transferencia de contraseñas»). Lo común (cuerpo de 440,
+   cabecera, campos de 34, aviso, pie) está en dialogo.css; aquí, el glifo de las dos flechas, el código (seis
+   palabras numeradas en una rejilla de 2 × 3, en JetBrains Mono de 18 px 600 sobre una tarjeta de superficie de radio
+   8), la casilla de los códigos de verificación, la fila del archivo (un campo de 34 con su nombre y un botón compacto
+   dentro), el resumen al recibir y los botones compactos (30 de alto, radio 7, 13 px 400). Solo var(--aegis-*); los
+   colores, fuera de alto contraste. Nada se mueve en reposo. */
+
+.icono {
+  background-image: url("transferencia-icono.svg");
+}
+
+/* ───────── El código ───────── */
+
+.palabras {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--aegis-s-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  & > li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--aegis-s-8);
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: var(--aegis-s-8) var(--aegis-s-12);
+    border: 1px solid transparent;
+    border-radius: var(--aegis-r-8);
+  }
+}
+.numero {
+  min-width: 12px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.palabra {
+  font-family: var(--aegis-font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 28px;
+  overflow-wrap: anywhere;
+  /* Se puede seleccionar y copiar a mano (el botón «Copiar» lo hace con el portapapeles sensible). */
+  user-select: text;
+}
+
+.copiar,
+.borrar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  margin-block-start: var(--aegis-s-12);
+
+  & > .nota {
+    margin: 0;
+  }
+}
+
+/* ───────── Casilla de los códigos de verificación ───────── */
+
+.casilla {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--aegis-s-8);
+  margin-block-start: var(--aegis-s-12);
+
+  & > input {
+    flex-shrink: 0;
+    margin: 2px 0 0;
+  }
+}
+
+/* ───────── Archivo y código al recibir ───────── */
+
+.etiqueta {
+  display: block;
+  margin-block-end: var(--aegis-s-4);
+}
+.archivo {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  box-sizing: border-box;
+  min-height: var(--aegis-h-field);
+  padding-block: 0;
+  padding-inline: 10px 1px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-7);
+
+  /* «Elegir…» a 2 px del borde por los cuatro lados (1 de relleno + 1 de borde), con radio 7 − 2 = 5, concéntrico. */
+  & > .compacto {
+    border-radius: var(--aegis-r-5);
+  }
+  & > .nombre {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+/* El campo del código no lleva botón de mostrar: sin su hueco a la derecha. Visible y en monoespaciada (dialogo.css). */
+.caja > input.sin-boton {
+  padding-inline: 10px;
+}
+
+.resumen {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  & > li {
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+  & > li + li {
+    border-block-start: 1px solid transparent;
+  }
+}
+
+/* ───────── Botón compacto (DISENO §9, «Quitar» compacto) ───────── */
+
+.compacto {
+  flex-shrink: 0;
+  min-height: 30px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-7);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  appearance: none;
+
+  &:disabled {
+    opacity: 0.28;
+    cursor: default;
+  }
+}
+
+/* ───────── Colores ───────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .palabras > li {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+    color: var(--aegis-text);
+  }
+  .numero,
+  .archivo > .nombre[data-vacio] {
+    color: var(--aegis-sub);
+  }
+  .archivo {
+    background-color: var(--aegis-hover);
+    border-color: var(--aegis-field-border);
+    color: var(--aegis-text);
+  }
+  .resumen > li {
+    color: var(--aegis-text);
+  }
+  .resumen > li + li {
+    border-block-start-color: var(--aegis-line);
+  }
+  .compacto {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+
+    &:hover:not(:disabled) {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active:not(:disabled) {
+      background-color: var(--aegis-control-down);
+    }
+  }
+  .casilla > input {
+    accent-color: var(--aegis-accent);
+  }
+}
+
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .palabras > li,
+  .archivo,
+  .compacto {
+    border-color: currentColor;
+  }
+  .resumen > li + li {
+    border-block-start-color: currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .compacto {
+    transition:
+      background-color var(--aegis-t-hover) var(--aegis-ease),
+      transform var(--aegis-t-press) var(--aegis-ease);
+
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+  }
+}

@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Identidad propia de Aegis (fabricante y carpeta de perfiles)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: con el fabricante de Firefox («Mozilla»), Aegis usaba en Windows la
+misma carpeta de perfiles que un Firefox instalado (%APPDATA%\Mozilla\Firefox,
+con su profiles.ini e installs.ini) y las mismas claves del registro
+(HKCU\Software\Mozilla\Firefox\Launcher, PreXULSkeletonUISettings,
+DllPrefetchExperiment, Installer\<hash>…), que el desinstalador propio no
+puede quitar sin tocar las de Firefox. MOZ_APP_VENDOR y MOZ_APP_PROFILE solo
+se pueden fijar con imply_option (project_flag en toolkit/moz.configure: ni el
+mozconfig ni el configure.sh de la marca valen), así que hace falta este
+parche. Con ellos:
+- perfiles en %APPDATA%\Aegis y %LOCALAPPDATA%\Aegis (en Linux, ~/.aegis);
+- claves del navegador en HKCU\Software\Aegis\Firefox\…, solo de Aegis;
+- application.ini: Vendor=Aegis y Profile=Aegis.
+No cambia lo que ven las webs: el User-Agent sale de MOZ_APP_BASENAME
+(nsHttpHandler: si no es «Firefox», añade «<nombre>/<versión>»), que sigue
+siendo «Firefox», y navigator.vendor es siempre "". Tampoco las extensiones de
+AMO: el ID ({ec8030f7…}) es el mismo. El nombre de remoting («aegis») lo pone
+el mozconfig (MOZ_APP_REMOTINGNAME), sin parche. Ver docs/PLAN.md, «Identidad
+en el sistema».
+Bug upstream: ninguno
+Origen: Aegis (LibreWolf separa sus carpetas con un parche de
+nsXREDirProvider.cpp; aquí basta con los valores de configure)
+
+Aegis-Parche: 0200-branding/0001-identidad-propia.patch
+
+diff --git a/browser/moz.configure b/browser/moz.configure
+index ef7de8397f..58ccd2093a 100644
+--- a/browser/moz.configure
++++ b/browser/moz.configure
+@@ -11,7 +11,10 @@ imply_option("MOZ_NORMANDY", True)
+ imply_option("MOZ_PROFILE_MIGRATOR", True)
+ 
+ 
+-imply_option("MOZ_APP_VENDOR", "Mozilla")
++# Aegis: fabricante y carpeta de perfiles propios; el nombre (MOZ_APP_BASENAME)
++# sigue siendo «Firefox» por el User-Agent (0200-branding/0001).
++imply_option("MOZ_APP_VENDOR", "Aegis")
++imply_option("MOZ_APP_PROFILE", "Aegis")
+ imply_option("MOZ_APP_ID", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}")
+ # Include the DevTools client, not just the server (which is the default)
+ imply_option("MOZ_DEVTOOLS", "all")

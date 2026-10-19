@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recolector de huella · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · Caja fuerte</p>
+<h1>Un recolector de huella</h1>
+<p>Esta página imita a un script de huella conocido: lee un lienzo del tamaño que usan los recolectores (650 × 12)
+y prueba decenas de fuentes que no existen. Con Caja fuerte, el navegador lo reconoce y Aegis avisa junto al botón de
+Escudos, una vez por sitio y sesión, si lo hace la propia web.</p>
+<div class="tarjeta"><p id="estado-fase">Recolectando…</p><div id="siguiente"></div></div>
+<div class="tarjeta"><button id="extraer" class="principal" type="button">Leer el lienzo (con un clic)</button>
+<p class="porque">Con un clic tuyo, leer un lienzo en Caja fuerte abre el aviso del propio navegador para pedir permiso.</p></div>
+<div id="marcos" class="fila"></div>
+<div id="pruebas" aria-hidden="true" style="position:absolute;inset-inline-start:-9999px"></div>
+<script>
+"use strict";
+// metodo: lienzo (getImageData), todataurl, fuentes, todo (lienzo y fuentes), marco (lo hace un marco de otro sitio)
+const metodo = Banco.q.get("metodo") || "todo";
+
+function pintar(c) {
+  const ctx = c.getContext("2d");
+  ctx.textBaseline = "top";
+  ctx.font = "11px Arial";
+  ctx.fillStyle = "#f60";
+  ctx.fillRect(0, 0, 120, 12);
+  ctx.fillStyle = "#069";
+  ctx.fillText("Cwm fjordbank glyphs vext quiz, 😃", 2, 0);
+  return ctx;
+}
+
+function lienzo(api) {
+  const c = document.createElement("canvas");
+  c.width = 650;
+  c.height = 12;
+  const ctx = pintar(c);
+  if (api === "todataurl") {
+    return c.toDataURL().length;
+  }
+  const d = ctx.getImageData(0, 0, 650, 12).data;
+  let distintos = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i] !== 255 || d[i + 1] !== 255 || d[i + 2] !== 255) {
+      distintos++;
+    }
+  }
+  return distintos;
+}
+
+function fuentes() {
+  // Más de 10 familias que no están en el equipo en pocos segundos: lo que el navegador reconoce como sondeo.
+  const nombres = ["Abadi MT Condensed", "Adobe Fangsong Std", "Agency FB", "Aharoni Bold", "Algerian", "Amazone BT",
+    "American Typewriter", "Andale Mono WT", "Antique Olive", "Aparajita Bold", "Arabic Typesetting X", "Arno Pro",
+    "Avant Garde", "Avenir Next Rounded", "Baskerville Old Face", "Bauhaus 93", "Bell MT", "Bernard MT Condensed",
+    "Bitstream Vera Sans Mono", "Blackadder ITC", "Bodoni MT Black", "Bookman Old Style", "Bradley Hand ITC",
+    "Britannic Bold", "Broadway BT", "Brush Script MT"];
+  const caja = document.getElementById("pruebas");
+  let vistas = 0;
+  for (const n of nombres) {
+    const s = document.createElement("span");
+    s.style.font = `72px "${n}", monospace`;
+    s.textContent = "mmmmmmmmmmlli";
+    caja.append(s);
+    vistas += s.offsetWidth > 0 ? 1 : 0;
+  }
+  return vistas;
+}
+
+document.getElementById("extraer").addEventListener("click", () => {
+  window.__clic = { lienzo: lienzo("getimagedata") };
+});
+
+(async () => {
+  const datos = { metodo };
+  if (metodo === "marco") {
+    const host = Banco.q.get("marco") || "sitio-b.test";
+    const f = document.createElement("iframe");
+    f.title = "recolector de otro sitio";
+    f.src = `https://${host}/recolector.html?${Banco.parametros({ fase: Banco.fase, metodo: "todo", dentro: "1" })}`;
+    document.getElementById("marcos").append(f);
+    await Banco.espera(2500);
+  } else {
+    if (metodo === "lienzo" || metodo === "todo") {
+      datos.lienzo = lienzo("getimagedata");
+    }
+    if (metodo === "todataurl") {
+      datos.todataurl = lienzo("todataurl");
+    }
+    if (metodo === "fuentes" || metodo === "todo") {
+      datos.fuentes = fuentes();
+    }
+  }
+  if (Banco.q.get("dentro") !== "1") {
+    await Banco.listo(datos);
+  }
+})();
+</script>
+</body>
+</html>

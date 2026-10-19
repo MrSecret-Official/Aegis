@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web con Google · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+<script src="/google.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · Google limpio</p>
+<h1>Una web normal con Google Analytics y anuncios</h1>
+<p>Los scripts que la protección contra rastreo sabe sustituir se le dejan a ella; las balizas y los píxeles de
+Google se cortan siempre. Un enlace a <code>google.com/url</code> desde aquí no se toca.</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<div class="tarjeta"><a id="url-externo" href="#">Enlace a google.com/url (firmado) desde otra web</a></div>
+<div id="marcos" class="fila"></div>
+<script>
+"use strict";
+const destino = `https://sitio-a.test/destino.html?${Banco.parametros({ fase: "g-url-externo" })}`;
+document.getElementById("url-externo").href =
+  `https://www.google.com/url?q=${encodeURIComponent(destino)}&sa=U&usg=AOvVaw0prueba` +
+  `&aegisid=${encodeURIComponent(`${Banco.run}.g-url-externo.url`)}`;
+lanzarGoogle(Banco.fase || "g-terceros").then(senales => Banco.listo({ senales }));
+</script>
+</body>
+</html>

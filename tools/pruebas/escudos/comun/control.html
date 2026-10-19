@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web normal · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · lo que no se debe romper</p>
+<h1>Una web normal</h1>
+<p>Recursos propios y de su CDN, un formulario, un vídeo y un inicio de sesión de prueba. Nada de esto debe dejar de
+funcionar en ningún modo.</p>
+<div class="tarjeta"><p id="estado-fase">Comprobando…</p><pre class="mono" id="detalle"></pre><div id="siguiente"></div></div>
+<div class="tarjeta">
+<p class="etiqueta">Inicio de sesión de prueba</p>
+<form id="entrar" method="post" class="fila">
+<label>Usuario <input name="usuario" autocomplete="username" value="prueba"></label>
+<label>Contraseña <input name="clave" type="password" autocomplete="current-password" value="aegis-1234"></label>
+<button class="principal" type="submit">Entrar</button>
+</form>
+</div>
+<div class="tarjeta">
+<p class="etiqueta">Formulario</p>
+<form id="formulario" method="post" action="/__/formulario" target="respuesta" class="fila">
+<label>Nombre <input name="nombre" value="Ada"></label>
+<label>Comentario <input name="comentario" value="hola, ñandú"></label>
+<button type="submit">Enviar</button>
+</form>
+<iframe name="respuesta" title="respuesta del formulario"></iframe>
+</div>
+<div class="tarjeta">
+<p class="etiqueta">Vídeo local</p>
+<video id="video" muted playsinline width="240" height="135"></video>
+</div>
+<div id="marcos" class="fila"></div>
+<script>
+"use strict";
+document.getElementById("entrar").action = `/__/entrar?${Banco.parametros({ fase: "c-cuenta" })}`;
+
+function enviarFormulario() {
+  return new Promise(resolver => {
+    const marco = document.querySelector("iframe[name=respuesta]");
+    marco.addEventListener(
+      "load",
+      () => {
+        try {
+          resolver(JSON.parse(marco.contentDocument.body.textContent));
+        } catch (e) {
+          resolver({ error: String(e) });
+        }
+      },
+      { once: true }
+    );
+    document.getElementById("formulario").requestSubmit();
+    setTimeout(() => resolver({ error: "sin respuesta" }), 5000);
+  });
+}
+
+function video() {
+  return new Promise(resolver => {
+    const v = document.getElementById("video");
+    const fin = setTimeout(() => resolver({ error: "sin reproducir", readyState: v.readyState, red: v.networkState }), 8000);
+    v.addEventListener("error", () => {
+      clearTimeout(fin);
+      resolver({ error: v.error?.code ?? "error" });
+    });
+    v.addEventListener(
+      "timeupdate",
+      () => {
+        if (v.currentTime > 0.2) {
+          clearTimeout(fin);
+          resolver({ reproduce: true, ancho: v.videoWidth, alto: v.videoHeight, tiempo: v.currentTime });
+        }
+      },
+      { once: false }
+    );
+    v.src = `/__/video?id=${encodeURIComponent(Banco.id("video"))}`;
+    v.play().catch(e => resolver({ error: `play: ${e.name}` }));
+  });
+}
+
+(async () => {
+  const recursos = {};
+  for (const [etiqueta, url, tipo] of [
+    ["script-propio", `/__/js?id=${Banco.id("script-propio")}`, "script"],
+    ["imagen-propia", `/__/px?id=${Banco.id("imagen-propia")}`, "imagen"],
+    ["script-cdn", `https://cdn.sitio-a.test/__/js?id=${Banco.id("script-cdn")}`, "script"],
+    ["imagen-cdn", `https://cdn.sitio-a.test/__/px?id=${Banco.id("imagen-cdn")}`, "imagen"],
+    ["fetch-propio", `/__/eco?id=${Banco.id("fetch-propio")}`, "fetch"],
+  ]) {
+    recursos[etiqueta] = await Banco.cargar(tipo, url);
+  }
+  const datos = { recursos, formulario: await enviarFormulario(), video: await video() };
+  document.getElementById("detalle").textContent = JSON.stringify(datos, null, 1);
+  await Banco.listo(datos, {
+    siguiente: null,
+    instrucciones: "Después, pulsa «Entrar»: el inicio de sesión de prueba tiene que funcionar.",
+  });
+})();
+</script>
+</body>
+</html>

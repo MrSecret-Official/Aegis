@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: =?UTF-8?q?B=C3=BAsquedas=20sin=20c=C3=B3digos=20de=20socio?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: los buscadores de la configuración de Mozilla llevan un código de
+socio en la URL (por ejemplo client=firefox-b-d en Google) que identifica al
+navegador ante el buscador para los acuerdos comerciales de Mozilla. Aegis no
+tiene acuerdos comerciales: el código queda vacío y SearchEngine ya omite el
+parámetro cuando está vacío. Siguen algunos parámetros fijos de la configuración
+(form=, sourceid=…) que identifican el tráfico como Firefox, no a la persona.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0400-privacidad/0002-busqueda-sin-codigos-de-socio.patch
+
+diff --git a/toolkit/components/search/ConfigSearchEngine.sys.mjs b/toolkit/components/search/ConfigSearchEngine.sys.mjs
+index 2186215520..0adc758f32 100644
+--- a/toolkit/components/search/ConfigSearchEngine.sys.mjs
++++ b/toolkit/components/search/ConfigSearchEngine.sys.mjs
+@@ -685,7 +685,8 @@ export class ConfigSearchEngine extends SearchEngine {
+     this._name = engineConfig.name.trim();
+     this._definedAliases =
+       engineConfig.aliases?.map(alias => `@${alias}`) ?? [];
+-    this.#partnerCode = engineConfig.partnerCode ?? "";
++    // Aegis: sin códigos de socio (con el código vacío, SearchEngine omite el parámetro de la URL).
++    this.#partnerCode = "";
+     /** @type {string} */
+     this.isNewUntil = engineConfig.isNewUntil ?? "";
+ 
+@@ -725,7 +726,7 @@ export class ConfigSearchEngine extends SearchEngine {
+         });
+       }
+       partnerCodeMap.set("newtab_search_widget", {
+-        partnerCode: "firefox-b-exp1",
++        partnerCode: "",
+         telemetryId: "google-b-exp1",
+       });
+     }

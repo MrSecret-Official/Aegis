@@ -1,0 +1,728 @@
+// Aegis Setup · componentes. Copia de los de la bienvenida de SecretOS (Bienvenida.qml), con las medidas de
+// docs/DISENO.md §9: botones de 38 con radio 8, segmentos, tarjetas elegibles, grupos de filas, interruptor y casilla.
+// Movimiento (§7): color 110–150 ms, pulsar 90 ms (0,97), curva OutCubic; nada animado en reposo.
+//
+// Teclado (§1.7): cada control lleva un FocusScope de ancho 0 (como los widgets de Slint: el ratón no le quita el
+// foco a nadie), así que Tab y Mayús+Tab los recorren en orden. Espacio o Intro los activan; en los segmentos y en
+// las tarjetas, las flechas eligen la opción de al lado (en una rejilla, también arriba y abajo) y el foco la
+// acompaña. Con el foco, un anillo de 2 px por fuera en T.focus (§5).
+
+import { T } from "tokens.slint";
+
+export struct Opcion {
+    v: string,
+    t: string,
+}
+
+// Flechas en un grupo de tarjetas: la tarjeta con el foco apunta aquí a cuál pasa (grupo e índice) y sube «pedido»;
+// la que coincide toma el foco. Así el foco acompaña a la flecha aunque la de destino ya estuviera elegida.
+export global FocoTarjetas {
+    in-out property <string> grupo;
+    in-out property <int> indice;
+    in-out property <int> pedido;
+}
+
+// Anillo de foco (DISENO §5): 2 px, a 1 px por fuera del control y con su radio + 3. Quien lo usa le da la
+// posición (x/y −3, ancho/alto +6) y el radio.
+export component Anillo inherits Rectangle {
+    background: transparent;
+    border-width: 2px;
+    border-color: T.focus;
+}
+
+// Título de página: 24 px, 600, espaciado −0,4, como Ajustes y el Centro (30 px en la bienvenida).
+export component Titulo inherits Text {
+    color: T.text;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+    horizontal-alignment: center;
+    wrap: word-wrap;
+}
+
+export component Subtitulo inherits Text {
+    color: T.sub;
+    font-size: 14px;
+    horizontal-alignment: center;
+    wrap: word-wrap;
+}
+
+// Etiqueta de sección: 11 px, 600, +0,8, mayúsculas, apagado (único uso de mayúsculas).
+export component Seccion inherits Text {
+    color: T.muted;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    horizontal-alignment: center;
+}
+
+export component Nota inherits Text {
+    color: T.muted;
+    font-size: 12px;
+    horizontal-alignment: center;
+    wrap: word-wrap;
+}
+
+// Icono de la página: círculo de 56 con el glifo de 26.
+export component IconoPagina inherits Rectangle {
+    in property <image> icono;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: T.control;
+    border-width: 1px;
+    border-color: T.line;
+    Image {
+        source: root.icono;
+        width: 26px;
+        height: 26px;
+        colorize: T.text;
+    }
+}
+
+// Botón principal: uno por pantalla.
+export component BotonPrincipal {
+    in property <string> texto;
+    in property <bool> activo: true;
+    callback pulsado();
+    width: max(112px, etiqueta.preferred-width + 40px);
+    height: 38px;
+    accessible-role: button;
+    accessible-label: root.texto;
+    accessible-enabled: root.activo;
+    accessible-action-default => { if (root.activo) { root.pulsado(); } }
+    forward-focus: foco;
+    foco := FocusScope {
+        x: 0;
+        width: 0px;
+        enabled: root.activo;
+        key-pressed(e) => {
+            if (e.text == Key.Space || e.text == Key.Return) {
+                root.pulsado();
+                return accept;
+            }
+            return reject;
+        }
+    }
+    if foco.has-focus: Anillo {
+        x: -3px;
+        y: -3px;
+        width: root.width + 6px;
+        height: root.height + 6px;
+        border-radius: 11px;
+    }
+    Rectangle {
+        width: zona.pressed ? root.width * 0.97 : root.width;
+        height: zona.pressed ? root.height * 0.97 : root.height;
+        border-radius: 8px;
+        background: zona.pressed ? T.prim-down : zona.has-hover ? T.prim-hover : T.prim;
+        opacity: root.activo ? 1 : 0.28;
+        animate background { duration: T.dur(120ms); }
+        animate width, height { duration: T.dur(90ms); easing: cubic-bezier(0.33, 1, 0.68, 1); }
+    }
+    etiqueta := Text {
+        text: root.texto;
+        color: T.on-prim;
+        font-size: 14px;
+        font-weight: 600;
+        opacity: root.activo ? 1 : 0.6;
+    }
+    zona := TouchArea {
+        enabled: root.activo;
+        mouse-cursor: pointer;
+        clicked => { root.pulsado(); }
+    }
+}
+
+export component BotonSecundario {
+    in property <string> texto;
+    callback pulsado();
+    width: max(96px, etiqueta.preferred-width + 36px);
+    height: 38px;
+    accessible-role: button;
+    accessible-label: root.texto;
+    accessible-action-default => { root.pulsado(); }
+    forward-focus: foco;
+    foco := FocusScope {
+        x: 0;
+        width: 0px;
+        key-pressed(e) => {
+            if (e.text == Key.Space || e.text == Key.Return) {
+                root.pulsado();
+                return accept;
+            }
+            return reject;
+        }
+    }
+    if foco.has-focus: Anillo {
+        x: -3px;
+        y: -3px;
+        width: root.width + 6px;
+        height: root.height + 6px;
+        border-radius: 11px;
+    }
+    Rectangle {
+        width: zona.pressed ? root.width * 0.97 : root.width;
+        height: zona.pressed ? root.height * 0.97 : root.height;
+        border-radius: 8px;
+        background: zona.pressed ? T.control-down : zona.has-hover ? T.control-hover : T.control;
+        animate background { duration: T.dur(120ms); }
+        animate width, height { duration: T.dur(90ms); easing: cubic-bezier(0.33, 1, 0.68, 1); }
+    }
+    etiqueta := Text {
+        text: root.texto;
+        color: T.text;
+        font-size: 14px;
+    }
+    zona := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.pulsado(); }
+    }
+}
+
+// Botón de icono (la × de la esquina): 28 × 28, radio 7; al pasar --aegis-hover y pulsado --aegis-control (DISENO §9).
+export component BotonIcono {
+    in property <image> icono;
+    in property <string> etiqueta;
+    in property <bool> activo: true;
+    callback pulsado();
+    width: 28px;
+    height: 28px;
+    accessible-role: button;
+    accessible-label: root.etiqueta;
+    accessible-enabled: root.activo;
+    accessible-action-default => { if (root.activo) { root.pulsado(); } }
+    forward-focus: foco;
+    foco := FocusScope {
+        x: 0;
+        width: 0px;
+        enabled: root.activo;
+        key-pressed(e) => {
+            if (e.text == Key.Space || e.text == Key.Return) {
+                root.pulsado();
+                return accept;
+            }
+            return reject;
+        }
+    }
+    if foco.has-focus: Anillo {
+        x: -3px;
+        y: -3px;
+        width: root.width + 6px;
+        height: root.height + 6px;
+        border-radius: 10px;
+    }
+    Rectangle {
+        border-radius: 7px;
+        background: zona.pressed ? T.control : zona.has-hover ? T.hover : transparent;
+        animate background { duration: T.dur(110ms); }
+    }
+    Image {
+        source: root.icono;
+        width: 16px;
+        height: 16px;
+        colorize: T.text;
+        opacity: !root.activo ? 0.25 : zona.has-hover || foco.has-focus ? 1 : 0.6;
+        animate opacity { duration: T.dur(110ms); }
+    }
+    zona := TouchArea {
+        enabled: root.activo;
+        mouse-cursor: pointer;
+        clicked => { root.pulsado(); }
+    }
+}
+
+// Control segmentado: fondo de control con radio 12 y opciones de 26 con radio 8 (12 − 4, concéntricos); la
+// elegida, en gris más claro (seg-sel) con borde de línea fuerte, como en SecretOS. Con el teclado, cada opción es
+// una parada de Tab; Espacio o Intro la eligen, y las flechas eligen la de al lado (el foco la acompaña).
+export component Segmentos inherits Rectangle {
+    in property <[Opcion]> opciones;
+    in property <string> valor;
+    callback elegido(string);
+    // Una flecha acaba de elegir otra opción: el foco pasa a ella cuando se marque (changed sel).
+    property <bool> mover-foco;
+    height: 34px;
+    border-radius: 12px;
+    background: T.control;
+    HorizontalLayout {
+        padding: 4px;
+        spacing: 2px;
+        for o[i] in root.opciones: seg := Rectangle {
+            property <bool> sel: root.valor == o.v;
+            changed sel => {
+                if (self.sel && root.mover-foco) {
+                    root.mover-foco = false;
+                    foco.focus();
+                }
+            }
+            min-width: 96px;
+            height: 26px;
+            border-radius: 8px;
+            background: self.sel ? T.seg-sel : zona.has-hover ? T.hover : transparent;
+            border-width: 1px;
+            border-color: self.sel ? T.line-strong : transparent;
+            animate background { duration: T.dur(140ms); }
+            accessible-role: button;
+            accessible-label: o.t;
+            accessible-checked: self.sel;
+            accessible-action-default => { root.elegido(o.v); }
+            foco := FocusScope {
+                x: 0;
+                width: 0px;
+                key-pressed(e) => {
+                    if (e.text == Key.Space || e.text == Key.Return) {
+                        root.elegido(o.v);
+                        return accept;
+                    }
+                    if (e.text == Key.RightArrow && i + 1 < root.opciones.length) {
+                        root.mover-foco = true;
+                        root.elegido(root.opciones[i + 1].v);
+                        return accept;
+                    }
+                    if (e.text == Key.LeftArrow && i > 0) {
+                        root.mover-foco = true;
+                        root.elegido(root.opciones[i - 1].v);
+                        return accept;
+                    }
+                    return reject;
+                }
+            }
+            if foco.has-focus: Anillo {
+                x: -3px;
+                y: -3px;
+                width: seg.width + 6px;
+                height: seg.height + 6px;
+                border-radius: 11px;
+            }
+            HorizontalLayout {
+                padding-left: 14px;
+                padding-right: 14px;
+                Text {
+                    text: o.t;
+                    color: seg.sel ? T.text : T.sub;
+                    font-size: 13px;
+                    font-weight: seg.sel ? 600 : 400;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+            zona := TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.elegido(o.v); }
+            }
+        }
+    }
+}
+
+// Teclado de una tarjeta de un grupo: Espacio o Intro la eligen; las flechas eligen la de al lado (izquierda y
+// derecha en la fila; arriba y abajo si hay varias filas de «columnas»). Sin «total», solo Espacio o Intro.
+component TeclasTarjeta inherits FocusScope {
+    in property <string> grupo;
+    in property <int> indice;
+    in property <int> total;
+    in property <int> columnas;
+    callback pulsada();
+    callback mover(int);
+    property <int> pedido: FocoTarjetas.pedido;
+    changed pedido => {
+        if (FocoTarjetas.grupo == root.grupo && FocoTarjetas.indice == root.indice && root.total > 0) {
+            root.focus();
+        }
+    }
+    function ir(n: int) {
+        FocoTarjetas.grupo = root.grupo;
+        FocoTarjetas.indice = n;
+        FocoTarjetas.pedido += 1;
+        root.mover(n);
+    }
+    x: 0;
+    width: 0px;
+    key-pressed(e) => {
+        if (e.text == Key.Space || e.text == Key.Return) {
+            root.pulsada();
+            return accept;
+        }
+        if (root.total <= 0 || root.columnas <= 0) {
+            return reject;
+        }
+        if (e.text == Key.RightArrow && Math.mod(root.indice, root.columnas) < root.columnas - 1 && root.indice + 1 < root.total) {
+            root.ir(root.indice + 1);
+            return accept;
+        }
+        if (e.text == Key.LeftArrow && Math.mod(root.indice, root.columnas) > 0) {
+            root.ir(root.indice - 1);
+            return accept;
+        }
+        if (e.text == Key.DownArrow && root.indice + root.columnas < root.total) {
+            root.ir(root.indice + root.columnas);
+            return accept;
+        }
+        if (e.text == Key.UpArrow && root.indice - root.columnas >= 0) {
+            root.ir(root.indice - root.columnas);
+            return accept;
+        }
+        return reject;
+    }
+}
+
+// Tarjeta elegible con lámina para la miniatura, nombre y descripción debajo (ChoiceCard de SecretOS). La elegida,
+// como las «Tarjetas de nivel» de DISENO §9: borde de 1 px del color del texto, relleno --aegis-sel y nombre en 600.
+// «insignia» (p. ej. RECOMENDADO): etiqueta de sección de 11 px 600 en una pestaña de radio 5 sobre el borde de
+// arriba de la lámina, en gris (no pide atención). Con «grupo», «indice» y «total», las flechas recorren el grupo.
+export component Tarjeta {
+    in property <bool> sel;
+    in property <string> texto;
+    in property <string> detalle;
+    in property <string> insignia;
+    // Lo que lee el lector de pantalla como nombre (de serie, el texto; con insignia, p. ej. «Estricto+ (recomendado)»).
+    in property <string> nombre-accesible: root.texto;
+    in property <length> alto-lamina: 132px;
+    in property <string> grupo;
+    in property <int> indice;
+    in property <int> total;
+    in property <int> columnas: root.total;
+    callback pulsada();
+    callback mover(int);
+    width: 244px;
+    accessible-role: button;
+    accessible-label: root.nombre-accesible;
+    accessible-description: root.detalle;
+    accessible-checked: root.sel;
+    accessible-action-default => { root.pulsada(); }
+    forward-focus: foco;
+    foco := TeclasTarjeta {
+        grupo: root.grupo;
+        indice: root.indice;
+        total: root.total;
+        columnas: root.columnas;
+        pulsada => { root.pulsada(); }
+        mover(n) => { root.mover(n); }
+    }
+    VerticalLayout {
+        spacing: 0px;
+        lamina := Rectangle {
+            height: root.alto-lamina;
+            border-radius: 12px;
+            background: T.surface;
+            border-width: 1px;
+            border-color: root.sel ? T.text : zona.has-hover ? T.line-strong : T.line;
+            animate border-color { duration: T.dur(150ms); }
+            Rectangle {
+                border-radius: 12px;
+                background: root.sel ? T.sel : transparent;
+                animate background { duration: T.dur(150ms); }
+            }
+            if foco.has-focus: Anillo {
+                x: -3px;
+                y: -3px;
+                width: lamina.width + 6px;
+                height: lamina.height + 6px;
+                border-radius: 15px;
+            }
+            Rectangle {
+                x: 12px;
+                y: 12px;
+                width: parent.width - 24px;
+                height: parent.height - 24px;
+                @children
+            }
+            // Sobre el borde de arriba, centrada: tapa la línea con el fondo de la página y lleva su propio borde
+            // (el de la lámina: del color del texto si está elegida).
+            if root.insignia != "": Rectangle {
+                x: (lamina.width - self.width) / 2;
+                y: -9px;
+                width: rotulo.preferred-width + 16px;
+                height: 18px;
+                border-radius: 5px;
+                background: T.bg;
+                border-width: 1px;
+                border-color: root.sel ? T.text : T.line-strong;
+                animate border-color { duration: T.dur(150ms); }
+                rotulo := Text {
+                    text: root.insignia;
+                    color: T.sub;
+                    font-size: 11px;
+                    font-weight: 600;
+                    letter-spacing: 0.8px;
+                    vertical-alignment: center;
+                    horizontal-alignment: center;
+                }
+            }
+        }
+        Rectangle { height: 10px; }
+        Text {
+            text: root.texto;
+            color: T.text;
+            font-size: 14px;
+            font-weight: root.sel ? 600 : 400;
+            horizontal-alignment: center;
+        }
+        Rectangle { height: 2px; }
+        Text {
+            text: root.detalle;
+            color: T.muted;
+            font-size: 12px;
+            horizontal-alignment: center;
+            wrap: word-wrap;
+        }
+    }
+    zona := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.pulsada(); }
+    }
+}
+
+// Tarjeta elegible sin lámina (más baja): nombre de 14 px y una o dos líneas de 12 px en --aegis-sub, a la izquierda
+// y con 16 de relleno, sobre la superficie con borde de línea y radio 12. La elegida, como la Tarjeta y las «Tarjetas
+// de nivel» de DISENO §9: borde de 1 px del color del texto, relleno --aegis-sel y nombre en 600. Mismo teclado.
+export component TarjetaCompacta {
+    in property <bool> sel;
+    in property <string> texto;
+    in property <string> detalle;
+    in property <string> grupo;
+    in property <int> indice;
+    in property <int> total;
+    in property <int> columnas: root.total;
+    callback pulsada();
+    callback mover(int);
+    min-height: 76px;
+    accessible-role: button;
+    accessible-label: root.texto;
+    accessible-description: root.detalle;
+    accessible-checked: root.sel;
+    accessible-action-default => { root.pulsada(); }
+    forward-focus: foco;
+    foco := TeclasTarjeta {
+        grupo: root.grupo;
+        indice: root.indice;
+        total: root.total;
+        columnas: root.columnas;
+        pulsada => { root.pulsada(); }
+        mover(n) => { root.mover(n); }
+    }
+    Rectangle {
+        border-radius: 12px;
+        background: T.surface;
+        border-width: 1px;
+        border-color: root.sel ? T.text : zona.has-hover ? T.line-strong : T.line;
+        animate border-color { duration: T.dur(150ms); }
+        Rectangle {
+            border-radius: 12px;
+            background: root.sel ? T.sel : transparent;
+            animate background { duration: T.dur(150ms); }
+        }
+    }
+    if foco.has-focus: Anillo {
+        x: -3px;
+        y: -3px;
+        width: root.width + 6px;
+        height: root.height + 6px;
+        border-radius: 15px;
+    }
+    // Arriba: en una fila de la rejilla, los nombres quedan a la misma altura aunque una descripción ocupe más.
+    VerticalLayout {
+        padding: 16px;
+        spacing: 4px;
+        alignment: start;
+        Text {
+            text: root.texto;
+            color: T.text;
+            font-size: 14px;
+            font-weight: root.sel ? 600 : 400;
+        }
+        Text {
+            text: root.detalle;
+            // Sobre la superficie y el relleno de la elegida, el apagado no llega a 4,5:1.
+            color: T.sub;
+            font-size: 12px;
+            wrap: word-wrap;
+        }
+    }
+    zona := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.pulsada(); }
+    }
+}
+
+// Grupo de filas: superficie con radio 12 y borde de línea.
+export component Grupo inherits Rectangle {
+    border-radius: 12px;
+    background: T.surface;
+    border-width: 1px;
+    border-color: T.line;
+    VerticalLayout {
+        padding: 1px;
+        @children
+    }
+}
+
+// Fila de un grupo: resalte de radio 7 a 4 px del borde y separador sangrado 16 px. Si es pulsable, también es una
+// parada de Tab (Espacio o Intro la pulsan) con el anillo alrededor del resalte.
+export component Fila {
+    in property <bool> ultima;
+    in property <bool> pulsable;
+    in property <length> alto: 44px;
+    callback pulsada();
+    height: root.alto;
+    foco := FocusScope {
+        x: 0;
+        width: 0px;
+        enabled: root.pulsable;
+        key-pressed(e) => {
+            if (e.text == Key.Space || e.text == Key.Return) {
+                root.pulsada();
+                return accept;
+            }
+            return reject;
+        }
+    }
+    Rectangle {
+        x: 4px;
+        y: 4px;
+        width: parent.width - 8px;
+        height: parent.height - 8px;
+        border-radius: 7px;
+        background: root.pulsable && zona.pressed ? T.control : root.pulsable && zona.has-hover ? T.hover : transparent;
+        animate background { duration: T.dur(110ms); }
+    }
+    if root.pulsable && foco.has-focus: Anillo {
+        x: 1px;
+        y: 1px;
+        width: root.width - 2px;
+        height: root.height - 2px;
+        border-radius: 10px;
+    }
+    if !root.ultima: Rectangle {
+        x: 16px;
+        y: parent.height - 1px;
+        width: parent.width - 32px;
+        height: 1px;
+        background: T.line;
+    }
+    zona := TouchArea {
+        enabled: root.pulsable;
+        mouse-cursor: root.pulsable ? MouseCursor.pointer : MouseCursor.default;
+        clicked => { root.pulsada(); }
+    }
+    @children
+}
+
+// Interruptor: 34 × 20, radio 10, botón de 16. Apagado: pista --aegis-track con el botón --aegis-sub (DISENO §9).
+export component Interruptor {
+    in-out property <bool> encendido;
+    in property <string> etiqueta;
+    callback cambiado(bool);
+    width: 34px;
+    height: 20px;
+    accessible-role: switch;
+    accessible-label: root.etiqueta;
+    accessible-checked: root.encendido;
+    accessible-action-default => { root.encendido = !root.encendido; root.cambiado(root.encendido); }
+    forward-focus: foco;
+    foco := FocusScope {
+        x: 0;
+        width: 0px;
+        key-pressed(e) => {
+            if (e.text == Key.Space || e.text == Key.Return) {
+                root.encendido = !root.encendido;
+                root.cambiado(root.encendido);
+                return accept;
+            }
+            return reject;
+        }
+    }
+    if foco.has-focus: Anillo {
+        x: -3px;
+        y: -3px;
+        width: root.width + 6px;
+        height: root.height + 6px;
+        border-radius: 13px;
+    }
+    Rectangle {
+        border-radius: 10px;
+        background: root.encendido ? T.prim : T.track;
+        animate background { duration: T.dur(140ms); }
+        Rectangle {
+            x: root.encendido ? 16px : 2px;
+            y: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background: root.encendido ? T.on-prim : T.sub;
+            animate x { duration: T.dur(150ms); easing: cubic-bezier(0.33, 1, 0.68, 1); }
+        }
+    }
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.encendido = !root.encendido;
+            root.cambiado(root.encendido);
+        }
+    }
+}
+
+// Casilla: 18, radio 5. Sin marcar, borde al 35 % (45 % en claro). Va dentro de una Fila pulsable, que es la que
+// recibe el foco y el clic.
+export component Casilla {
+    in property <bool> marcada;
+    width: 18px;
+    height: 18px;
+    Rectangle {
+        border-radius: 5px;
+        background: root.marcada ? T.prim : transparent;
+        border-width: root.marcada ? 0px : 1px;
+        border-color: T.casilla;
+        animate background { duration: T.dur(120ms); }
+        if root.marcada: Image {
+            source: @image-url("../assets/iconos/marca.svg");
+            width: 14px;
+            height: 14px;
+            colorize: T.on-prim;
+        }
+    }
+}
+
+// Campo de texto: alto 34, radio 7, relleno al 4 % (7 % con foco), borde al 10 % (con foco, T.focus).
+export component Campo inherits Rectangle {
+    in-out property <string> texto <=> entrada.text;
+    in property <string> etiqueta;
+    callback aceptado();
+    height: 34px;
+    border-radius: 7px;
+    clip: true;
+    background: entrada.has-focus ? T.campo-foco : T.campo;
+    border-width: 1px;
+    border-color: entrada.has-focus ? T.focus : T.campo-borde;
+    animate background, border-color { duration: T.dur(140ms); }
+    entrada := TextInput {
+        x: 12px;
+        width: parent.width - 24px;
+        height: parent.height;
+        vertical-alignment: center;
+        single-line: true;
+        color: T.text;
+        font-size: 13px;
+        selection-background-color: T.seleccion;
+        selection-foreground-color: T.text;
+        accessible-label: root.etiqueta;
+        accepted => { root.aceptado(); }
+    }
+}
+
+// Barra de progreso fina: alto 4, radio 2; el relleno, el color de la acción principal.
+export component BarraProgreso inherits Rectangle {
+    in property <float> valor;
+    height: 4px;
+    border-radius: 2px;
+    background: T.track;
+    accessible-role: progress-indicator;
+    accessible-value: round(root.valor * 100) + " %";
+    Rectangle {
+        x: 0px;
+        width: parent.width * clamp(root.valor, 0, 1);
+        height: parent.height;
+        border-radius: 2px;
+        background: T.prim;
+        animate width { duration: T.dur(200ms); easing: cubic-bezier(0.33, 1, 0.68, 1); }
+    }
+}

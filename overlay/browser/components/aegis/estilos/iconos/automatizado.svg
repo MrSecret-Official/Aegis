@@ -1,0 +1,12 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Aegis · navegador controlado por un programa (pruebas automáticas): cabeza de robot, glifo de línea (rejilla de
+     24, trazo de 1,5, extremos redondos), en lugar del robot de color de Firefox. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="context-fill"
+     stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 3.5v2.5"/>
+  <circle cx="12" cy="3" r=".5"/>
+  <rect x="4.5" y="6" width="15" height="12" rx="3.5"/>
+  <path d="M9.25 11v1.5M14.75 11v1.5M9.5 15.25h5M2.75 11v3M21.25 11v3"/>
+</svg>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Google (simulado) · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+<script src="/google.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · Google limpio</p>
+<h1>Portada de Google (simulada)</h1>
+<p>Servida en <code>https://www.google.com/</code> por el banco. Lanza la telemetría y los anuncios que corta Google
+limpio y lo que tiene que dejar pasar (inicio de sesión, reCAPTCHA, fuentes, mapas…).</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<div class="tarjeta">
+<p class="etiqueta">Resultados (enlaces de prueba)</p>
+<ul>
+<li><a id="url-firmado" href="#">Resultado con enlace de Google firmado (usg)</a></li>
+<li><a id="url-sinfirma" href="#">Enlace de Google sin firma</a></li>
+<li><a id="url-javascript" href="#">Enlace de Google a javascript:</a></li>
+<li><a id="busqueda" href="#">Otra búsqueda desde la página (con parámetros de rastreo)</a></li>
+</ul>
+</div>
+<div id="marcos" class="fila"></div>
+<script>
+"use strict";
+const destino = (fase, extra = "") => `https://sitio-a.test/destino.html?${Banco.parametros({ fase })}${extra}`;
+const urlGoogle = (fase, q, firma) =>
+  `/url?q=${encodeURIComponent(q)}&sa=U&ved=2ahUKEwprueba${firma ? "&usg=AOvVaw0prueba" : ""}` +
+  `&aegisid=${encodeURIComponent(`${Banco.run}.${fase}.url`)}`;
+document.getElementById("url-firmado").href = urlGoogle(
+  "g-url-firmado",
+  destino("g-url-firmado", "&gclid=prueba123&x=1"),
+  true
+);
+document.getElementById("url-sinfirma").href = urlGoogle("g-url-sinfirma", destino("g-url-sinfirma"), false);
+document.getElementById("url-javascript").href = urlGoogle("g-url-javascript", "javascript:void(0)", true);
+document.getElementById("busqueda").href =
+  `/search?q=${encodeURIComponent(`${Banco.run}-enlace`)}&ved=1&ei=2&oq=x&sxsrf=3&start=10&` +
+  Banco.parametros({ fase: "g-busqueda-enlace" });
+lanzarGoogle("g-inicio").then(senales => Banco.listo({ senales }));
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "nombre": {
+    "message": "Mitternacht",
+    "description": "Nombre del tema en Complementos › Temas."
+  },
+  "descripcion": {
+    "message": "Tiefes Schwarz mit einem schwachen Licht oben.",
+    "description": "Descripción del tema."
+  }
+}

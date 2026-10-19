@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resultado · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+<script src="/google.js"></script>
+<script src="/casos.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · resultado</p>
+<h1 id="titulo">Resultado</h1>
+<p id="modo" class="mono"></p>
+<div id="veredicto"><p>Evaluando…</p></div>
+<p><a href="/">Volver al banco</a></p>
+<script>
+"use strict";
+(async () => {
+  const caso = Banco.caso;
+  document.getElementById("titulo").textContent = `Resultado: ${caso}`;
+  document.getElementById("modo").textContent = Object.entries(Banco.modo).map(([k, v]) => `${k}=${v}`).join(" · ");
+  const [fases, registro, base] = await Promise.all([
+    Banco.json(`/__/fase?run=${encodeURIComponent(Banco.run)}`),
+    Banco.registro(caso === "red" ? "" : Banco.run),
+    Banco.json("/__/base"),
+  ]);
+  let comprobaciones;
+  try {
+    comprobaciones = Casos[caso](Banco.modo, fases, registro, base);
+  } catch (e) {
+    comprobaciones = [{ titulo: "Error al evaluar", esperado: "—", observado: `${e}\n${e.stack}`, estado: "fallo", porque: "", codigo: "" }];
+  }
+  Banco.pintar(document.getElementById("veredicto"), comprobaciones);
+  window.__veredicto = { caso, run: Banco.run, modo: Banco.modo, comprobaciones, fases: Object.keys(fases) };
+})();
+</script>
+</body>
+</html>

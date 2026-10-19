@@ -1,0 +1,16 @@
+# Parches de Aegis sobre Firefox, en orden de aplicación (uno por línea, ruta relativa a patches/).
+# Cada parche lleva cabecera con Asunto, Por qué, Bug upstream y Origen (ver docs/PARCHES.md).
+# Grupos: 0100-build 0200-branding 0300-telemetria 0400-privacidad 0500-ui 0600-escudos
+#         0700-tor-proxy 0800-contrasenas 0900-migracion
+0100-build/0001-actualizaciones-estaticas.patch
+0400-privacidad/0001-actualizaciones-anonimas.patch
+0400-privacidad/0002-busqueda-sin-codigos-de-socio.patch
+0500-ui/0001-gancho-aegis.patch
+0500-ui/0002-temas-de-aegis.patch
+0400-privacidad/0003-conexiones-tras-la-bienvenida.patch
+0600-escudos/0001-motor-en-gkrust.patch
+0100-build/0002-sin-asistente-nsis-tras-actualizar.patch
+0400-privacidad/0004-descarga-del-mar-sin-extras.patch
+0200-branding/0001-identidad-propia.patch
+0400-privacidad/0005-sin-atribucion-msix.patch
+0900-migracion/0001-migradores-firefox-y-aegis.patch

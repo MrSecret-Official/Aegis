@@ -1,0 +1,97 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · Complementos, por dentro de los componentes de Firefox (shadow DOM). Hoja de USUARIO, la única que entra en
+   el shadow DOM (la pone complementos.sys.mjs solo en about:addons): por eso todo va con !important, y los
+   selectores usan clases que solo existen dentro de esos componentes. Solo var(--aegis-*). */
+
+/* ───────── Barra lateral (moz-page-nav) ───────── */
+
+/* Cabecera de Firefox («Complementos» grande con el logotipo): la sustituye la de Aegis (complementos.sys.mjs). El
+   título sigue existiendo para los lectores de pantalla (da nombre a la lista de categorías). */
+.page-nav-heading-wrapper {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+.page-nav-heading-wrapper > .logo {
+  display: none !important;
+}
+
+/* Filas de 32 (16 + 8 + 8): icono a la izquierda, texto de 13. */
+.page-nav-icon {
+  width: 16px !important;
+  height: 16px !important;
+}
+.primary-nav-group ~ hr {
+  margin-block: var(--aegis-s-8) !important;
+}
+
+/* ───────── Estado vacío (addons-promo) ───────── */
+
+/* Glifo de 32 encima de la frase, todo centrado; sin la ilustración ni el título de Firefox. */
+.promo-layout {
+  flex-direction: column !important;
+  gap: var(--aegis-s-12) !important;
+  text-align: center !important;
+}
+.promo-layout > .image-container {
+  width: 32px !important;
+  height: 32px !important;
+  align-self: center !important;
+}
+.promo-layout > .image-container > img {
+  width: 32px !important;
+  height: 32px !important;
+  -moz-context-properties: fill;
+}
+.promo-layout > .text-container {
+  align-items: center !important;
+  gap: var(--aegis-s-16) !important;
+  padding-inline: 0 !important;
+}
+.promo-layout > .text-container > .heading {
+  display: none !important;
+}
+.promo-layout > .text-container > .message {
+  padding: 0 !important;
+  font-size: 14px !important;
+}
+
+/* ───────── Segmentos (Claro, Oscuro, Dispositivo: moz-segmented-control) ───────── */
+
+/* DISENO §9: contenedor de radio 10 con las opciones de radio 8 a 2 px; 30 de alto (24 + 2 × 2 + 2 de borde). Firefox:
+   radio 12 y casi 4 de relleno (33,5). */
+moz-segmented-control {
+  --segmented-control-padding: 2px !important;
+  --segmented-control-border-radius: var(--aegis-r-10) !important;
+}
+moz-segmented-control-item {
+  --button-border-radius: var(--aegis-r-8) !important;
+}
+/* El elegido, en 600, como en Ajustes y en la nueva pestaña. */
+moz-segmented-control-item[checked] {
+  --button-font-weight: 600 !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* Iconos de la barra lateral en gris; el de la categoría elegida, en el color del texto. */
+  .page-nav-icon {
+    fill: var(--aegis-sub) !important;
+  }
+  button[selected] > .page-nav-icon,
+  button:hover > .page-nav-icon {
+    fill: var(--aegis-text) !important;
+  }
+
+  .promo-layout > .image-container > img {
+    fill: var(--aegis-sub) !important;
+  }
+  .promo-layout > .text-container > .message {
+    color: var(--aegis-sub) !important;
+  }
+}

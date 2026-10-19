@@ -1,0 +1,121 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · página de la navegación privada (about:privatebrowsing) con el diseño Nova de Firefox 157, en la línea de
+   la nueva pestaña: fondo liso de Aegis sin la cola de zorro, el fantasma con candado de la marca en lugar del
+   antifaz violeta, el buscador de radio 12 con superficie y borde, y los textos en el gris de Aegis. Los colores de
+   base vienen de comun.css; aquí, lo propio de browser/themes/shared/privatebrowsing/aboutPrivateBrowsing.css. */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+
+/* Firefox fija «color-scheme: dark», el morado #25003e y el texto blanco en html.private: Aegis sigue al sistema,
+   como el resto de páginas, con su fondo y su texto. */
+:root.private {
+  color-scheme: light dark;
+  --background-color-canvas: var(--aegis-bg) !important;
+  --link-color: var(--aegis-text) !important;
+  --link-color-hover: var(--aegis-text) !important;
+  --link-color-active: var(--aegis-sub) !important;
+  background: var(--aegis-bg) !important;
+  color: var(--aegis-text) !important;
+}
+
+/* Sin la cola de zorro de fondo. */
+:root.private body::before {
+  display: none !important;
+}
+
+/* Buscador: igual que el de la nueva pestaña. */
+content-search-handoff-ui {
+  --content-search-handoff-ui-background-color: var(--aegis-surface) !important;
+  --content-search-handoff-ui-color: var(--aegis-text) !important;
+  --content-search-handoff-ui-fill: var(--aegis-sub) !important;
+  --content-search-handoff-ui-caret-color: var(--aegis-text) !important;
+  --content-search-handoff-ui-border-width: 1px !important;
+  --content-search-handoff-ui-border-radius: var(--aegis-r-12) !important;
+  --content-search-handoff-ui-unfocused-border-color: var(--aegis-line-strong) !important;
+  --content-search-handoff-ui-fakefocus-border-color: var(--aegis-focus) !important;
+  --content-search-handoff-ui-fakefocus-box-shadow-inner: transparent !important;
+  --content-search-handoff-ui-fakefocus-box-shadow-outer: transparent !important;
+  --box-shadow-level-3: none;
+}
+
+/* Textos: el título en el texto de Aegis; la explicación y el pie, en el secundario. */
+:root.private .nova-subheader,
+:root.private .info {
+  color: var(--aegis-sub) !important;
+}
+
+#private-browsing-myths:link,
+#private-browsing-myths:visited {
+  color: var(--aegis-text) !important;
+}
+}
+
+/* ── Logo: el fantasma con candado de la marca (about-logo-private*.png, de branding/icono/privado) ─────────── */
+
+.logo-and-wordmark .logo {
+  background: image-set(url("chrome://branding/content/about-logo-private.png"), url("chrome://branding/content/about-logo-private@2x.png") 2x) no-repeat center / contain !important;
+  width: 72px !important;
+  height: 72px !important;
+}
+
+.logo-and-wordmark .wordmark {
+  display: none !important;
+}
+
+.nova-tagline {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nova-subheader {
+  font-size: 14px;
+}
+
+/* ── Buscador: ancho moderado, 44 px ────────────────────────────────────────────────────────────────────────── */
+
+.search-inner-wrapper {
+  min-width: 0 !important;
+  width: min(600px, 100%);
+  height: 44px !important;
+}
+
+/* ── Sin promociones (Relay, VPN, fijar a la barra de tareas…): las apagan las prefs de 55-mensajes.js; esto evita
+   que un mensaje que llegue por otra vía ocupe sitio. ─────────────────────────────────────────────────────────── */
+
+.promo,
+.nova-promo-wrapper {
+  display: none !important;
+}
+
+/* ── Tor (solo en la instancia con Tor; privada.sys.mjs): el estado de la conexión y una línea honesta, debajo del
+   buscador, en el gris de Aegis. Un error lleva su color y su texto (DISENO §2); conectado no se celebra. ─────── */
+
+.aegis-tor-privada {
+  width: min(600px, 100%);
+  margin-block: var(--aegis-s-16) 0;
+  text-align: center;
+}
+.aegis-tor-privada-estado {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.aegis-tor-privada-nota {
+  margin: var(--aegis-s-4) 0 0;
+  font-size: 12px;
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-tor-privada-estado {
+    color: var(--aegis-text);
+  }
+  .aegis-tor-privada[aegis-tor-fase="error"] > .aegis-tor-privada-estado {
+    color: var(--aegis-err);
+  }
+  .aegis-tor-privada-nota {
+    color: var(--aegis-sub);
+  }
+}

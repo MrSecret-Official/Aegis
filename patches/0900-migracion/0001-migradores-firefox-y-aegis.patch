@@ -1,0 +1,82 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Importar de Firefox y de otro perfil de Aegis
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: el asistente de importar no ofrece Firefox (FirefoxProfileMigrator
+solo funciona al crear un perfil, copia los archivos encima y lista los
+perfiles de la propia aplicación, que en Aegis son los de Aegis) ni otro
+perfil de Aegis. MIGRATOR_MODULES es privado y está congelado: dos entradas
+registran los migradores de browser/components/aegis/migracion, que fusionan
+marcadores, historial y formularios. Sus nombres están en aegis.ftl, que el
+asistente carga como recurso opcional. Las contraseñas de Brave, Edge,
+Firefox y otro perfil de Aegis van por la página del CSV que Firefox usa para
+Chrome en Windows (Brave y Edge cifran igual, «v20», y fallaban sin avisar):
+una llamada a asistente.sys.mjs, que pone sus pasos, decide si se enseña.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0900-migracion/0001-migradores-firefox-y-aegis.patch
+
+diff --git a/browser/components/migration/MigrationUtils.sys.mjs b/browser/components/migration/MigrationUtils.sys.mjs
+index e366c09df3..abda091592 100644
+--- a/browser/components/migration/MigrationUtils.sys.mjs
++++ b/browser/components/migration/MigrationUtils.sys.mjs
+@@ -117,6 +117,16 @@ const MIGRATOR_MODULES = Object.freeze({
+     platforms: ["macosx", "win"],
+   },
+ 
++  // Aegis: importar de Firefox y de otro perfil de Aegis, fusionando (browser/components/aegis/migracion).
++  AegisFirefoxMigrator: {
++    moduleURI: "resource:///modules/aegis/migracion/migradores.sys.mjs",
++    platforms: ["linux", "macosx", "win"],
++  },
++  AegisPerfilMigrator: {
++    moduleURI: "resource:///modules/aegis/migracion/migradores.sys.mjs",
++    platforms: ["linux", "macosx", "win"],
++  },
++
+   InternalTestingProfileMigrator: {
+     moduleURI: "resource:///modules/InternalTestingProfileMigrator.sys.mjs",
+     platforms: ["linux", "macosx", "win"],
+diff --git a/browser/components/migration/MigrationWizardChild.sys.mjs b/browser/components/migration/MigrationWizardChild.sys.mjs
+index 5b817c59eb..1b87a62e36 100644
+--- a/browser/components/migration/MigrationWizardChild.sys.mjs
++++ b/browser/components/migration/MigrationWizardChild.sys.mjs
+@@ -7,6 +7,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+ 
+ const lazy = {};
++ChromeUtils.defineESModuleGetters(lazy, {
++  AegisImportar: "resource:///modules/aegis/migracion/asistente.sys.mjs",
++});
+ XPCOMUtils.defineLazyPreferenceGetter(
+   lazy,
+   "SHOW_IMPORT_ALL_PREF",
+@@ -355,8 +358,9 @@ export class MigrationWizardChild extends JSWindowActorChild {
+         });
+         return;
+       } else if (
+-        migrationDetails.key == "chrome" &&
+-        AppConstants.platform == "win"
++        // Aegis: Brave, Edge, Firefox y otro perfil de Aegis, también por el CSV (browser/components/aegis/migracion).
++        lazy.AegisImportar.pasosDelCsv(this.#wizardEl, migrationDetails.key) ||
++        (migrationDetails.key == "chrome" && AppConstants.platform == "win")
+       ) {
+         this.#sendTelemetryEvent("chromePasswordFile");
+         this.setComponentState({
+diff --git a/browser/components/migration/MigrationWizardParent.sys.mjs b/browser/components/migration/MigrationWizardParent.sys.mjs
+index 0a4b1a0191..7034882d08 100644
+--- a/browser/components/migration/MigrationWizardParent.sys.mjs
++++ b/browser/components/migration/MigrationWizardParent.sys.mjs
+@@ -12,6 +12,8 @@ ChromeUtils.defineLazyGetter(lazy, "gFluentStrings", function () {
+   return new Localization([
+     "branding/brand.ftl",
+     "browser/migrationWizard.ftl",
++    // Aegis: los nombres de sus orígenes (opcional: sin él, el resto del asistente sigue traducido).
++    { path: "aegis.ftl", optional: true },
+   ]);
+ });
+ 

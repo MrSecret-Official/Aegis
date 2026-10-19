@@ -1,0 +1,13 @@
+<!-- Aegis · icono de la navegación privada (modo incógnito): el fantasma con el hueco de una cerradura por boca.
+     tools/iconos.py lo usa para pbmode.ico, PrivateBrowsing_*.png y about-logo-private*.png. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect width="256" height="256" rx="52" fill="#0a0a0b"/>
+  <rect x="1" y="1" width="254" height="254" rx="51" fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="2"/>
+  <path fill="#f4f4f5" d="M68 112a60 60 0 0 1 120 0v72a20 20 0 0 1-40 0a20 20 0 0 1-40 0a20 20 0 0 1-40 0z"/>
+  <g fill="#0a0a0b">
+    <ellipse cx="106" cy="110" rx="10" ry="15"/>
+    <ellipse cx="150" cy="110" rx="10" ry="15"/>
+    <circle cx="128" cy="148" r="9"/>
+    <path d="M124 152h8l3 22h-14z"/>
+  </g>
+</svg>

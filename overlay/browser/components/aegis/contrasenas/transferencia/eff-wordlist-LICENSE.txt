@@ -1,0 +1,20 @@
+Lista grande de palabras del EFF («EFF's Long Wordlist», eff_large_wordlist.txt)
+
+La lista de palabras de palabras.sys.mjs es la lista grande para frases de contraseña con dados
+de Joseph Bonneau y la Electronic Frontier Foundation (2016):
+
+  https://www.eff.org/deeplinks/2016/07/new-wordlists-random-passphrases
+  https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt
+  sha256 addd35536511597a02fa0a9ff1e5284677b8883b83e986e43f15a3db996b903e
+
+Licencia: Creative Commons Attribution 3.0 Unported (CC BY 3.0).
+
+  https://creativecommons.org/licenses/by/3.0/
+  Texto legal: https://creativecommons.org/licenses/by/3.0/legalcode
+
+Cambios: solo se conservan las palabras, en el orden original (se quitan los números de los dados,
+de 11111 a 66666: la palabra i es la de i escrito en base 6). No se ha añadido, quitado ni cambiado
+ninguna palabra.
+
+Aegis la usa para el código de transferencia de 6 palabras con el que se cifra el paquete de
+contraseñas que pasa de un Aegis a otro. La EFF no respalda Aegis.

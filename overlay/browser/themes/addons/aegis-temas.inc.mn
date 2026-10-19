@@ -1,0 +1,102 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Aegis · manifiesto chrome de Aegis (no solo de temas). Lo incluye browser/themes/addons/jar.mn (parche 0500-ui,
+# «Temas de Aegis»), dentro de browser.jar. Sirve los temas integrados en resource://builtin-themes/ junto a los de
+# Firefox (la lista, en AegisTemas.sys.mjs), y en chrome://browser/content/aegis/ lo que sustituye a archivos de
+# Firefox con «% override» (sin pisarlos ni parchearlos): vista previa del tema, navegación privada, marcadores de
+# serie y el diálogo de la contraseña principal. Rutas de origen relativas a browser/themes/addons/; las que empiezan
+# por «/», a la raíz del árbol.
+
+  content/builtin-themes/AegisTemas.sys.mjs    (AegisTemas.sys.mjs)
+
+# Vista previa del tema de serie (y de Claro y Oscuro, que la usan con el esquema forzado) en Complementos: la de
+# Firefox es violeta y naranja. «override» la sustituye sin tocar el archivo de Firefox.
+  content/browser/aegis/tema-predeterminado.svg    (aegis-predeterminado/preview.svg)
+% override chrome://mozapps/content/extensions/default-theme/preview-nova.svg chrome://browser/content/aegis/tema-predeterminado.svg
+
+# Navegación privada: el fantasma con candado de Aegis en el icono de la pestaña privada y en el logotipo (panel de
+# información y página about:privatebrowsing), en lugar del antifaz violeta de Firefox.
+  content/browser/aegis/privado-favicon.svg    (aegis-privado/favicon.svg)
+  content/browser/aegis/privado-logo.svg    (aegis-privado/logo.svg)
+% override chrome://browser/skin/privatebrowsing/favicon.svg chrome://browser/content/aegis/privado-favicon.svg
+% override chrome://browser/skin/privatebrowsing/pbm-logo.svg chrome://browser/content/aegis/privado-logo.svg
+
+# Marcadores de serie de un perfil nuevo (y de «Restaurar marcadores predeterminados»): ninguno, en lugar de la carpeta
+# de Firefox con enlaces a sus webs y sus logotipos de color.
+  content/browser/aegis/marcadores-de-serie.html    (aegis-marcadores/default-bookmarks.html)
+% override chrome://browser/content/default-bookmarks.html chrome://browser/content/aegis/marcadores-de-serie.html
+
+# Contraseña principal: el diálogo de Aegis (crear o cambiar, con fortaleza mínima y el aviso de que no se puede
+# recuperar) en lugar del changemp.xhtml de Firefox. Con el override vale para todos los que lo abren: Ajustes,
+# about:logins, el aviso de guardar y contrasenas.sys.mjs. Detalle en overlay/browser/components/aegis/dialogos/.
+  content/browser/aegis/contrasena-principal.xhtml    (/browser/components/aegis/dialogos/contrasena-principal.xhtml)
+  content/browser/aegis/contrasena-principal.mjs    (/browser/components/aegis/dialogos/contrasena-principal.mjs)
+  content/browser/aegis/dialogo.css    (/browser/components/aegis/dialogos/dialogo.css)
+  content/browser/aegis/dialogo-agente.css    (/browser/components/aegis/dialogos/dialogo-agente.css)
+  content/browser/aegis/contrasena-principal-fortaleza.mjs    (/browser/components/aegis/dialogos/fortaleza.mjs)
+  content/browser/aegis/contrasena-principal-llave.svg    (/browser/components/aegis/estilos/iconos/llave.svg)
+  content/browser/aegis/contrasena-principal-ojo.svg    (/browser/components/aegis/dialogos/ojo.svg)
+  content/browser/aegis/contrasena-principal-ojo-tachado.svg    (/browser/components/aegis/dialogos/ojo-tachado.svg)
+% override chrome://mozapps/content/preferences/changemp.xhtml chrome://browser/content/aegis/contrasena-principal.xhtml
+
+# Códigos de verificación (autenticador/autenticador.sys.mjs): el diálogo para añadirlos, cambiarlos o quitarlos, con
+# la lectura de códigos QR en el equipo. jsQR.js es jsQR 1.4.0 de npm sin tocar (Apache-2.0; licencia junto a él y en
+# NOTICE.md; sha256 bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859).
+  content/browser/aegis/autenticador.xhtml    (/browser/components/aegis/dialogos/autenticador.xhtml)
+  content/browser/aegis/autenticador.mjs    (/browser/components/aegis/dialogos/autenticador.mjs)
+  content/browser/aegis/autenticador.css    (/browser/components/aegis/dialogos/autenticador.css)
+  content/browser/aegis/autenticador-icono.svg    (/browser/components/aegis/dialogos/autenticador.svg)
+  content/browser/aegis/autenticador-desplegar.svg    (/browser/components/aegis/estilos/iconos/escudo-desplegar.svg)
+  content/browser/aegis/jsQR.js    (/browser/components/aegis/dialogos/jsqr/jsQR.js)
+  content/browser/aegis/jsQR-LICENSE.txt    (/browser/components/aegis/dialogos/jsqr/LICENSE)
+
+# Pasar las contraseñas a otro Aegis (contrasenas/transferencia/transferencia.sys.mjs): los diálogos de pasar (crea el
+# paquete y enseña el código de 6 palabras una vez) y de recibir (archivo y código). Usan dialogo.css, de arriba.
+  content/browser/aegis/transferencia-pasar.xhtml    (/browser/components/aegis/dialogos/transferencia-pasar.xhtml)
+  content/browser/aegis/transferencia-pasar.mjs    (/browser/components/aegis/dialogos/transferencia-pasar.mjs)
+  content/browser/aegis/transferencia-recibir.xhtml    (/browser/components/aegis/dialogos/transferencia-recibir.xhtml)
+  content/browser/aegis/transferencia-recibir.mjs    (/browser/components/aegis/dialogos/transferencia-recibir.mjs)
+  content/browser/aegis/transferencia.css    (/browser/components/aegis/dialogos/transferencia.css)
+  content/browser/aegis/transferencia-icono.svg    (/browser/components/aegis/dialogos/transferencia.svg)
+
+# Importar datos (migracion/migradores.sys.mjs): el icono del origen «Firefox», un navegador genérico de línea. Va por
+# chrome:// porque la CSP de Ajustes no deja cargar imágenes resource://.
+  content/browser/aegis/migracion-navegador.svg    (/browser/components/aegis/migracion/navegador.svg)
+
+  content/builtin-themes/aegis-grafito/manifest.json   (aegis-grafito/manifest.json)
+  content/builtin-themes/aegis-grafito/preview.svg    (aegis-grafito/preview.svg)
+  content/builtin-themes/aegis-grafito/_locales/de/messages.json    (aegis-grafito/_locales/de/messages.json)
+  content/builtin-themes/aegis-grafito/_locales/en_US/messages.json    (aegis-grafito/_locales/en_US/messages.json)
+  content/builtin-themes/aegis-grafito/_locales/es/messages.json    (aegis-grafito/_locales/es/messages.json)
+  content/builtin-themes/aegis-grafito/_locales/fr/messages.json    (aegis-grafito/_locales/fr/messages.json)
+  content/builtin-themes/aegis-grafito/_locales/it/messages.json    (aegis-grafito/_locales/it/messages.json)
+  content/builtin-themes/aegis-grafito/_locales/pt_BR/messages.json    (aegis-grafito/_locales/pt_BR/messages.json)
+
+  content/builtin-themes/aegis-medianoche/manifest.json    (aegis-medianoche/manifest.json)
+  content/builtin-themes/aegis-medianoche/preview.svg    (aegis-medianoche/preview.svg)
+  content/builtin-themes/aegis-medianoche/_locales/de/messages.json    (aegis-medianoche/_locales/de/messages.json)
+  content/builtin-themes/aegis-medianoche/_locales/en_US/messages.json    (aegis-medianoche/_locales/en_US/messages.json)
+  content/builtin-themes/aegis-medianoche/_locales/es/messages.json    (aegis-medianoche/_locales/es/messages.json)
+  content/builtin-themes/aegis-medianoche/_locales/fr/messages.json    (aegis-medianoche/_locales/fr/messages.json)
+  content/builtin-themes/aegis-medianoche/_locales/it/messages.json    (aegis-medianoche/_locales/it/messages.json)
+  content/builtin-themes/aegis-medianoche/_locales/pt_BR/messages.json    (aegis-medianoche/_locales/pt_BR/messages.json)
+
+  content/builtin-themes/aegis-niebla/manifest.json    (aegis-niebla/manifest.json)
+  content/builtin-themes/aegis-niebla/preview.svg    (aegis-niebla/preview.svg)
+  content/builtin-themes/aegis-niebla/_locales/de/messages.json    (aegis-niebla/_locales/de/messages.json)
+  content/builtin-themes/aegis-niebla/_locales/en_US/messages.json    (aegis-niebla/_locales/en_US/messages.json)
+  content/builtin-themes/aegis-niebla/_locales/es/messages.json    (aegis-niebla/_locales/es/messages.json)
+  content/builtin-themes/aegis-niebla/_locales/fr/messages.json    (aegis-niebla/_locales/fr/messages.json)
+  content/builtin-themes/aegis-niebla/_locales/it/messages.json    (aegis-niebla/_locales/it/messages.json)
+  content/builtin-themes/aegis-niebla/_locales/pt_BR/messages.json    (aegis-niebla/_locales/pt_BR/messages.json)
+
+  content/builtin-themes/aegis-arena/manifest.json    (aegis-arena/manifest.json)
+  content/builtin-themes/aegis-arena/preview.svg    (aegis-arena/preview.svg)
+  content/builtin-themes/aegis-arena/_locales/de/messages.json    (aegis-arena/_locales/de/messages.json)
+  content/builtin-themes/aegis-arena/_locales/en_US/messages.json    (aegis-arena/_locales/en_US/messages.json)
+  content/builtin-themes/aegis-arena/_locales/es/messages.json    (aegis-arena/_locales/es/messages.json)
+  content/builtin-themes/aegis-arena/_locales/fr/messages.json    (aegis-arena/_locales/fr/messages.json)
+  content/builtin-themes/aegis-arena/_locales/it/messages.json    (aegis-arena/_locales/it/messages.json)
+  content/builtin-themes/aegis-arena/_locales/pt_BR/messages.json    (aegis-arena/_locales/pt_BR/messages.json)

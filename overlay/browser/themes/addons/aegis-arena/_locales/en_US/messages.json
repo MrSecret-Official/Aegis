@@ -1,0 +1,10 @@
+{
+  "nombre": {
+    "message": "Sand",
+    "description": "Nombre del tema en Complementos › Temas."
+  },
+  "descripcion": {
+    "message": "Light, warm gray with a soft fade.",
+    "description": "Descripción del tema."
+  }
+}

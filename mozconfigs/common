@@ -1,0 +1,48 @@
+# mozconfig común de Aegis. tools/aegis.py lo concatena con el de la plataforma, sustituye los
+# marcadores @…@ (objdir, actualizaciones) y escribe el resultado en <árbol>/mozconfig. La marca
+# (--with-branding) la añade aegis.py.
+#
+# NUNCA activar MOZILLA_OFFICIAL ni --enable-official-branding: reactivan la subida de Glean
+# (telemetría) y son la marca registrada de Mozilla. verificar.py lo comprueba.
+
+ac_add_options --enable-application=browser
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+
+# Los compiladores (clang, rust, cbindgen, nasm, node…) los descarga mach desde Mozilla.
+ac_add_options --enable-bootstrap
+
+# Sin informes de fallos: no envían nada a nadie.
+ac_add_options --disable-crashreporter
+
+# Telemetría: el código de envío se compila, pero con MOZ_TELEMETRY_REPORTING vacío
+# isOfficialTelemetry es false y no envía; Glean no sube porque, sin MOZILLA_OFFICIAL, se compila
+# con glean_disable_upload. Normandy y el informe de salud (MOZ_DATA_REPORTING) los activa
+# browser/moz.configure sin opción para quitarlos: se apagan con prefs en la fase 1.
+export MOZ_TELEMETRY_REPORTING=
+
+# Firma de complementos: en Release es obligatoria por compilación. Sin ella, la decide la pref
+# xpinstall.signatures.required, que sigue a true de serie. Hace falta para incluir extensiones
+# propias de Aegis sin pasar por AMO. Las de los usuarios siguen necesitando firma.
+export MOZ_REQUIRE_SIGNING=
+
+# Actualizaciones propias (ver docs/ACTUALIZACIONES.md): canal «release» (el updater usa
+# release_primary.der y release_secondary.der, que aegis.py sustituye por las claves de Aegis),
+# MAR con el canal de Aegis (no acepta MAR de Mozilla) y update.xml estático en GitHub Releases.
+ac_add_options --enable-update-channel=release
+export MAR_CHANNEL_ID=@MAR_CANAL@
+export ACCEPTED_MAR_CHANNEL_IDS=@MAR_CANAL@
+export MOZ_APPUPDATE_HOST=@UPDATE_HOST@
+
+# Identidad propia en el sistema (docs/PLAN.md, «Identidad en el sistema»). El nombre de remoting es el
+# que busca una segunda ejecución para pasarle la orden a la que ya está abierta (en Windows, la clase
+# de su ventana de mensajes; en Linux, también WM_CLASS y el app_id de Wayland). Sin esto sería
+# «firefox», el de Firefox: abrir Aegis con un Firefox abierto podía acabar en una ventana del otro.
+# El fabricante y la carpeta de perfiles (MOZ_APP_VENDOR y MOZ_APP_PROFILE, «Aegis») no se pueden poner
+# aquí: solo con imply_option, en el parche 0200-branding/0001. MOZ_APP_BASENAME («Firefox», el
+# Name de application.ini) y MOZ_APP_NAME (firefox.exe) no se tocan: del primero sale el User-Agent, y
+# el segundo lo usan los lectores de pantalla y otros programas para reconocer el navegador.
+export MOZ_APP_REMOTINGNAME=aegis
+
+# El objdir vive fuera del árbol: `prepare --limpio` no tira la compilación.
+mk_add_options MOZ_OBJDIR=@OBJDIR@

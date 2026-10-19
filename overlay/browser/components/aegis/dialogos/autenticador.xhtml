@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- Aegis · diálogo de los códigos de verificación (autenticador/autenticador.sys.mjs, abrirDialogo): añadir el de un
+     inicio de sesión guardado pegando la clave de configuración o el enlace otpauth://, o leyendo un código QR de la
+     página que se está viendo o de una imagen; cambiarlo o quitarlo. Lo abre el panel de contraseñas y about:logins.
+     La lógica, en autenticador.mjs; la lectura del QR, con jsQR (jsqr/, Apache-2.0, NOTICE.md), en el equipo. El
+     aspecto: dialogo.css (común) y autenticador.css. Textos: aegis.ftl («aegis-autenticador-*»).
+     La CSP no deja conectar con nada (connect-src 'none') ni enviar el formulario a ninguna parte. -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; script-src chrome:; style-src chrome: resource:; img-src chrome:; font-src chrome:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title data-l10n-id="aegis-autenticador-ventana"></title>
+    <link rel="stylesheet" href="resource:///modules/aegis/estilos/tokens.css" />
+    <link rel="stylesheet" href="chrome://browser/content/aegis/dialogo.css" />
+    <link rel="stylesheet" href="chrome://browser/content/aegis/autenticador.css" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="aegis.ftl" />
+    <script src="chrome://browser/content/aegis/jsQR.js"></script>
+    <script type="module" src="chrome://browser/content/aegis/autenticador.mjs"></script>
+  </head>
+  <body>
+    <form id="formulario" class="principal" novalidate="novalidate" autocomplete="off">
+      <header class="cabecera">
+        <div class="icono" aria-hidden="true"></div>
+        <h1 id="titulo" data-l10n-id="aegis-autenticador-titulo"></h1>
+        <p class="explicacion" data-l10n-id="aegis-autenticador-explicacion"></p>
+      </header>
+
+      <div class="campo">
+        <label for="cuenta" data-l10n-id="aegis-autenticador-cuenta"></label>
+        <select id="cuenta" aria-describedby="nota-cuenta"></select>
+        <p id="nota-cuenta" class="nota" hidden="hidden"></p>
+      </div>
+
+      <div class="campo">
+        <label for="clave" data-l10n-id="aegis-autenticador-clave"></label>
+        <div class="caja">
+          <input id="clave" type="password" autocomplete="off" spellcheck="false" aria-describedby="estado" />
+          <button type="button" class="ver" aria-controls="clave" aria-pressed="false"
+                  data-l10n-id="aegis-autenticador-mostrar"></button>
+        </div>
+        <div class="qr">
+          <button type="button" id="qr-pagina" class="compacto" data-l10n-id="aegis-autenticador-qr-pagina"></button>
+          <button type="button" id="qr-imagen" class="compacto" data-l10n-id="aegis-autenticador-qr-imagen"></button>
+        </div>
+        <p id="estado" class="nota" aria-live="polite"></p>
+      </div>
+
+      <section class="aviso" aria-labelledby="aviso-titulo">
+        <h2 id="aviso-titulo" data-l10n-id="aegis-autenticador-honestidad-titulo"></h2>
+        <p data-l10n-id="aegis-autenticador-honestidad"></p>
+      </section>
+
+      <p id="error-general" class="error" role="alert" data-l10n-id="aegis-autenticador-error-guardar" hidden="hidden"></p>
+      <footer class="acciones">
+        <button type="button" id="quitar" class="secundario quitar" data-l10n-id="aegis-autenticador-quitar"
+                hidden="hidden"></button>
+        <button type="button" id="cancelar" class="secundario" data-l10n-id="aegis-autenticador-cancelar"></button>
+        <button type="submit" id="guardar" class="primario" disabled="disabled"
+                data-l10n-id="aegis-autenticador-guardar"></button>
+      </footer>
+    </form>
+  </body>
+</html>

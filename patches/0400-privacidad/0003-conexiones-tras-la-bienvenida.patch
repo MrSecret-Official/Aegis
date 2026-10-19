@@ -1,0 +1,278 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Conexiones de fondo solo tras la bienvenida
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: con un perfil nuevo, Remote Settings sincronizaba al arrancar
+(cientos de intentos a firefox.settings.services.mozilla.com: Nimbus,
+tippytop, listas de rastreo…) y la comprobación de actualizaciones salía a
+los 30 s, antes de que el usuario aceptara nada. Remote Settings no admite
+cambiar el servidor en Release y su única forma de cerrarlo es una política
+(que haría decir a Ajustes que una organización administra el navegador).
+- Remote Settings solo sincroniza las colecciones de
+  aegis.remotesettings.colecciones (vacía de serie; la escribe
+  conexiones.sys.mjs con lo aceptado), sin el paquete de arranque y sin
+  consultar el servidor desde about:support. Los adjuntos (y la consulta
+  que da su dirección base) tampoco se piden para otras colecciones: la
+  traducción de páginas, por ejemplo, bajaba modelos antes de aceptar.
+- Todas sus peticiones van sin cookies (mozAnon) y con el mismo
+  Accept-Language en todos los Aegis, como las actualizaciones (0001).
+- Las comprobaciones automáticas de actualizaciones esperan a
+  app.update.aegis.automaticas (manualUpdateOnly, el mismo camino que la
+  política ManualAppUpdateOnly). Va en la rama app.update. y como valor del
+  usuario para que la tarea de actualización en segundo plano de Windows,
+  que solo copia del perfil las prefs app.update.*, vea la misma decisión.
+  «Buscar actualizaciones» sigue a mano.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0400-privacidad/0003-conexiones-tras-la-bienvenida.patch
+
+diff --git a/browser/base/content/aboutDialog-appUpdater.js b/browser/base/content/aboutDialog-appUpdater.js
+index 879b827299..8849bf5f30 100644
+--- a/browser/base/content/aboutDialog-appUpdater.js
++++ b/browser/base/content/aboutDialog-appUpdater.js
+@@ -72,7 +72,19 @@ function appUpdater(options = {}) {
+     }
+   }
+ 
+-  this._appUpdater.check();
++  // Aegis: sin las actualizaciones aceptadas (about:conexiones), abrir Acerca de
++  // o Ajustes no comprueba nada: el botón «Buscar actualizaciones» lo hace. Con
++  // una actualización ya en marcha o lista (pedida a mano), sí se mira su estado.
++  if (
++    Services.prefs.getBoolPref("app.update.aegis.automaticas", false) ||
++    Cc["@mozilla.org/updates/update-service;1"].getService(
++      Ci.nsIApplicationUpdateService
++    ).currentState != Ci.nsIApplicationUpdateService.STATE_IDLE
++  ) {
++    this._appUpdater.check();
++  } else {
++    this.selectPanel("checkForUpdates");
++  }
+ }
+ 
+ appUpdater.prototype = {
+diff --git a/browser/components/preferences/config/privacy.mjs b/browser/components/preferences/config/privacy.mjs
+index 861d807227..e09849ea50 100644
+--- a/browser/components/preferences/config/privacy.mjs
++++ b/browser/components/preferences/config/privacy.mjs
+@@ -2028,7 +2028,13 @@ if (SECURITY_PRIVACY_STATUS_CARD_ENABLED) {
+         appUpdater.addListener(listener);
+         if (sharedAppUpdater) {
+           this.cachedValue = appUpdater.status;
+-        } else {
++        } else if (
++          // Aegis: sin las actualizaciones aceptadas, la tarjeta no comprueba.
++          Services.prefs.getBoolPref("app.update.aegis.automaticas", false) ||
++          Cc["@mozilla.org/updates/update-service;1"].getService(
++            Ci.nsIApplicationUpdateService
++          ).currentState != Ci.nsIApplicationUpdateService.STATE_IDLE
++        ) {
+           appUpdater.check();
+         }
+         return () => {
+diff --git a/services/settings/Attachments.sys.mjs b/services/settings/Attachments.sys.mjs
+index acf1bd219a..cf54e8c310 100644
+--- a/services/settings/Attachments.sys.mjs
++++ b/services/settings/Attachments.sys.mjs
+@@ -182,7 +182,11 @@ export class Downloader {
+    */
+   async cacheAll(force = false) {
+     // If we're offline, don't try
+-    if (lazy.Utils.isOffline) {
++    if (
++      lazy.Utils.isOffline ||
++      // Aegis: solo colecciones permitidas.
++      !lazy.Utils.aegisPermite(`${this.bucketName}/${this.collectionName}`)
++    ) {
+       return null;
+     }
+ 
+@@ -549,6 +553,12 @@ export class Downloader {
+       attachment: { location, hash, size },
+     } = record;
+ 
++    // Aegis: solo adjuntos de colecciones permitidas (aegisPermite).
++    const aegisColeccion = `${this.bucketName}/${this.collectionName}`;
++    if (!lazy.Utils.aegisPermite(aegisColeccion)) {
++      throw new Downloader.DownloadError(aegisColeccion);
++    }
++
+     let baseURL;
+     try {
+       baseURL = await lazy.Utils.baseAttachmentsURL();
+diff --git a/services/settings/RemoteSettingsClient.sys.mjs b/services/settings/RemoteSettingsClient.sys.mjs
+index f84cdf9796..57772a1468 100644
+--- a/services/settings/RemoteSettingsClient.sys.mjs
++++ b/services/settings/RemoteSettingsClient.sys.mjs
+@@ -651,7 +651,11 @@ export class RemoteSettingsClient extends EventEmitter {
+    * @param {object} options See #maybeSync() options.
+    */
+   async sync(options) {
+-    if (lazy.Utils.shouldSkipRemoteActivity) {
++    if (
++      lazy.Utils.shouldSkipRemoteActivity ||
++      // Aegis: solo las colecciones permitidas.
++      !lazy.Utils.aegisPermite(this.identifier)
++    ) {
+       lazy.console.debug(`${this.identifier} Skip remote sync.`);
+       return;
+     }
+@@ -703,6 +707,11 @@ export class RemoteSettingsClient extends EventEmitter {
+       sendEvents = true,
+     } = options;
+ 
++    // Aegis: solo las colecciones permitidas (también en el sondeo).
++    if (!lazy.Utils.aegisPermite(this.identifier)) {
++      return;
++    }
++
+     // Make sure we don't run several synchronizations in parallel, mainly
+     // in order to avoid race conditions in "sync" events listeners.
+     if (this._syncRunning) {
+diff --git a/services/settings/Utils.sys.mjs b/services/settings/Utils.sys.mjs
+index 70f77c9fcb..739920a16d 100644
+--- a/services/settings/Utils.sys.mjs
++++ b/services/settings/Utils.sys.mjs
+@@ -119,6 +119,10 @@ export var Utils = {
+   log,
+ 
+   get shouldSkipRemoteActivity() {
++    // Aegis: nada de red mientras no haya ninguna colección permitida.
++    if (!this.aegisPermite()) {
++      return true;
++    }
+     if (
+       (lazy.isRunningTests || Cu.isInAutomation) &&
+       this.SERVER_URL == "data:,#remote-settings-dummy/v1"
+@@ -128,6 +132,28 @@ export var Utils = {
+     return Services.policies?.isAllowed("remoteSettings") === false;
+   },
+ 
++  /**
++   * Aegis: ¿puede sincronizarse esta colección («bucket/colección»)? Sin
++   * identificador: ¿hay alguna? Las permitidas van en
++   * aegis.remotesettings.colecciones («bucket/colección» o «bucket/*»,
++   * separadas por comas), que escribe Aegis (conexiones.sys.mjs) con lo que el
++   * usuario acepta en la bienvenida. De serie está vacía: ninguna conexión.
++   */
++  aegisPermite(identifier) {
++    const permitidas = Services.prefs
++      .getStringPref("aegis.remotesettings.colecciones", "")
++      .split(",")
++      .map(c => c.trim())
++      .filter(Boolean);
++    if (!identifier) {
++      return !!permitidas.length;
++    }
++    const bucket = identifier.split("/")[0];
++    return (
++      permitidas.includes(identifier) || permitidas.includes(`${bucket}/*`)
++    );
++  },
++
+   get CERT_CHAIN_ROOT_IDENTIFIER() {
+     if (Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+       return Ci.nsIX509CertDB.AppXPCShellRoot;
+@@ -242,7 +268,8 @@ export var Utils = {
+    */
+   async fetch(input, init = {}) {
+     return new Promise(function (resolve, reject) {
+-      const request = new ServiceRequest();
++      // Aegis: sin cookies.
++      const request = new ServiceRequest({ mozAnon: true });
+       const { method = "GET", headers = {}, bypassProxy = false } = init;
+       function fallbackOrReject(err) {
+         if (
+@@ -294,6 +321,9 @@ export var Utils = {
+       // Content-Type header, or UTF-8 otherwise. This may mangle binary
+       // responses. Avoid that by requesting the raw bytes.
+       request.responseType = "arraybuffer";
++      // Aegis: el mismo idioma en todos los Aegis, no el del usuario (como las
++      // actualizaciones, parche 0400-privacidad/0001).
++      request.setRequestHeader("Accept-Language", "en-US,en;q=0.5");
+ 
+       for (const [name, value] of Object.entries(headers)) {
+         request.setRequestHeader(name, value);
+@@ -327,6 +357,11 @@ export var Utils = {
+    * console.log(attachmentsURL);
+    */
+   async baseAttachmentsURL(options = {}) {
++    // Aegis: ningún adjunto (ni la consulta al servidor) con Remote Settings
++    // cerrado.
++    if (!Utils.aegisPermite()) {
++      throw new Error("Remote Settings cerrado (aegis.remotesettings.colecciones)");
++    }
+     if (Utils._baseAttachmentsURLPromise) {
+       // Wait for ongoing call to finish.
+       return Utils._baseAttachmentsURLPromise;
+diff --git a/services/settings/remote-settings.sys.mjs b/services/settings/remote-settings.sys.mjs
+index b180cfc850..b01a40f407 100644
+--- a/services/settings/remote-settings.sys.mjs
++++ b/services/settings/remote-settings.sys.mjs
+@@ -256,7 +256,10 @@ function remoteSettingsFunction() {
+    * @throws {Error} If the signature of any bundled changeset is invalid.
+    */
+   remoteSettings.pullStartupBundle = async () => {
+-    if (lazy.Utils.shouldSkipRemoteActivity) {
++    // Aegis: nunca el paquete de arranque, que trae colecciones no permitidas;
++    // cada colección permitida se sincroniza por su cuenta (sync()).
++    const aegisSinPaquete = true;
++    if (lazy.Utils.shouldSkipRemoteActivity || aegisSinPaquete) {
+       return [];
+     }
+ 
+@@ -649,7 +652,8 @@ function remoteSettingsFunction() {
+ 
+     let changes = [];
+     let serverTimestamp = null;
+-    if (!localOnly) {
++    // Aegis: about:support no consulta el servidor si Remote Settings está cerrado.
++    if (!localOnly && !lazy.Utils.shouldSkipRemoteActivity) {
+       // Make sure we fetch the latest server info, use a random cache bust value.
+       const randomCacheBust = 99990000 + Math.floor(Math.random() * 9999);
+       ({ changes, timestamp: serverTimestamp } =
+diff --git a/toolkit/mozapps/update/UpdateService.sys.mjs b/toolkit/mozapps/update/UpdateService.sys.mjs
+index 4a1b635e36..0a46c6a05a 100644
+--- a/toolkit/mozapps/update/UpdateService.sys.mjs
++++ b/toolkit/mozapps/update/UpdateService.sys.mjs
+@@ -3138,7 +3138,11 @@ export class UpdateService {
+         await cleanupDownloadingUpdate();
+       } else {
+         // Attempt to resume download
+-        if (lazy.UM.internal.downloadingUpdate) {
++        if (this.manualUpdateOnly) {
++          // Aegis: sin las automáticas aceptadas, una descarga a medias se
++          // descarta en vez de reanudarse sola.
++          await cleanupDownloadingUpdate();
++        } else if (lazy.UM.internal.downloadingUpdate) {
+           LOG(
+             "UpdateService:#asyncInit - resuming patch found in " +
+               "downloading state"
+@@ -3508,6 +3512,10 @@ export class UpdateService {
+    */
+   async _attemptResume() {
+     LOG("UpdateService:_attemptResume");
++    // Aegis: sin las automáticas aceptadas (o revocadas), nada se reanuda solo.
++    if (this.manualUpdateOnly) {
++      return;
++    }
+     // If a download is in progress and we aren't already downloading it, then
+     // resume it.
+     if (this.isDownloading) {
+@@ -4076,7 +4084,11 @@ export class UpdateService {
+    */
+   get manualUpdateOnly() {
+     return (
+-      Services.policies && !Services.policies.isAllowed("autoAppUpdateChecking")
++      // Aegis: sin comprobaciones automáticas mientras el usuario no las
++      // acepte (conexiones.sys.mjs). «Buscar actualizaciones» sigue a mano.
++      !Services.prefs.getBoolPref("app.update.aegis.automaticas", false) ||
++      (Services.policies &&
++        !Services.policies.isAllowed("autoAppUpdateChecking"))
+     );
+   }
+ 

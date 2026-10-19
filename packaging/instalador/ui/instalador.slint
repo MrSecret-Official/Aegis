@@ -1,0 +1,1066 @@
+// Aegis Setup · ventana del instalador. Copia del asistente de bienvenida de SecretOS
+// (SecretOS-Private/system/share/bienvenida/Bienvenida.qml): ventana sin marco de 960 × 620, marca arriba a la
+// izquierda, × discreta a la derecha, contenido centrado de 600 de ancho y pie fijo de 76 con los pasos en rayitas,
+// «Paso N de 8», «Atrás» y la acción principal.
+//
+// Pasos: 0 bienvenida · 1 cómo navegar · 2 escudos · 3 buscador · 4 apariencia · 5 opciones · 6 instalando · 7 listo.
+// Los textos van en inglés (origen técnico, locales/GLOSARIO.md) con @tr; las traducciones están en traducciones/.
+
+import "../assets/fuentes/Inter-Regular.ttf";
+import "../assets/fuentes/Inter-SemiBold.ttf";
+import { T } from "tokens.slint";
+import {
+    Titulo, Subtitulo, Seccion, Nota, IconoPagina, BotonPrincipal, BotonSecundario, BotonIcono, Tarjeta,
+    TarjetaCompacta, Grupo, Fila, Interruptor, Casilla, Campo, BarraProgreso,
+} from "componentes.slint";
+import { MiniNavegador, MiniApariencia, MiniEscudos } from "miniaturas.slint";
+
+export { T }
+
+// Una página del asistente: la que entra se desliza 30 px y aparece (300 ms, OutCubic), como en SecretOS.
+component Pagina inherits Rectangle {
+    in property <int> n;
+    in property <int> actual;
+    visible: root.actual == root.n;
+    x: root.actual < root.n ? 30px : -30px;
+    opacity: 0;
+    states [
+        activa when root.actual == root.n: {
+            x: 0px;
+            opacity: 1;
+            in {
+                animate x { duration: T.dur(300ms); easing: cubic-bezier(0.33, 1, 0.68, 1); }
+                animate opacity { duration: T.dur(220ms); easing: cubic-bezier(0.33, 1, 0.68, 1); }
+            }
+        }
+    ]
+    @children
+}
+
+// Cabecera común: icono en círculo, título y subtítulo.
+component Cabecera inherits VerticalLayout {
+    in property <image> icono;
+    in property <string> titulo;
+    in property <string> subtitulo;
+    spacing: 8px;
+    HorizontalLayout {
+        alignment: center;
+        padding-bottom: 6px;
+        IconoPagina {
+            icono: root.icono;
+        }
+    }
+
+    Titulo {
+        text: root.titulo;
+    }
+
+    HorizontalLayout {
+        padding-left: 30px;
+        padding-right: 30px;
+        Subtitulo {
+            text: root.subtitulo;
+        }
+    }
+}
+
+// Fila del resumen de la bienvenida: icono, nombre, valor y el glifo «siguiente».
+component FilaResumen inherits Fila {
+    in property <image> icono;
+    in property <string> nombre;
+    in property <string> valor;
+    pulsable: true;
+    alto: 40px;
+    accessible-role: button;
+    accessible-label: root.nombre;
+    accessible-description: root.valor;
+    accessible-action-default => { root.pulsada(); }
+    Image {
+        x: 16px;
+        width: 18px;
+        height: 18px;
+        source: root.icono;
+        colorize: T.text;
+        opacity: 0.85;
+    }
+
+    Text {
+        x: 46px;
+        width: 180px;
+        text: root.nombre;
+        color: T.text;
+        font-size: 14px;
+        overflow: elide;
+    }
+
+    Text {
+        x: 230px;
+        width: parent.width - 230px - 40px;
+        text: root.valor;
+        color: T.sub;
+        font-size: 13px;
+        horizontal-alignment: right;
+        overflow: elide;
+    }
+
+    Image {
+        x: parent.width - 16px - self.width;
+        width: 16px;
+        height: 16px;
+        source: @image-url("../assets/iconos/siguiente.svg");
+        colorize: T.muted;
+    }
+}
+
+export component Instalador inherits Window {
+    title: @tr("Aegis Setup");
+    icon: @image-url("../assets/aegis.svg");
+    no-frame: true;
+    width: 960px;
+    height: 620px;
+    background: T.bg;
+    default-font-family: "Inter";
+    forward-focus: teclas;
+
+    // ---------------------------------------------------------------- estado
+    in-out property <int> paso: 0;
+    in-out property <string> modo: "estandar";          // estandar | workflow
+    // Nivel de los Escudos: normal | estricto | estricto_mas. Estricto+ es el de serie y el recomendado (como en
+    // Ajustes › Escudos de Aegis).
+    in-out property <string> escudos: "estricto_mas";
+    in-out property <string> buscador: "duckduckgo";    // duckduckgo | startpage | brave | google
+    in-out property <string> apariencia: "auto";        // oscuro | claro | auto
+    in-out property <string> carpeta;
+    in-out property <bool> escritorio: false;
+    in-out property <bool> menu-inicio: true;
+    in-out property <bool> predeterminado: false;
+    in property <bool> demo: true;
+    in property <int> mb-necesarios: 250;
+    // Progreso real de la copia (0..1) y fase: 0 preparar, 1 copiar, 2 accesos, 3 terminar.
+    in-out property <float> progreso: 0;
+    in-out property <int> fase: 0;
+    // Error: 0 ninguno, 1 sin espacio (error-mb), 2 Aegis abierto, 3 carga dañada, 4 no se pudo escribir,
+    // 5 la carpeta tiene otros archivos.
+    in-out property <int> error: 0;
+    in-out property <int> error-mb: 0;
+    out property <int> pasos: 8;
+    // Desinstalar (la misma aplicación con --desinstalar): 10 confirmar · 11 desinstalando · 12 hecho.
+
+    callback instalar();
+    callback desinstalar();
+    callback abrir();
+    callback cerrar();
+    callback arrastrar();
+    // Dónde se instala de verdad: siempre en una carpeta «Aegis» dentro de la elegida (lo calcula Rust).
+    pure callback ruta-final(string) -> string;
+
+    property <bool> instalando: (root.paso == 6 && root.error == 0) || root.paso == 11;
+    // Al cambiar de paso, el foco vuelve a la ventana: Tab empieza por el primer control del paso nuevo y nada de un
+    // paso oculto se queda con el teclado.
+    changed paso => {
+        teclas.focus();
+    }
+    // Para las capturas con teclado (src/captura.rs): el foco vuelve a la ventana.
+    public function quitar-foco() {
+        teclas.focus();
+    }
+
+    // ---------------------------------------------------------------- acciones del pie
+    function empezar() {
+        root.error = 0;
+        root.progreso = 0;
+        root.fase = 0;
+        root.paso = 6;
+        root.instalar();
+    }
+    function principal() {
+        if (root.paso == 0 || root.paso == 5) {
+            root.empezar();
+        } else if (root.paso <= 4) {
+            root.paso += 1;
+        } else if (root.paso == 6) {
+            if (root.error != 0) {
+                root.empezar();
+            }
+        } else if (root.paso == 7) {
+            if (root.demo) {
+                root.cerrar();
+            } else {
+                root.abrir();
+            }
+        } else if (root.paso == 10) {
+            root.error = 0;
+            root.paso = 11;
+            root.desinstalar();
+        } else if (root.paso == 12) {
+            root.cerrar();
+        }
+    }
+    function secundario() {
+        if (root.paso == 0) {
+            root.paso = 1;
+        } else if (root.paso <= 5) {
+            root.paso -= 1;
+        } else if (root.paso == 6) {
+            root.error = 0;
+            root.paso = 5;
+        } else {
+            root.cerrar();
+        }
+    }
+
+    pure function texto-principal() -> string {
+        if (root.paso == 0 || root.paso == 5) {
+            return @tr("Install");
+        }
+        if (root.paso <= 4) {
+            return @tr("Continue");
+        }
+        if (root.paso == 6) {
+            return @tr("Try again");
+        }
+        if (root.paso == 10) {
+            return @tr("Uninstall");
+        }
+        if (root.paso == 7 && !root.demo) {
+            return @tr("Open Aegis");
+        }
+        return @tr("Close");
+    }
+    pure function texto-secundario() -> string {
+        if (root.paso == 0) {
+            return @tr("Customize");
+        }
+        if (root.paso <= 6) {
+            return @tr("Back");
+        }
+        if (root.paso == 10) {
+            return @tr("Cancel");
+        }
+        return @tr("Close");
+    }
+
+    // ---------------------------------------------------------------- flechas en las tarjetas (índice → valor)
+    function elegir-modo(i: int) {
+        root.modo = i == 0 ? "estandar" : "workflow";
+    }
+    function elegir-escudos(i: int) {
+        root.escudos = i == 0 ? "normal" : i == 1 ? "estricto" : "estricto_mas";
+    }
+    function elegir-buscador(i: int) {
+        root.buscador = i == 0 ? "duckduckgo" : i == 1 ? "startpage" : i == 2 ? "brave" : "google";
+    }
+    function elegir-apariencia(i: int) {
+        root.apariencia = i == 0 ? "oscuro" : i == 1 ? "claro" : "auto";
+    }
+
+    // ---------------------------------------------------------------- nombres de lo elegido
+    pure function nombre-modo() -> string {
+        return root.modo == "workflow" ? "Workflow" : @tr("Standard");
+    }
+    pure function nombre-escudos() -> string {
+        if (root.escudos == "estricto_mas") {
+            return @tr("Strict+");
+        }
+        return root.escudos == "estricto" ? @tr("Strict") : @tr("Normal");
+    }
+    pure function nombre-buscador() -> string {
+        if (root.buscador == "startpage") {
+            return "Startpage";
+        }
+        if (root.buscador == "brave") {
+            return "Brave Search";
+        }
+        if (root.buscador == "google") {
+            return "Google";
+        }
+        return "DuckDuckGo";
+    }
+    pure function nombre-apariencia() -> string {
+        if (root.apariencia == "oscuro") {
+            return @tr("Dark");
+        }
+        if (root.apariencia == "claro") {
+            return @tr("Light");
+        }
+        return @tr("Automatic");
+    }
+    pure function texto-error() -> string {
+        if (root.error == 1) {
+            return @tr("There isn't enough space on the disk. Free up {0} MB and try again.", root.error-mb);
+        }
+        if (root.error == 2) {
+            return @tr("Aegis is open and can't be replaced. Close it and try again.");
+        }
+        if (root.error == 3) {
+            return @tr("The installer is damaged. Download it again from the official page.");
+        }
+        if (root.error == 5) {
+            return @tr("That folder already has other files. Choose an empty one and try again.");
+        }
+        return @tr("The files couldn't be copied to that folder. Choose another one and try again.");
+    }
+    pure function texto-fase() -> string {
+        if (root.fase == 1) {
+            return @tr("Copying files");
+        }
+        if (root.fase == 2) {
+            return @tr("Creating shortcuts");
+        }
+        if (root.fase == 3) {
+            return @tr("Finishing");
+        }
+        return @tr("Preparing");
+    }
+
+    teclas := FocusScope {
+        key-pressed(e) => {
+            if (e.text == Key.Return) {
+                root.principal();
+                return accept;
+            }
+            if (e.text == Key.Escape) {
+                if (root.paso >= 1 && root.paso <= 5) {
+                    root.paso -= 1;
+                }
+                return accept;
+            }
+            return reject;
+        }
+
+        // Arrastrar la ventana desde cualquier zona vacía.
+        TouchArea {
+            pointer-event(e) => {
+                if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
+                    root.arrastrar();
+                }
+            }
+        }
+
+        // ------------------------------------------------ marca
+        HorizontalLayout {
+            x: 28px;
+            y: 24px;
+            height: 20px;
+            spacing: 10px;
+            Image {
+                source: @image-url("../assets/aegis-pequeno.svg");
+                width: 20px;
+                height: 20px;
+            }
+
+            Text {
+                text: "Aegis";
+                color: T.text;
+                font-size: 16px;
+                font-weight: 600;
+                letter-spacing: 0.2px;
+                vertical-alignment: center;
+            }
+        }
+
+        // ------------------------------------------------ cerrar
+        BotonIcono {
+            x: parent.width - 20px - self.width;
+            y: 20px;
+            icono: @image-url("../assets/iconos/cerrar.svg");
+            etiqueta: @tr("Close");
+            activo: !root.instalando;
+            pulsado => { root.cerrar(); }
+        }
+
+        // ------------------------------------------------ contenido
+        Rectangle {
+            x: (parent.width - self.width) / 2;
+            y: 64px;
+            width: 600px;
+            height: parent.height - 64px - 76px - 8px;
+
+            // ===================== 0. Bienvenida: logotipo, nombre y resumen de lo que se instala
+            Pagina {
+                n: 0;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    HorizontalLayout {
+                        alignment: center;
+                        padding-bottom: 12px;
+                        Image {
+                            source: @image-url("../assets/aegis.svg");
+                            width: 64px;
+                            height: 64px;
+                        }
+                    }
+
+                    Titulo {
+                        text: "Aegis";
+                        font-size: 30px;
+                    }
+
+                    Subtitulo {
+                        text: @tr("A private browser, clean and fast");
+                    }
+
+                    Rectangle {
+                        height: 6px;
+                    }
+
+                    HorizontalLayout {
+                        padding-left: 44px;
+                        Seccion {
+                            text: @tr("WHAT WILL BE INSTALLED");
+                            horizontal-alignment: left;
+                        }
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        Grupo {
+                            width: 520px;
+                            FilaResumen {
+                                icono: @image-url("../assets/iconos/ventana.svg");
+                                nombre: @tr("Mode");
+                                valor: root.nombre-modo();
+                                pulsada => { root.paso = 1; }
+                            }
+
+                            FilaResumen {
+                                icono: @image-url("../assets/iconos/escudo.svg");
+                                nombre: @tr("Shields");
+                                valor: root.nombre-escudos();
+                                pulsada => { root.paso = 2; }
+                            }
+
+                            FilaResumen {
+                                icono: @image-url("../assets/iconos/buscar.svg");
+                                nombre: @tr("Search engine");
+                                valor: root.nombre-buscador();
+                                pulsada => { root.paso = 3; }
+                            }
+
+                            FilaResumen {
+                                icono: @image-url("../assets/iconos/luna.svg");
+                                nombre: @tr("Appearance");
+                                valor: root.nombre-apariencia();
+                                pulsada => { root.paso = 4; }
+                            }
+
+                            FilaResumen {
+                                ultima: true;
+                                icono: @image-url("../assets/iconos/carpeta.svg");
+                                nombre: @tr("Folder");
+                                valor: root.ruta-final(root.carpeta);
+                                pulsada => { root.paso = 5; }
+                            }
+                        }
+                    }
+
+                    Nota {
+                        text: @tr("Just for you, with no administrator permission. It takes up about {0} MB.", root.mb-necesarios);
+                    }
+                }
+            }
+
+            // ===================== 1. Cómo navegar: Estándar o Workflow
+            Pagina {
+                n: 1;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: @image-url("../assets/iconos/ventana.svg");
+                        titulo: @tr("How do you want to browse?");
+                        subtitulo: @tr("Choose a mode. You can change it whenever you like in Settings.");
+                    }
+
+                    Rectangle {
+                        height: 12px;
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: 24px;
+                        Tarjeta {
+                            texto: @tr("Standard");
+                            detalle: @tr("Tabs on top, as always");
+                            sel: root.modo == "estandar";
+                            grupo: "modo";
+                            indice: 0;
+                            total: 2;
+                            pulsada => { root.modo = "estandar"; }
+                            mover(n) => { root.elegir-modo(n); }
+                            MiniNavegador {
+                                vertical: false;
+                            }
+                        }
+
+                        Tarjeta {
+                            texto: "Workflow";
+                            detalle: @tr("Vertical tabs and spaces");
+                            sel: root.modo == "workflow";
+                            grupo: "modo";
+                            indice: 1;
+                            total: 2;
+                            pulsada => { root.modo = "workflow"; }
+                            mover(n) => { root.elegir-modo(n); }
+                            MiniNavegador {
+                                vertical: true;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 6px;
+                    }
+
+                    HorizontalLayout {
+                        padding-left: 40px;
+                        padding-right: 40px;
+                        Nota {
+                            text: root.modo == "workflow"
+                                ? @tr("Tabs on the side and spaces to keep work and leisure apart.")
+                                : @tr("A clean bar with the tabs on top and a discreet bookmarks bar.");
+                        }
+                    }
+                }
+            }
+
+            // ===================== 2. Escudos: Normal, Estricto o Estricto+ (el de serie y el recomendado)
+            Pagina {
+                n: 2;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: @image-url("../assets/iconos/escudo.svg");
+                        titulo: @tr("How much do you want to block?");
+                        subtitulo: @tr("Shields block ads and trackers from the very first minute.");
+                    }
+
+                    // 12 como en los demás pasos y 8 más para la insignia, que asoma por encima de la tarjeta.
+                    Rectangle {
+                        height: 20px;
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: 24px;
+                        Tarjeta {
+                            width: 184px;
+                            alto-lamina: 100px;
+                            texto: @tr("Normal");
+                            detalle: @tr("Blocks known trackers and ads. Almost no site breaks.");
+                            sel: root.escudos == "normal";
+                            grupo: "escudos";
+                            indice: 0;
+                            total: 3;
+                            pulsada => { root.escudos = "normal"; }
+                            mover(n) => { root.elegir-escudos(n); }
+                            MiniEscudos {
+                                nivel: 0;
+                            }
+                        }
+
+                        Tarjeta {
+                            width: 184px;
+                            alto-lamina: 100px;
+                            texto: @tr("Strict");
+                            detalle: @tr("Also blocks social buttons and videos that track you. Some sites may look incomplete.");
+                            sel: root.escudos == "estricto";
+                            grupo: "escudos";
+                            indice: 1;
+                            total: 3;
+                            pulsada => { root.escudos = "estricto"; }
+                            mover(n) => { root.elegir-escudos(n); }
+                            MiniEscudos {
+                                nivel: 1;
+                            }
+                        }
+
+                        Tarjeta {
+                            width: 184px;
+                            alto-lamina: 100px;
+                            texto: @tr("Strict+");
+                            insignia: @tr("RECOMMENDED");
+                            nombre-accesible: @tr("Strict+ (recommended)");
+                            detalle: @tr("Everything in Strict plus a broader tracking list. Uses a little more memory.");
+                            sel: root.escudos == "estricto_mas";
+                            grupo: "escudos";
+                            indice: 2;
+                            total: 3;
+                            pulsada => { root.escudos = "estricto_mas"; }
+                            mover(n) => { root.elegir-escudos(n); }
+                            MiniEscudos {
+                                nivel: 2;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 6px;
+                    }
+
+                    Nota {
+                        text: @tr("You can change it whenever you like in Settings › Shields.");
+                    }
+                }
+            }
+
+            // ===================== 3. Buscador: DuckDuckGo, Startpage, Brave Search o Google (sin logotipos)
+            Pagina {
+                n: 3;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: @image-url("../assets/iconos/buscar.svg");
+                        titulo: @tr("Where do you want to search?");
+                        subtitulo: @tr("The search engine for the address bar. You can change it whenever you like in Settings.");
+                    }
+
+                    Rectangle {
+                        height: 12px;
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        // Dos columnas iguales de 264 con 16 entre ellas; las de una fila, con el alto de la más alta.
+                        GridLayout {
+                            spacing: 16px;
+                            Row {
+                                TarjetaCompacta {
+                                    width: 264px;
+                                    texto: "DuckDuckGo";
+                                    detalle: @tr("Doesn't keep what you search for.");
+                                    sel: root.buscador == "duckduckgo";
+                                    grupo: "buscador";
+                                    indice: 0;
+                                    total: 4;
+                                    columnas: 2;
+                                    pulsada => { root.buscador = "duckduckgo"; }
+                                    mover(n) => { root.elegir-buscador(n); }
+                                }
+
+                                TarjetaCompacta {
+                                    width: 264px;
+                                    texto: "Startpage";
+                                    detalle: @tr("Google results without Google knowing who you are.");
+                                    sel: root.buscador == "startpage";
+                                    grupo: "buscador";
+                                    indice: 1;
+                                    total: 4;
+                                    columnas: 2;
+                                    pulsada => { root.buscador = "startpage"; }
+                                    mover(n) => { root.elegir-buscador(n); }
+                                }
+                            }
+
+                            Row {
+                                TarjetaCompacta {
+                                    width: 264px;
+                                    texto: "Brave Search";
+                                    detalle: @tr("Its own independent index, with no profiles.");
+                                    sel: root.buscador == "brave";
+                                    grupo: "buscador";
+                                    indice: 2;
+                                    total: 4;
+                                    columnas: 2;
+                                    pulsada => { root.buscador = "brave"; }
+                                    mover(n) => { root.elegir-buscador(n); }
+                                }
+
+                                TarjetaCompacta {
+                                    width: 264px;
+                                    texto: "Google";
+                                    detalle: @tr("The usual results. Google keeps what you search for.");
+                                    sel: root.buscador == "google";
+                                    grupo: "buscador";
+                                    indice: 3;
+                                    total: 4;
+                                    columnas: 2;
+                                    pulsada => { root.buscador = "google"; }
+                                    mover(n) => { root.elegir-buscador(n); }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===================== 4. Apariencia: oscuro, claro o automático
+            Pagina {
+                n: 4;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: @image-url("../assets/iconos/luna.svg");
+                        titulo: @tr("Choose a look");
+                        subtitulo: @tr("Aegis stays black and white: the color comes from the web.");
+                    }
+
+                    Rectangle {
+                        height: 12px;
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: 24px;
+                        Tarjeta {
+                            width: 184px;
+                            alto-lamina: 100px;
+                            texto: @tr("Dark");
+                            detalle: @tr("Black and grays");
+                            sel: root.apariencia == "oscuro";
+                            grupo: "apariencia";
+                            indice: 0;
+                            total: 3;
+                            pulsada => { root.apariencia = "oscuro"; }
+                            mover(n) => { root.elegir-apariencia(n); }
+                            MiniApariencia {
+                                tono: 1;
+                            }
+                        }
+
+                        Tarjeta {
+                            width: 184px;
+                            alto-lamina: 100px;
+                            texto: @tr("Light");
+                            detalle: @tr("White and grays");
+                            sel: root.apariencia == "claro";
+                            grupo: "apariencia";
+                            indice: 1;
+                            total: 3;
+                            pulsada => { root.apariencia = "claro"; }
+                            mover(n) => { root.elegir-apariencia(n); }
+                            MiniApariencia {
+                                tono: 2;
+                            }
+                        }
+
+                        Tarjeta {
+                            width: 184px;
+                            alto-lamina: 100px;
+                            texto: @tr("Automatic");
+                            detalle: @tr("Follows Windows");
+                            sel: root.apariencia == "auto";
+                            grupo: "apariencia";
+                            indice: 2;
+                            total: 3;
+                            pulsada => { root.apariencia = "auto"; }
+                            mover(n) => { root.elegir-apariencia(n); }
+                            MiniApariencia {
+                                tono: 3;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 6px;
+                    }
+
+                    Nota {
+                        text: @tr("You can change it whenever you like in Settings › Appearance.");
+                    }
+                }
+            }
+
+            // ===================== 5. Opciones: carpeta y accesos
+            Pagina {
+                n: 5;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: @image-url("../assets/iconos/carpeta.svg");
+                        titulo: @tr("Final details");
+                        subtitulo: @tr("Aegis is installed just for you, without asking for administrator permission.");
+                    }
+
+                    Rectangle {
+                        height: 12px;
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        Grupo {
+                            width: 520px;
+                            Fila {
+                                alto: 50px;
+                                Text {
+                                    x: 16px;
+                                    text: @tr("Folder");
+                                    color: T.text;
+                                    font-size: 14px;
+                                }
+
+                                Campo {
+                                    x: 150px;
+                                    width: parent.width - 150px - 16px;
+                                    etiqueta: @tr("Folder");
+                                    texto <=> root.carpeta;
+                                    aceptado => { root.principal(); }
+                                }
+                            }
+
+                            Fila {
+                                Text {
+                                    x: 16px;
+                                    text: @tr("Shortcut on the desktop");
+                                    color: T.text;
+                                    font-size: 14px;
+                                }
+
+                                Interruptor {
+                                    x: parent.width - 16px - self.width;
+                                    etiqueta: @tr("Shortcut on the desktop");
+                                    encendido <=> root.escritorio;
+                                }
+                            }
+
+                            Fila {
+                                ultima: true;
+                                Text {
+                                    x: 16px;
+                                    text: @tr("Shortcut in the Start menu");
+                                    color: T.text;
+                                    font-size: 14px;
+                                }
+
+                                Interruptor {
+                                    x: parent.width - 16px - self.width;
+                                    etiqueta: @tr("Shortcut in the Start menu");
+                                    encendido <=> root.menu-inicio;
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 6px;
+                    }
+
+                    HorizontalLayout {
+                        padding-left: 40px;
+                        padding-right: 40px;
+                        Nota {
+                            text: @tr("It goes in {0}. It needs about {1} MB of free space.", root.ruta-final(root.carpeta), root.mb-necesarios);
+                        }
+                    }
+                }
+            }
+
+            // ===================== 6. Instalando (o el error, con qué ha pasado y qué hacer)
+            Pagina {
+                n: 6;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: root.error == 0 ? @image-url("../assets/iconos/descarga.svg") : @image-url("../assets/iconos/alerta.svg");
+                        titulo: root.error == 0 ? @tr("Installing Aegis") : @tr("Aegis couldn't be installed");
+                        subtitulo: root.error != 0 ? root.texto-error()
+                            : root.demo ? @tr("Demo mode: nothing is being installed.")
+                            : @tr("It takes less than a minute.");
+                    }
+
+                    if root.error == 0: VerticalLayout {
+                        padding-top: 20px;
+                        HorizontalLayout {
+                            alignment: center;
+                            VerticalLayout {
+                                width: 360px;
+                                spacing: 10px;
+                                BarraProgreso {
+                                    valor: root.progreso;
+                                }
+
+                                HorizontalLayout {
+                                    Text {
+                                        text: root.texto-fase();
+                                        color: T.muted;
+                                        font-size: 12px;
+                                    }
+
+                                    Text {
+                                        text: round(root.progreso * 100) + " %";
+                                        color: T.muted;
+                                        font-size: 12px;
+                                        horizontal-alignment: right;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===================== 7. Listo
+            Pagina {
+                n: 7;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: @image-url("../assets/iconos/hecho.svg");
+                        titulo: @tr("Aegis is ready");
+                        subtitulo: root.demo ? @tr("Demo mode: nothing has been installed.") : @tr("Everything is in place. You can start browsing.");
+                    }
+
+                    Rectangle {
+                        height: 12px;
+                    }
+
+                    if !root.demo: HorizontalLayout {
+                        alignment: center;
+                        Grupo {
+                            width: 460px;
+                            Fila {
+                                ultima: true;
+                                pulsable: true;
+                                alto: 60px;
+                                accessible-role: checkbox;
+                                accessible-label: @tr("Make Aegis your default browser");
+                                accessible-checked: root.predeterminado;
+                                accessible-action-default => { root.predeterminado = !root.predeterminado; }
+                                pulsada => { root.predeterminado = !root.predeterminado; }
+                                Casilla {
+                                    x: 16px;
+                                    marcada: root.predeterminado;
+                                }
+
+                                VerticalLayout {
+                                    x: 46px;
+                                    width: parent.width - 46px - 16px;
+                                    alignment: center;
+                                    spacing: 2px;
+                                    Text {
+                                        text: @tr("Make Aegis your default browser");
+                                        color: T.text;
+                                        font-size: 14px;
+                                    }
+
+                                    Text {
+                                        text: @tr("Windows will ask you to confirm it.");
+                                        // Sobre una fila pulsable (hover y pulsado), el apagado no llega a 4,5:1.
+                                        color: T.sub;
+                                        font-size: 12px;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===================== 10–12. Desinstalar
+            Pagina {
+                n: 10;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: root.error == 0 ? @image-url("../assets/iconos/carpeta.svg") : @image-url("../assets/iconos/alerta.svg");
+                        titulo: root.error == 0 ? @tr("Uninstall Aegis") : @tr("Aegis couldn't be uninstalled");
+                        subtitulo: root.error == 0
+                            ? @tr("Your bookmarks, passwords and history stay on this computer.")
+                            : root.texto-error();
+                    }
+                }
+            }
+
+            Pagina {
+                n: 11;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: @image-url("../assets/iconos/carpeta.svg");
+                        titulo: @tr("Uninstalling Aegis");
+                        subtitulo: @tr("This only takes a moment.");
+                    }
+                }
+            }
+
+            Pagina {
+                n: 12;
+                actual: root.paso;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Cabecera {
+                        icono: @image-url("../assets/iconos/hecho.svg");
+                        titulo: @tr("Aegis has been uninstalled");
+                        subtitulo: @tr("Your bookmarks, passwords and history stay on this computer.");
+                    }
+                }
+            }
+        }
+
+        // ------------------------------------------------ pie
+        Rectangle {
+            x: 0px;
+            y: parent.height - self.height;
+            width: parent.width;
+            height: 76px;
+            Rectangle {
+                x: 0px;
+                y: 0px;
+                width: parent.width;
+                height: 1px;
+                background: T.line;
+            }
+
+            // Pasos: rayitas de 12 (la actual, 26), las hechas del color del texto.
+            if root.paso < 10: HorizontalLayout {
+                x: 28px;
+                y: (parent.height - 4px) / 2;
+                height: 4px;
+                spacing: 6px;
+                alignment: start;
+                for i in root.pasos: Rectangle {
+                    width: i == root.paso ? 26px : 12px;
+                    height: 4px;
+                    border-radius: 2px;
+                    background: i <= root.paso ? T.text : T.track;
+                    animate width { duration: T.dur(260ms); easing: cubic-bezier(0.33, 1, 0.68, 1); }
+                    animate background { duration: T.dur(150ms); }
+                }
+            }
+
+            if root.paso < 10: Text {
+                // Las rayitas (las demás de 12, la actual de 26, separadas 6) y 16 de aire.
+                x: 28px + (root.pasos - 1) * 12px + 26px + (root.pasos - 1) * 6px + 16px;
+                text: @tr("Step {0} of {1}", root.paso + 1, root.pasos);
+                color: T.muted;
+                font-size: 12px;
+            }
+
+            HorizontalLayout {
+                x: parent.width - 28px - self.width;
+                y: (parent.height - 38px) / 2;
+                width: self.preferred-width;
+                height: 38px;
+                spacing: 10px;
+                if root.paso <= 5 || (root.paso == 6 && root.error != 0) || (root.paso == 7 && !root.demo) || root.paso == 10: BotonSecundario {
+                    texto: root.texto-secundario();
+                    pulsado => { root.secundario(); }
+                }
+                if !root.instalando: BotonPrincipal {
+                    texto: root.texto-principal();
+                    pulsado => { root.principal(); }
+                }
+            }
+        }
+    }
+}

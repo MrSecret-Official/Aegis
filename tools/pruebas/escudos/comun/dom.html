@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOM · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · rendimiento del cosmético</p>
+<h1>Una página con mucho DOM</h1>
+<p>3000 elementos con 537 clases distintas (algunos, huecos de anuncios genéricos) que pasan por el analizador y, después
+de cargar, 1000 más en 10 tandas con clases nuevas. Sirve para medir lo que cuesta el cosmético (hojas, clases e ids,
+MutationObserver) con tools/pruebas/escudos_rendimiento.py.</p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><div id="siguiente"></div></div>
+<script>
+"use strict";
+{
+  const partes = [];
+  for (let i = 0; i < 3000; i++) {
+    const anuncio = i % 100 == 0 ? " ad-slot" : "";
+    partes.push(`<div class="c${i % 500} k${i % 37}${anuncio}" id="e${i}"><span>texto ${i}</span></div>`);
+  }
+  document.write(partes.join(""));
+}
+</script>
+<script>
+"use strict";
+(async () => {
+  if (document.readyState != "complete") {
+    await new Promise(r => addEventListener("load", r, { once: true }));
+  }
+  const t0 = performance.now();
+  for (let b = 0; b < 10; b++) {
+    const f = document.createElement("div");
+    f.innerHTML = Array.from({ length: 100 }, (_, j) => `<div class="d${b}-${j % 20} x" id="d${b}-${j}">n</div>`).join("");
+    document.body.append(f);
+    await Banco.espera(0);
+  }
+  const dinamicoMs = performance.now() - t0;
+  const nav = performance.getEntriesByType("navigation")[0];
+  const anuncios = [...document.querySelectorAll(".ad-slot")];
+  await Banco.listo({
+    respuesta: nav?.responseEnd ?? null,
+    interactivo: nav?.domInteractive ?? null,
+    dcl: nav?.domContentLoadedEventEnd ?? null,
+    carga: nav?.loadEventEnd ?? null,
+    dinamicoMs,
+    anuncios: anuncios.length,
+    anunciosOcultos: anuncios.filter(el => getComputedStyle(el).display == "none").length,
+  });
+})();
+</script>
+</body>
+</html>

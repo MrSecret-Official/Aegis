@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cookies · Banco de Escudos</title>
+<link rel="stylesheet" href="/banco.css">
+<script src="/banco.js"></script>
+<script src="/cookies.js"></script>
+</head>
+<body>
+<p class="etiqueta">Banco de pruebas de Escudos · cookies de terceros</p>
+<h1 id="titulo">Cookies</h1>
+<p id="explicacion"></p>
+<div class="tarjeta"><p id="estado-fase">Cargando…</p><pre class="mono" id="detalle"></pre><div id="siguiente"></div></div>
+<div id="marcos" class="fila"></div>
+<script>
+"use strict";
+// ?marco=<host>&accion=poner|leer: un marco de ese otro sitio pone o lee sus cookies dentro de esta página.
+// Sin «marco»: esta página lee las suyas como sitio principal.
+const marco = Banco.q.get("marco");
+const accion = Banco.q.get("accion") || "leer";
+const detalle = document.getElementById("detalle");
+
+if (window.top !== window) {
+  // Dentro de otra web: hace la acción y se lo cuenta a la página de arriba.
+  (async () => {
+    const puesto = accion === "poner" ? await Almacen.poner() : {};
+    const leido = await Almacen.leer();
+    window.top.postMessage({ banco: "cookies", origen: location.origin, cargado: true, ...puesto, ...leido }, "*");
+  })();
+} else if (marco) {
+  document.getElementById("titulo").textContent = `Un marco de ${marco} dentro de ${location.host}`;
+  document.getElementById("explicacion").textContent =
+    accion === "poner"
+      ? "El marco pone una cookie con JavaScript, otra con Set-Cookie y un valor en localStorage, y los vuelve a leer."
+      : "El marco solo lee: ¿ve lo que puso antes?";
+  (async () => {
+    const respuesta = new Promise(ok => {
+      addEventListener("message", e => {
+        if (e.data?.banco === "cookies" && e.origin === `https://${marco}`) {
+          ok(e.data);
+        }
+      });
+      setTimeout(() => ok({ cargado: false }), 8000);
+    });
+    const f = document.createElement("iframe");
+    f.title = "marco de otro sitio";
+    f.src = `https://${marco}/cookies.html?${Banco.parametros({ fase: Banco.fase, accion })}`;
+    document.getElementById("marcos").append(f);
+    const datos = await respuesta;
+    detalle.textContent = JSON.stringify(datos, null, 1);
+    await Banco.listo({ marco, accion, superior: location.host, ...datos });
+  })();
+} else {
+  document.getElementById("titulo").textContent = `${location.host} como sitio principal`;
+  document.getElementById("explicacion").textContent = "Esta página lee sus propias cookies y su localStorage.";
+  (async () => {
+    const puesto = accion === "poner" ? await Almacen.poner() : {};
+    const datos = { cargado: true, ...puesto, ...(await Almacen.leer()) };
+    detalle.textContent = JSON.stringify(datos, null, 1);
+    await Banco.listo({ marco: null, accion, superior: location.host, ...datos });
+  })();
+}
+</script>
+</body>
+</html>

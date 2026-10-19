@@ -1,0 +1,301 @@
+{
+  "comentario": "Listas de Escudos (listas.sys.mjs; la instantánea de la build la hace `aegis.py filtros`). Cada una se descarga solo de su autor: la primera URL y, si falla, las siguientes, del mismo proyecto. grupo: base (todos los niveles), rastreo (Estricto+), cookies, ventanas y antiadblock (molestias, con un interruptor por grupo) y regional (según el idioma de la interfaz). titulo: el prefijo que tiene que traer su línea «! Title:». confianza: sus scriptlets pueden ser los «trusted-*» (solo las de uBlock Origin, como hace uBlock Origin). Tamaños en bytes: fuera de esos límites, la descarga se rechaza.",
+  "listas": [
+    {
+      "id": "ubo-filtros",
+      "nombre": "uBlock filters – Ads",
+      "autor": "uBlock Origin",
+      "grupo": "base",
+      "urls": [
+        "https://ublockorigin.github.io/uAssetsCDN/filters/filters.min.txt",
+        "https://ublockorigin.pages.dev/filters/filters.min.txt"
+      ],
+      "titulo": "uBlock filters",
+      "licencia": "GPL-3.0",
+      "confianza": true,
+      "tamano": [300000, 12000000]
+    },
+    {
+      "id": "ubo-privacidad",
+      "nombre": "uBlock filters – Privacy",
+      "autor": "uBlock Origin",
+      "grupo": "base",
+      "urls": [
+        "https://ublockorigin.github.io/uAssetsCDN/filters/privacy.min.txt",
+        "https://ublockorigin.pages.dev/filters/privacy.min.txt"
+      ],
+      "titulo": "uBlock filters – Privacy",
+      "licencia": "GPL-3.0",
+      "confianza": true,
+      "tamano": [20000, 2000000]
+    },
+    {
+      "id": "ubo-badware",
+      "nombre": "uBlock filters – Badware risks",
+      "autor": "uBlock Origin",
+      "grupo": "base",
+      "urls": [
+        "https://ublockorigin.github.io/uAssetsCDN/filters/badware.min.txt",
+        "https://ublockorigin.pages.dev/filters/badware.min.txt"
+      ],
+      "titulo": "uBlock filters – Badware risks",
+      "licencia": "GPL-3.0",
+      "confianza": true,
+      "tamano": [20000, 3000000]
+    },
+    {
+      "id": "ubo-arreglos",
+      "nombre": "uBlock filters – Quick fixes",
+      "autor": "uBlock Origin",
+      "grupo": "base",
+      "urls": [
+        "https://ublockorigin.github.io/uAssetsCDN/filters/quick-fixes.min.txt",
+        "https://ublockorigin.pages.dev/filters/quick-fixes.min.txt"
+      ],
+      "titulo": "uBlock filters – Quick fixes",
+      "licencia": "GPL-3.0",
+      "confianza": true,
+      "tamano": [2000, 2000000]
+    },
+    {
+      "id": "ubo-desbloqueo",
+      "nombre": "uBlock filters – Unbreak",
+      "autor": "uBlock Origin",
+      "grupo": "base",
+      "urls": [
+        "https://ublockorigin.github.io/uAssetsCDN/filters/unbreak.min.txt",
+        "https://ublockorigin.pages.dev/filters/unbreak.min.txt"
+      ],
+      "titulo": "uBlock filters – Unbreak",
+      "licencia": "GPL-3.0",
+      "confianza": true,
+      "tamano": [20000, 3000000]
+    },
+    {
+      "id": "easylist",
+      "nombre": "EasyList",
+      "autor": "The EasyList authors",
+      "grupo": "base",
+      "urls": [
+        "https://easylist.to/easylist/easylist.txt",
+        "https://ublockorigin.github.io/uAssets/thirdparties/easylist.txt"
+      ],
+      "titulo": "EasyList",
+      "licencia": "GPL-3.0 o CC BY-SA 3.0",
+      "confianza": false,
+      "tamano": [400000, 15000000]
+    },
+    {
+      "id": "easyprivacy",
+      "nombre": "EasyPrivacy",
+      "autor": "The EasyList authors",
+      "grupo": "base",
+      "urls": [
+        "https://easylist.to/easylist/easyprivacy.txt",
+        "https://ublockorigin.github.io/uAssets/thirdparties/easyprivacy.txt"
+      ],
+      "titulo": "EasyPrivacy",
+      "licencia": "GPL-3.0 o CC BY-SA 3.0",
+      "confianza": false,
+      "tamano": [300000, 12000000]
+    },
+    {
+      "id": "adguard-base",
+      "nombre": "AdGuard Base (sin EasyList)",
+      "autor": "AdGuard",
+      "grupo": "base",
+      "urls": ["https://filters.adtidy.org/extension/ublock/filters/2_without_easylist.txt"],
+      "titulo": "AdGuard Base filter",
+      "licencia": "GPL-3.0",
+      "confianza": false,
+      "tamano": [800000, 25000000]
+    },
+    {
+      "id": "brave-desbloqueo",
+      "nombre": "Brave Unbreak",
+      "autor": "Brave",
+      "grupo": "base",
+      "urls": ["https://raw.githubusercontent.com/brave/adblock-lists/master/brave-unbreak.txt"],
+      "titulo": "Brave Unbreak",
+      "licencia": "MPL-2.0",
+      "confianza": false,
+      "tamano": [10000, 2000000]
+    },
+    {
+      "id": "brave-especificas",
+      "nombre": "Brave Specific",
+      "autor": "Brave",
+      "grupo": "base",
+      "urls": ["https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-specific.txt"],
+      "titulo": "Brave Specific",
+      "licencia": "MPL-2.0",
+      "confianza": false,
+      "tamano": [1000, 1000000]
+    },
+    {
+      "id": "adguard-rastreo",
+      "nombre": "AdGuard Tracking Protection",
+      "autor": "AdGuard",
+      "grupo": "rastreo",
+      "urls": ["https://filters.adtidy.org/extension/ublock/filters/3.txt"],
+      "titulo": "AdGuard Tracking Protection filter",
+      "licencia": "GPL-3.0",
+      "confianza": false,
+      "tamano": [2000000, 50000000]
+    },
+    {
+      "id": "ubo-cookies",
+      "nombre": "uBlock filters – Cookie Notices",
+      "autor": "uBlock Origin",
+      "grupo": "cookies",
+      "urls": [
+        "https://ublockorigin.github.io/uAssetsCDN/filters/annoyances-cookies.txt",
+        "https://ublockorigin.pages.dev/filters/annoyances-cookies.txt"
+      ],
+      "titulo": "uBlock filters – Cookie Notices",
+      "licencia": "GPL-3.0",
+      "confianza": true,
+      "tamano": [50000, 5000000]
+    },
+    {
+      "id": "adguard-cookies",
+      "nombre": "AdGuard Cookie Notices",
+      "autor": "AdGuard",
+      "grupo": "cookies",
+      "urls": ["https://filters.adtidy.org/extension/ublock/filters/18.txt"],
+      "titulo": "AdGuard Cookie Notices filter",
+      "licencia": "GPL-3.0",
+      "confianza": false,
+      "tamano": [200000, 10000000]
+    },
+    {
+      "id": "ubo-molestias",
+      "nombre": "uBlock filters – Annoyances",
+      "autor": "uBlock Origin",
+      "grupo": "ventanas",
+      "urls": [
+        "https://ublockorigin.github.io/uAssetsCDN/filters/annoyances.min.txt",
+        "https://ublockorigin.pages.dev/filters/annoyances.min.txt"
+      ],
+      "titulo": "uBlock filters – Annoyances",
+      "licencia": "GPL-3.0",
+      "confianza": true,
+      "tamano": [40000, 5000000]
+    },
+    {
+      "id": "adguard-ventanas",
+      "nombre": "AdGuard Popups",
+      "autor": "AdGuard",
+      "grupo": "ventanas",
+      "urls": ["https://filters.adtidy.org/extension/ublock/filters/19.txt"],
+      "titulo": "AdGuard Popups filter",
+      "licencia": "GPL-3.0",
+      "confianza": false,
+      "tamano": [200000, 10000000]
+    },
+    {
+      "id": "adguard-banners-apps",
+      "nombre": "AdGuard Mobile App Banners",
+      "autor": "AdGuard",
+      "grupo": "ventanas",
+      "urls": ["https://filters.adtidy.org/extension/ublock/filters/20.txt"],
+      "titulo": "AdGuard Mobile App Banners filter",
+      "licencia": "GPL-3.0",
+      "confianza": false,
+      "tamano": [40000, 3000000]
+    },
+    {
+      "id": "adguard-otras-molestias",
+      "nombre": "AdGuard Other Annoyances",
+      "autor": "AdGuard",
+      "grupo": "ventanas",
+      "urls": ["https://filters.adtidy.org/extension/ublock/filters/21.txt"],
+      "titulo": "AdGuard Other Annoyances filter",
+      "licencia": "GPL-3.0",
+      "confianza": false,
+      "tamano": [100000, 6000000]
+    },
+    {
+      "id": "adguard-widgets",
+      "nombre": "AdGuard Widgets",
+      "autor": "AdGuard",
+      "grupo": "ventanas",
+      "urls": ["https://filters.adtidy.org/extension/ublock/filters/22.txt"],
+      "titulo": "AdGuard Widgets filter",
+      "licencia": "GPL-3.0",
+      "confianza": false,
+      "tamano": [20000, 2000000]
+    },
+    {
+      "id": "easylist-antiadblock",
+      "nombre": "Adblock Warning Removal List",
+      "autor": "The EasyList authors",
+      "grupo": "antiadblock",
+      "urls": ["https://easylist-downloads.adblockplus.org/antiadblockfilters.txt"],
+      "titulo": "Adblock Warning Removal List",
+      "licencia": "GPL-3.0 o CC BY-SA 3.0",
+      "confianza": false,
+      "tamano": [10000, 2000000]
+    },
+    {
+      "id": "easylist-es",
+      "nombre": "EasyList Spanish",
+      "autor": "The EasyList authors",
+      "grupo": "regional",
+      "idiomas": ["es"],
+      "urls": ["https://easylist-downloads.adblockplus.org/easylistspanish.txt"],
+      "titulo": "EasyList Spanish",
+      "licencia": "GPL-3.0 o CC BY-SA 3.0",
+      "confianza": false,
+      "tamano": [20000, 3000000]
+    },
+    {
+      "id": "adguard-es-pt",
+      "nombre": "AdGuard Spanish/Portuguese",
+      "autor": "AdGuard",
+      "grupo": "regional",
+      "idiomas": ["es", "pt"],
+      "urls": ["https://filters.adtidy.org/extension/ublock/filters/9.txt"],
+      "titulo": "AdGuard Spanish/Portuguese filter",
+      "licencia": "GPL-3.0",
+      "confianza": false,
+      "tamano": [60000, 5000000]
+    },
+    {
+      "id": "adguard-fr",
+      "nombre": "AdGuard French",
+      "autor": "AdGuard",
+      "grupo": "regional",
+      "idiomas": ["fr"],
+      "urls": ["https://filters.adtidy.org/extension/ublock/filters/16.txt"],
+      "titulo": "AdGuard French filter",
+      "licencia": "GPL-3.0",
+      "confianza": false,
+      "tamano": [100000, 8000000]
+    },
+    {
+      "id": "easylist-de",
+      "nombre": "EasyList Germany",
+      "autor": "The EasyList authors",
+      "grupo": "regional",
+      "idiomas": ["de"],
+      "urls": ["https://easylist.to/easylistgermany/easylistgermany.txt"],
+      "titulo": "EasyList Germany",
+      "licencia": "GPL-3.0 o CC BY-SA 3.0",
+      "confianza": false,
+      "tamano": [50000, 4000000]
+    },
+    {
+      "id": "easylist-it",
+      "nombre": "EasyList Italy",
+      "autor": "The EasyList authors",
+      "grupo": "regional",
+      "idiomas": ["it"],
+      "urls": ["https://easylist-downloads.adblockplus.org/easylistitaly.txt"],
+      "titulo": "EasyList Italy",
+      "licencia": "GPL-3.0 o CC BY-SA 3.0",
+      "confianza": false,
+      "tamano": [30000, 3000000]
+    }
+  ]
+}

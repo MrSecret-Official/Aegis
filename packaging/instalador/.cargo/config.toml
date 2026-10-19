@@ -1,0 +1,4 @@
+# Compilación cruzada para Windows desde Linux (WSL) con MinGW-w64: enlazador y CRT estático (un solo .exe).
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
+rustflags = ["-C", "target-feature=+crt-static"]
