@@ -330,6 +330,67 @@ aegis-enfasis-ambar = Ambra
 aegis-enfasis-coral = Corallo
 aegis-enfasis-lavanda = Lavanda
 aegis-enfasis-malva = Malva
+aegis-enfasis-cobalto = Cobalto
+aegis-enfasis-piedra = Pietra
+aegis-enfasis-laguna = Laguna
+aegis-enfasis-musgo = Muschio
+aegis-enfasis-frambuesa = Lampone
+aegis-enfasis-ciruela = Prugna
+
+## Énfasis personalizado: el «+» de los selectores y su ventana («Crear» y «Mis énfasis»)
+
+# Nombre de la opción del «+» en Ajustes y principio de sus etiquetas.
+aegis-enfasis-propio = Su misura
+# Etiqueta (y descripción emergente) del «+» sin ningún personalizado en uso.
+aegis-enfasis-propio-abrir = Su misura: creane uno o scegline uno salvato
+# El «+» con un personalizado en uso. $nombre: su nombre o sus códigos (p. ej. #88C0DC)
+aegis-enfasis-propio-abrir-activo = Su misura: { $nombre }
+# Línea del elegido, bajo las muestras de la nueva pestaña. $nombre: su nombre o sus códigos
+aegis-enfasis-propio-actual = Su misura: { $nombre }
+aegis-enfasis-propio-titulo = Colore d’accento personalizzato
+aegis-enfasis-propio-cerrar = Chiudi
+# Las dos pestañas de la ventana.
+aegis-enfasis-propio-crear = Crea
+aegis-enfasis-propio-mis = I miei colori
+aegis-enfasis-propio-degradado = Sfumatura
+aegis-enfasis-propio-degradado-ayuda = Un secondo colore per la cornice della finestra e il bordo della scheda attiva. Il resto usa il primo.
+# Para lectores de pantalla: los dos segmentos que eligen qué color se edita.
+aegis-enfasis-propio-editando = Colore che stai modificando
+aegis-enfasis-propio-color-1 = Primo colore
+aegis-enfasis-propio-color-2 = Secondo colore
+# El cuadro de color, para lectores de pantalla. $saturacion y $brillo: de 0 a 100
+aegis-enfasis-propio-area = Saturazione e luminosità
+aegis-enfasis-propio-area-valor = Saturazione { $saturacion }%, luminosità { $brillo }%
+aegis-enfasis-propio-tono = Tonalità
+# Campo del color en hexadecimal (#RRGGBB).
+aegis-enfasis-propio-hex = Codice
+aegis-enfasis-propio-hex-error = Inserisci un colore esadecimale, come #88C0DC.
+aegis-enfasis-propio-nombre = Nome
+aegis-enfasis-propio-nombre-ejemplo = Facoltativo
+aegis-enfasis-propio-vista = Anteprima
+aegis-enfasis-propio-ajuste = { -brand-short-name } regola luminosità e intensità perché resti leggibile sia in chiaro sia in scuro.
+aegis-enfasis-propio-guardar = Salva
+aegis-enfasis-propio-usar = Usa
+aegis-enfasis-propio-guardado = Salvato in «I miei colori».
+aegis-enfasis-propio-actualizado = Era già in «I miei colori».
+# $maximo: cuántos se pueden guardar (24)
+aegis-enfasis-propio-lleno = Ne hai già { $maximo } salvati. Eliminane uno in «I miei colori» per salvarne un altro.
+# $cuantos: los guardados; $maximo: el límite (24)
+aegis-enfasis-propio-cuenta = { $cuantos } di { $maximo }
+# Supr (Delete): la tecla que borra el guardado con el foco.
+aegis-enfasis-propio-mis-ayuda = Scegline uno per usarlo. Canc lo elimina.
+aegis-enfasis-propio-sin-nombre = Senza nome
+aegis-enfasis-propio-editar = Modifica
+aegis-enfasis-propio-borrar = Elimina
+# $nombre: el nombre del guardado (o el texto de «sin nombre»)
+aegis-enfasis-propio-borrar-pregunta = Eliminare «{ $nombre }»? L’operazione non si può annullare.
+aegis-enfasis-propio-borrar-confirmar = Elimina
+aegis-enfasis-propio-cancelar = Annulla
+aegis-enfasis-propio-borrado = «{ $nombre }» è stato eliminato.
+aegis-enfasis-propio-vacio-titulo = Ancora nessuno salvato
+# Estado vacío de «Mis énfasis». $maximo: cuántos se pueden guardar (24)
+aegis-enfasis-propio-vacio = Crea un colore d’accento e scegli «Salva»: apparirà qui, pronto da usare con un clic. Fino a { $maximo }.
+aegis-enfasis-propio-ir-crear = Creane uno
 
 ## Nueva pestaña › Personalizar: fondo, diseño (buscador, accesos y espaciado)
 

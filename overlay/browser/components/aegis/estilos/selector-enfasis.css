@@ -1,0 +1,671 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · el «+» de los selectores de énfasis y el selector del énfasis personalizado (selector-enfasis.sys.mjs;
+   docs/DISENO.md §2 «Énfasis» y §9 «Selector del énfasis personalizado»). Se pone en Ajustes (AegisArranque) y en la
+   nueva pestaña (paginas/AegisPaginasChild). Densidad de los diálogos de Aegis (dialogos/dialogo.css): 440 de ancho,
+   relleno 24, cuerpo de 13 px, título de 16 px 600, campos de 34 (radio 7), botones de 34 (radio 8; el principal en
+   600 y de 112 como mínimo). Las clases van siempre con su contenedor (.aegis-ep …): las hojas de las páginas de Firefox
+   dan estilo a button, input y dialog sueltos. Solo var(--aegis-*); los colores, fuera de alto contraste. Nada se
+   mueve en reposo. */
+
+/* ── Muestras de un énfasis con degradado: el círculo partido en diagonal (corte duro, no un degradado) ────────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-enfasis-circulo[aegis-enfasis-degradado] {
+    background-image: linear-gradient(135deg, var(--aegis-accent) 50%, var(--aegis-accent-2) 50%);
+  }
+}
+
+/* ── El «+»: un círculo vacío con el «+» de línea; con el personalizado en uso, su color y el «+» encima ──────── */
+
+.aegis-ep-mas {
+  appearance: none;
+  margin: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.aegis-ep-mas > .aegis-ep-mas-circulo {
+  display: grid;
+  place-items: center;
+}
+
+.aegis-ep-mas-circulo > .aegis-ep-glifo {
+  width: 16px;
+  height: 16px;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-ep-mas > .aegis-ep-mas-circulo:not([aegis-enfasis-muestra]) {
+    background-color: transparent;
+    border-color: var(--aegis-line-strong);
+    color: var(--aegis-sub);
+  }
+  .aegis-ep-mas:hover > .aegis-ep-mas-circulo:not([aegis-enfasis-muestra]) {
+    background-color: var(--aegis-hover);
+    color: var(--aegis-text);
+  }
+  .aegis-ep-mas > .aegis-ep-mas-circulo[aegis-enfasis-muestra] {
+    background-color: var(--aegis-accent);
+    color: var(--aegis-on-accent);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aegis-ep-mas > .aegis-ep-mas-circulo {
+    transition: background-color var(--aegis-t-hover) var(--aegis-ease), color var(--aegis-t-hover) var(--aegis-ease);
+  }
+}
+
+/* ── El diálogo ─────────────────────────────────────────────────────────────────────────────────────────────── */
+
+dialog.aegis-ep {
+  box-sizing: border-box;
+  width: min(440px, calc(100vw - 2 * var(--aegis-s-16)));
+  max-width: none;
+  max-height: calc(100vh - 2 * var(--aegis-s-16));
+  /* Arriba fijo (centrado para la pestaña Crear, la más alta, unos 680): al cambiar a «Mis énfasis», más baja, el
+     diálogo no salta. */
+  margin: max(var(--aegis-s-16), calc(50vh - 340px)) auto auto;
+  padding: var(--aegis-s-24);
+  overflow: auto;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+  font: 13px/1.5 var(--aegis-font);
+  text-align: start;
+}
+
+/* Sin velo: es una capa elevada (DISENO §6) y detrás se ve cómo queda la página. */
+dialog.aegis-ep::backdrop {
+  background: none;
+}
+
+.aegis-ep [hidden] {
+  display: none !important;
+}
+
+.aegis-ep .aegis-ep-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.aegis-ep .aegis-ep-glifo {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* Cabecera: el título y el botón de cerrar (botón de icono de 28, radio 7). */
+.aegis-ep .aegis-ep-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aegis-s-12);
+  margin-block-end: var(--aegis-s-16);
+}
+.aegis-ep .aegis-ep-titulo {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.aegis-ep .aegis-ep-icono {
+  display: grid;
+  place-items: center;
+  width: var(--aegis-h-icon);
+  height: var(--aegis-h-icon);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--aegis-r-7);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+}
+
+/* Pestañas con la forma de los segmentos (DISENO §9): contenedor de radio 10, opciones de radio 8 a 2 px, 30 de alto. */
+.aegis-ep :is(.aegis-ep-pestanas, .aegis-ep-segmentos) {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--aegis-s-4);
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-10);
+}
+.aegis-ep .aegis-ep-pestanas {
+  margin-block-end: var(--aegis-s-16);
+}
+.aegis-ep :is(.aegis-ep-pestana, .aegis-ep-segmento) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--aegis-s-8);
+  min-height: 24px;
+  margin: 0;
+  padding: 0 var(--aegis-s-8);
+  border: none;
+  border-radius: var(--aegis-r-8);
+  font: inherit;
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+  appearance: none;
+}
+.aegis-ep .aegis-ep-pestana[aria-selected="true"],
+.aegis-ep .aegis-ep-segmento:has(> input:checked) {
+  font-weight: 600;
+}
+.aegis-ep .aegis-ep-segmento > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+/* El color que se edita, tal cual (el de debajo del cursor). */
+.aegis-ep .aegis-ep-punto {
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background-color: var(--aegis-ep-color);
+}
+
+.aegis-ep .aegis-ep-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-12);
+}
+
+/* Fila con interruptor: rótulo de 13 px y ayuda de 12 px. */
+.aegis-ep .aegis-ep-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aegis-s-12);
+  cursor: pointer;
+}
+.aegis-ep .aegis-ep-fila-textos {
+  display: flex;
+  flex-direction: column;
+}
+.aegis-ep .aegis-ep-ayuda,
+.aegis-ep .aegis-ep-cuenta,
+.aegis-ep .aegis-ep-estado,
+.aegis-ep .aegis-ep-error {
+  margin: 0;
+  font-size: 12px;
+}
+.aegis-ep .aegis-ep-cuenta {
+  font-variant-numeric: tabular-nums;
+}
+.aegis-ep :is(.aegis-ep-estado, .aegis-ep-error):empty {
+  display: none;
+}
+
+/* Interruptor de 34 × 20, radio 10, botón de 16 (DISENO §9). */
+.aegis-ep .aegis-ep-interruptor {
+  appearance: none;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: var(--aegis-r-10);
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: 2px 50%;
+  cursor: pointer;
+}
+.aegis-ep .aegis-ep-interruptor:checked {
+  background-position: calc(100% - 2px) 50%;
+}
+
+/* Cuadro de saturación (de izquierda a derecha) y brillo (de abajo arriba), radio 8, con el cursor de 16. */
+.aegis-ep .aegis-ep-area {
+  position: relative;
+  height: 136px;
+  border-radius: var(--aegis-r-8);
+  direction: ltr;
+  touch-action: none;
+  cursor: crosshair;
+  background-image:
+    linear-gradient(to top, var(--aegis-espectro-negro), transparent),
+    linear-gradient(to right, var(--aegis-espectro-blanco), var(--aegis-ep-tono));
+}
+/* Aro blanco de 2 y línea oscura de 1: se ve sobre cualquier color (es parte del dibujo, no un borde de la interfaz). */
+.aegis-ep .aegis-ep-cursor {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  margin: -8px 0 0 -8px;
+  border: 2px solid var(--aegis-espectro-blanco);
+  border-radius: 50%;
+  background-color: var(--aegis-ep-color);
+  box-shadow: 0 0 0 1px var(--aegis-espectro-cursor);
+  pointer-events: none;
+}
+
+/* Barra de tono: el espectro en una pista de 10 (radio 5) y el mismo cursor de 16. */
+.aegis-ep .aegis-ep-tono {
+  appearance: none;
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  background: none;
+  direction: ltr;
+  cursor: pointer;
+}
+.aegis-ep .aegis-ep-tono::-moz-range-track {
+  height: 10px;
+  border-radius: var(--aegis-r-5);
+  background-image: var(--aegis-espectro);
+}
+.aegis-ep .aegis-ep-tono::-moz-range-progress {
+  background: none;
+}
+.aegis-ep .aegis-ep-tono::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 2px solid var(--aegis-espectro-blanco);
+  border-radius: 50%;
+  background: none;
+  box-shadow: 0 0 0 1px var(--aegis-espectro-cursor);
+}
+.aegis-ep .aegis-ep-tono:focus-visible {
+  outline: none;
+}
+
+/* Código y nombre: campos de 34 (radio 7; DISENO §2 «Campos»), con la etiqueta de 12 px encima. */
+.aegis-ep .aegis-ep-campos {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: var(--aegis-s-12);
+}
+.aegis-ep .aegis-ep-etiqueta {
+  display: block;
+  margin-block-end: var(--aegis-s-4);
+  font-size: 12px;
+}
+.aegis-ep .aegis-ep-entrada {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--aegis-h-field);
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-7);
+  font: inherit;
+  appearance: none;
+}
+.aegis-ep .aegis-ep-entrada:focus-visible {
+  outline: none;
+}
+/* El código, en JetBrains Mono (dato técnico, DISENO §3). */
+.aegis-ep .aegis-ep-hex {
+  font-family: var(--aegis-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Así queda: tarjeta de superficie (radio 12, relleno 12) con el marco y su pestaña activa, un interruptor encendido y
+   una cápsula elegida. */
+.aegis-ep .aegis-ep-vista {
+  display: flex;
+  flex-direction: column;
+}
+.aegis-ep .aegis-ep-vista-muestra {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-12);
+  margin-block-end: var(--aegis-s-8);
+  padding: var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+}
+/* El marco (radio 8) con la pestaña a 3 px (radio 5, concéntrico) y su filo de 1 px arriba. */
+.aegis-ep .aegis-ep-vista-marco {
+  flex: 1;
+  display: flex;
+  box-sizing: border-box;
+  height: 36px;
+  padding: 3px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-8);
+}
+.aegis-ep .aegis-ep-vista-pestana {
+  position: relative;
+  box-sizing: border-box;
+  width: 88px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-5);
+  overflow: hidden;
+}
+.aegis-ep .aegis-ep-vista-pestana::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+}
+.aegis-ep .aegis-ep-vista-interruptor {
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border-radius: var(--aegis-r-10);
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: calc(100% - 2px) 50%;
+}
+.aegis-ep .aegis-ep-vista-capsula {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  height: 24px;
+  border-radius: var(--aegis-r-8);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Pie: «Guardar» (secundario) y «Usar» (principal), de 34 y radio 8, a la derecha. */
+.aegis-ep .aegis-ep-pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--aegis-s-8);
+  margin-block-start: var(--aegis-s-4);
+}
+.aegis-ep .aegis-ep-boton,
+.aegis-ep .aegis-ep-compacto {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  appearance: none;
+}
+.aegis-ep .aegis-ep-boton {
+  height: 34px;
+  padding: 0 var(--aegis-s-16);
+  border-radius: var(--aegis-r-8);
+}
+.aegis-ep .aegis-ep-boton.aegis-ep-principal {
+  min-width: 112px;
+  font-weight: 600;
+}
+/* «Editar», «Borrar», «Cancelar»: el «Quitar» compacto (DISENO §9): 30 de alto, radio 7. */
+.aegis-ep .aegis-ep-compacto {
+  flex: none;
+  height: 30px;
+  padding: 0 var(--aegis-s-12);
+  border-radius: var(--aegis-r-7);
+}
+
+/* Mis énfasis: muestras de 24 en zonas de 32, ocho por fila (24 = tres filas llenas). */
+.aegis-ep .aegis-ep-guardados {
+  display: grid;
+  grid-template-columns: repeat(8, 32px);
+  justify-content: space-between;
+  row-gap: var(--aegis-s-8);
+}
+.aegis-ep .aegis-ep-guardado {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.aegis-ep .aegis-ep-guardado > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.aegis-ep .aegis-ep-circulo {
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 50%;
+}
+.aegis-ep .aegis-ep-guardado:has(> input:checked),
+.aegis-ep .aegis-ep-guardado:has(> input:focus-visible) {
+  outline: 2px solid;
+  outline-offset: 0;
+}
+
+/* Detalle del guardado (o la pregunta de borrar): nombre de 13 px 600 y código de 12 px, con sus botones compactos. */
+.aegis-ep .aegis-ep-detalle {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  min-height: 44px;
+  padding-block-start: var(--aegis-s-8);
+  border-block-start: 1px solid transparent;
+}
+.aegis-ep .aegis-ep-detalle-textos {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.aegis-ep .aegis-ep-detalle-nombre {
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.aegis-ep .aegis-ep-detalle-codigo {
+  font-family: var(--aegis-font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.aegis-ep .aegis-ep-pregunta {
+  flex: 1;
+  margin: 0;
+}
+
+/* Estado vacío (DISENO §9): el glifo de 32, una frase y el botón para crear uno. */
+.aegis-ep .aegis-ep-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  padding: var(--aegis-s-24) var(--aegis-s-8) var(--aegis-s-8);
+  text-align: center;
+}
+.aegis-ep .aegis-ep-vacio > .aegis-ep-glifo {
+  width: 32px;
+  height: 32px;
+  margin-block-end: var(--aegis-s-4);
+}
+.aegis-ep .aegis-ep-vacio-titulo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.aegis-ep .aegis-ep-vacio > .aegis-ep-boton {
+  min-width: 112px;
+  margin-block-start: var(--aegis-s-8);
+}
+
+/* Foco: anillo de 2 px por fuera (DISENO §5). */
+.aegis-ep :is(.aegis-ep-icono, .aegis-ep-pestana, .aegis-ep-boton, .aegis-ep-compacto, .aegis-ep-interruptor, .aegis-ep-area):focus-visible,
+.aegis-ep .aegis-ep-segmento:has(> input:focus-visible) {
+  outline: 2px solid;
+  outline-offset: 2px;
+}
+.aegis-ep :is(.aegis-ep-pestana, .aegis-ep-segmento):is(:focus-visible, :has(> input:focus-visible)) {
+  outline-offset: 1px;
+}
+.aegis-ep .aegis-ep-tono:focus-visible::-moz-range-thumb {
+  outline: 2px solid;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aegis-ep :is(.aegis-ep-icono, .aegis-ep-pestana, .aegis-ep-segmento, .aegis-ep-boton, .aegis-ep-compacto) {
+    transition: background-color var(--aegis-t-hover) var(--aegis-ease), transform var(--aegis-t-press) var(--aegis-ease);
+  }
+  .aegis-ep .aegis-ep-interruptor {
+    transition: background-position var(--aegis-t-hover) var(--aegis-ease);
+  }
+  .aegis-ep :is(.aegis-ep-boton, .aegis-ep-compacto):active {
+    transform: scale(0.97);
+  }
+}
+
+/* ── Colores (fuera de alto contraste, donde mandan los del sistema) ─────────────────────────────────────────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  dialog.aegis-ep {
+    background-color: var(--aegis-dialog);
+    color: var(--aegis-text);
+    border-color: var(--aegis-line);
+    box-shadow: var(--aegis-shadow);
+  }
+  .aegis-ep :is(.aegis-ep-ayuda, .aegis-ep-cuenta, .aegis-ep-estado, .aegis-ep-etiqueta, .aegis-ep-detalle-codigo) {
+    color: var(--aegis-sub);
+  }
+  .aegis-ep .aegis-ep-estado[aegis-ep-error],
+  .aegis-ep .aegis-ep-error {
+    color: var(--aegis-err);
+  }
+  .aegis-ep .aegis-ep-icono:hover {
+    background-color: var(--aegis-hover);
+  }
+  .aegis-ep .aegis-ep-icono:hover:active {
+    background-color: var(--aegis-control);
+  }
+  .aegis-ep :is(.aegis-ep-pestanas, .aegis-ep-segmentos) {
+    border-color: var(--aegis-field-border);
+  }
+  .aegis-ep :is(.aegis-ep-pestana, .aegis-ep-segmento) {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+  }
+  .aegis-ep :is(.aegis-ep-pestana, .aegis-ep-segmento):hover {
+    background-color: var(--aegis-control-hover);
+  }
+  /* La pestaña y el segmento elegidos: la cápsula del énfasis (en Monocromo, la acción principal). */
+  .aegis-ep .aegis-ep-pestana[aria-selected="true"],
+  .aegis-ep .aegis-ep-segmento:has(> input:checked) {
+    background-color: var(--aegis-accent);
+    color: var(--aegis-on-accent);
+  }
+  .aegis-ep .aegis-ep-punto {
+    border-color: var(--aegis-line-strong);
+  }
+  .aegis-ep .aegis-ep-interruptor {
+    background-image: radial-gradient(closest-side, var(--aegis-sub) 96%, transparent);
+    background-color: var(--aegis-track);
+  }
+  .aegis-ep .aegis-ep-interruptor:checked {
+    background-image: radial-gradient(closest-side, var(--aegis-on-accent) 96%, transparent);
+    background-color: var(--aegis-accent);
+  }
+  .aegis-ep .aegis-ep-entrada {
+    background-color: var(--aegis-hover);
+    border-color: var(--aegis-field-border);
+    color: var(--aegis-text);
+  }
+  .aegis-ep .aegis-ep-entrada:focus {
+    background-color: var(--aegis-control);
+    border-color: var(--aegis-focus);
+  }
+  .aegis-ep .aegis-ep-entrada[aria-invalid="true"] {
+    border-color: var(--aegis-err-fill);
+  }
+  .aegis-ep .aegis-ep-entrada::placeholder {
+    color: var(--aegis-sub);
+    opacity: 1;
+  }
+  /* La vista lleva aegis-enfasis-muestra="propio": dentro, --aegis-accent y los demás son los del color elegido. */
+  .aegis-ep .aegis-ep-vista-muestra {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+  .aegis-ep .aegis-ep-vista-marco {
+    background-image: linear-gradient(to right, var(--aegis-grad-desde), var(--aegis-grad-hasta));
+    border-color: var(--aegis-line);
+  }
+  .aegis-ep .aegis-ep-vista-pestana {
+    background-color: var(--aegis-surface);
+    border-color: var(--aegis-line);
+  }
+  .aegis-ep .aegis-ep-vista-pestana::before {
+    background-image: linear-gradient(to right, var(--aegis-filo-desde), var(--aegis-filo-hasta));
+  }
+  .aegis-ep .aegis-ep-vista-interruptor {
+    background-image: radial-gradient(closest-side, var(--aegis-on-accent) 96%, transparent);
+    background-color: var(--aegis-accent);
+  }
+  .aegis-ep .aegis-ep-vista-capsula {
+    background-color: var(--aegis-accent);
+    color: var(--aegis-on-accent);
+  }
+  .aegis-ep :is(.aegis-ep-boton, .aegis-ep-compacto) {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+  }
+  .aegis-ep :is(.aegis-ep-boton, .aegis-ep-compacto):hover {
+    background-color: var(--aegis-control-hover);
+  }
+  .aegis-ep :is(.aegis-ep-boton, .aegis-ep-compacto):hover:active {
+    background-color: var(--aegis-control-down);
+  }
+  /* La acción principal sigue en --aegis-prim (una acción, no un estado: DISENO §2). */
+  .aegis-ep .aegis-ep-boton.aegis-ep-principal {
+    background-color: var(--aegis-prim);
+    color: var(--aegis-on-prim);
+  }
+  .aegis-ep .aegis-ep-boton.aegis-ep-principal:hover {
+    background-color: var(--aegis-prim-hover);
+  }
+  .aegis-ep .aegis-ep-boton.aegis-ep-principal:hover:active {
+    background-color: var(--aegis-prim-down);
+  }
+  .aegis-ep .aegis-ep-circulo {
+    background-color: var(--aegis-accent);
+    border-color: var(--aegis-line-strong);
+  }
+  /* El guardado en uso: el énfasis de la página, que siempre llega a 3:1 sobre el diálogo (cMarca, DISENO §2). */
+  .aegis-ep .aegis-ep-guardado:has(> input:checked) {
+    outline-color: var(--aegis-accent);
+  }
+  .aegis-ep .aegis-ep-detalle {
+    border-color: var(--aegis-line);
+  }
+  .aegis-ep .aegis-ep-vacio > .aegis-ep-glifo {
+    color: var(--aegis-sub);
+  }
+  .aegis-ep :is(.aegis-ep-icono, .aegis-ep-pestana, .aegis-ep-boton, .aegis-ep-compacto, .aegis-ep-interruptor, .aegis-ep-area):focus-visible,
+  .aegis-ep .aegis-ep-segmento:has(> input:focus-visible),
+  .aegis-ep .aegis-ep-guardado:has(> input:focus-visible),
+  .aegis-ep .aegis-ep-tono:focus-visible::-moz-range-thumb {
+    outline-color: var(--aegis-focus);
+  }
+}

@@ -49,8 +49,9 @@ const HOJAS_POR_DOCUMENTO = [
   // Complementos (temas incluidos).
   ["about:addons", ["estilos/complementos.css"]],
   // Ajustes, con el aspecto del Centro de SecretOS.
-  ["about:preferences", ["estilos/ajustes.css"]],
-  ["about:settings", ["estilos/ajustes.css"]],
+  // Con el selector del énfasis personalizado (Apariencia › Énfasis).
+  ["about:preferences", ["estilos/ajustes.css", "estilos/selector-enfasis.css"]],
+  ["about:settings", ["estilos/ajustes.css", "estilos/selector-enfasis.css"]],
   // «Cómo funcionan los Escudos» (escudos-ayuda.sys.mjs): página propia en el proceso padre.
   ["about:escudos", ["paginas/comun.css", "paginas/escudos-ayuda.css"]],
   // «Tú decides qué se conecta» (conexiones.sys.mjs): página propia en el proceso padre.
@@ -369,6 +370,12 @@ export const AegisArranque = {
       ["hojas de la interfaz", observarDocumentos],
       ["barra lateral", () => AegisBarraLateral.inicio()],
       ["páginas propias", registrarPaginas],
+      // «Descartar» un acceso de la nueva pestaña quita el sitio entero (accesos.sys.mjs). Se importa aquí: si fallara
+      // al cargar, el resto de Aegis sigue funcionando.
+      [
+        "accesos descartados",
+        () => ChromeUtils.importESModule(new URL("accesos.sys.mjs", import.meta.url).href).AegisAccesos.inicio(),
+      ],
       ["about:escudos", () => AegisEscudosAyuda.registrar()],
       ["protección estricta", aplicarEtpEstrictoUnaVez],
       // Las elecciones de Aegis Setup, solo en el primer arranque de un perfil nuevo (instalador.sys.mjs): después del

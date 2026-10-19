@@ -522,6 +522,10 @@ moz-button {
   grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
   gap: var(--aegis-s-8);
 }
+/* El grupo de radios no ocupa sitio: sus opciones y el «+» del personalizado son celdas de la misma rejilla. */
+.aegis-enfasis-grupo {
+  display: contents;
+}
 /* Cada opción: muestra redonda de 28 y el nombre debajo; la elegida, con borde y relleno de fila elegida. */
 .aegis-enfasis-opcion {
   position: relative;
@@ -530,21 +534,41 @@ moz-button {
   align-items: center;
   gap: var(--aegis-s-8);
   box-sizing: border-box;
+  /* Sin el margen que las páginas de Ajustes dan a cada <label> (1,875 px arriba y abajo): las opciones (<label>) y el
+     «+» (<button>) quedan a la misma altura en la fila, con el círculo y el nombre en la misma línea. */
+  margin: 0;
   padding: var(--aegis-s-12) var(--aegis-s-4) var(--aegis-s-8);
   border: 1px solid transparent;
   border-radius: var(--aegis-r-10);
   font-size: 12px;
+  line-height: normal;
   text-align: center;
   transition:
     border-color var(--aegis-t-hover) var(--aegis-ease),
     background-color var(--aegis-t-hover) var(--aegis-ease);
 }
-.aegis-enfasis-opcion:has(> input:checked) {
+.aegis-enfasis-opcion:has(> input:checked),
+.aegis-enfasis-opcion.aegis-ep-mas[aegis-ep-activo] {
   border-color: currentColor;
 }
-.aegis-enfasis-opcion:has(> input:focus-visible) {
+.aegis-enfasis-opcion:has(> input:focus-visible),
+.aegis-enfasis-opcion.aegis-ep-mas:focus-visible {
   outline: 2px solid;
   outline-offset: 2px;
+}
+/* El «+» (selector-enfasis.sys.mjs y estilos/selector-enfasis.css): la misma tarjeta que las demás opciones, con
+   «Personalizado» debajo. */
+.aegis-enfasis-opcion.aegis-ep-mas {
+  /* Un <button> no se estira solo en la rejilla: como las demás, del alto de la fila y con el círculo arriba. */
+  align-self: stretch;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border-style: solid;
+  border-width: 1px;
+  font-size: 12px;
+  font-weight: 400;
 }
 /* El botón de radio no se ve (la opción entera es el control), pero sigue ahí para el teclado y los lectores. */
 .aegis-enfasis-opcion > input {
@@ -586,12 +610,26 @@ moz-button {
   .aegis-enfasis-opcion:hover {
     background-color: var(--aegis-hover);
   }
-  .aegis-enfasis-opcion:has(> input:checked) {
+  .aegis-enfasis-opcion:has(> input:checked),
+  .aegis-enfasis-opcion.aegis-ep-mas[aegis-ep-activo] {
     background-color: var(--aegis-sel);
     border-color: var(--aegis-text);
   }
-  .aegis-enfasis-opcion:has(> input:focus-visible) {
+  .aegis-enfasis-opcion:has(> input:focus-visible),
+  .aegis-enfasis-opcion.aegis-ep-mas:focus-visible {
     outline-color: var(--aegis-focus);
+  }
+  /* Con más peso que las reglas de botón de las páginas de Ajustes. */
+  .aegis-enfasis-opcion.aegis-ep-mas:not([aegis-ep-activo]) {
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--aegis-text);
+  }
+  .aegis-enfasis-opcion.aegis-ep-mas:not([aegis-ep-activo]):hover {
+    background-color: var(--aegis-hover);
+  }
+  .aegis-enfasis-opcion.aegis-ep-mas[aegis-ep-activo] {
+    color: var(--aegis-text);
   }
   .aegis-enfasis-circulo {
     background-color: var(--aegis-accent);

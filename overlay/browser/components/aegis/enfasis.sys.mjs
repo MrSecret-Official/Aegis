@@ -6,15 +6,25 @@
  * Aegis · énfasis de color (docs/DISENO.md §2, «Énfasis»), a elegir en Ajustes › Apariencia o en «Personalizar» de
  * la nueva pestaña (pref aegis.enfasis):
  * - «monocromo» (de serie): el blanco o negro de la acción principal;
- * - temas fijos: hielo, pizarra, salvia, ambar, coral, lavanda y malva (sus bases están en estilos/tokens.css);
+ * - temas fijos: hielo, pizarra, salvia, ambar, coral, lavanda, malva, cobalto, piedra, laguna, musgo, frambuesa y
+ *   ciruela (sus bases están en estilos/tokens.css);
  * - «windows»: el color de énfasis de Windows (el color de sistema AccentColor);
- * - «fondo»: el color dominante del fondo de escritorio, leído y calculado en este equipo.
+ * - «fondo»: el color dominante del fondo de escritorio, leído y calculado en este equipo;
+ * - «propio»: uno que crea el usuario en el selector del «+» (selector-enfasis.sys.mjs), con un color o dos (degradado).
+ *   El que está en uso va en aegis.enfasis.propio y los guardados («Mis énfasis»), en aegis.enfasis.guardados (JSON,
+ *   validados por enfasis-propio.sys.mjs, como mucho 24). Solo prefs del perfil: nada sale del equipo. Sin valor de
+ *   serie, Gecko no copia su valor a los procesos de las webs ni a los precargados; los demás (privilegedabout, un
+ *   privilegedmozilla creado en frío, el de las extensiones y el de file://) sí lo reciben, como cualquier pref: es el
+ *   modelo de Gecko y solo lo aprovecharía un proceso comprometido. A sharedData, que ven todos los procesos, solo van
+ *   los colores del que está en uso; el nombre y los guardados, por mensaje y solo al proceso de las páginas
+ *   privilegiadas.
  *
  * Cómo llega a cada documento: el atributo aegis-enfasis en la raíz. tokens.css deriva de la base de cada énfasis, con
  * una sola fórmula, el énfasis de cada esquema, su encima, el foco, el filo de la pestaña activa y el tinte del
  * degradado del marco (siempre con el contraste de DISENO §2). Lo que solo sabe este módulo va como variables en la
- * raíz: --aegis-enfasis-fondo (el color del fondo) y, en las páginas de contenido, que no ven los colores de sistema,
- * --aegis-enfasis-windows.
+ * raíz: --aegis-enfasis-fondo (el color del fondo), los colores del personalizado (--aegis-enfasis-propio y -propio-2,
+ * con el atributo aegis-enfasis-degradado si tiene dos) y, en las páginas de contenido, que no ven los colores de
+ * sistema, --aegis-enfasis-windows.
  * - Documentos de la interfaz (chrome:// y about: del proceso principal, como la ventana o Ajustes): los marca este
  *   módulo al crearse (document-element-inserted, antes de pintarse).
  * - Páginas propias en un proceso de contenido (nueva pestaña, navegación privada…): el actor AegisPaginas lee el
@@ -31,14 +41,41 @@
  * huella (una lectura del registro y la fecha del archivo) y se decodifica únicamente si ha cambiado.
  */
 
+import { borrarDe, guardarEn, leerGuardados, leerPropio, oklab, validarAcento } from "./enfasis-propio.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
 });
 
 export const PREF = "aegis.enfasis";
-/** Énfasis que se pueden elegir, en el orden de los selectores. El primero es el de serie. */
-export const ENFASIS = ["monocromo", "windows", "fondo", "hielo", "pizarra", "salvia", "ambar", "coral", "lavanda", "malva"];
+/**
+ * Énfasis que se pueden elegir con una muestra, en el orden de los selectores: arriba Monocromo y los automáticos,
+ * debajo los temas en dos filas de siete con el «+» del personalizado al final. El primero es el de serie.
+ */
+export const ENFASIS = [
+  "monocromo",
+  "windows",
+  "fondo",
+  "hielo",
+  "pizarra",
+  "salvia",
+  "ambar",
+  "coral",
+  "lavanda",
+  "malva",
+  "cobalto",
+  "piedra",
+  "laguna",
+  "musgo",
+  "frambuesa",
+  "ciruela",
+];
+/** El personalizado: un valor más de aegis.enfasis, sin muestra propia (lo abre el «+»). */
+export const PROPIO = "propio";
+/** El personalizado en uso y los guardados (JSON; enfasis-propio.sys.mjs). */
+export const PREF_PROPIO = "aegis.enfasis.propio";
+export const PREF_GUARDADOS = "aegis.enfasis.guardados";
 /** Color calculado del fondo de escritorio (oklch) y la huella del fondo del que salió. */
 const PREF_FONDO_COLOR = "aegis.enfasis.fondo.color";
 const PREF_FONDO_HUELLA = "aegis.enfasis.fondo.huella";
@@ -47,6 +84,8 @@ export const CLAVE_COMPARTIDA = "aegis:enfasis";
 /** Mensajes de las páginas propias (paginas/personalizar.sys.mjs). */
 export const MENSAJE = "Aegis:Paginas";
 export const MENSAJE_IMAGEN = "Aegis:Paginas:Imagen";
+/** El personalizado con su nombre y los guardados, solo al proceso de las páginas privilegiadas. */
+export const MENSAJE_PROPIO = "Aegis:Paginas:Propio";
 /**
  * Separación entre la fila de accesos y el buscador de la nueva pestaña (pref aegis.nuevapestana.espaciado), en px de
  * la rejilla de 4 (DISENO §4): del mínimo (la de Brave) al máximo (la de serie de Aegis).
@@ -64,6 +103,10 @@ const estado = {
   fondo: null,
   /** Énfasis de Windows en «rgb(…)», para las páginas de contenido. */
   windows: null,
+  /** El personalizado en uso ({c, c2?, n?}) o null. */
+  propio: null,
+  /** Los guardados en «Mis énfasis». */
+  guardados: [],
 };
 
 /** Documentos de la interfaz marcados (WeakRef), para repintarlos cuando cambia el énfasis. */
@@ -75,7 +118,37 @@ let calculando = null;
 
 function leerModo() {
   const modo = Services.prefs.getStringPref(PREF, "monocromo");
+  if (modo == PROPIO) {
+    return leerPropio(Services.prefs.getStringPref(PREF_PROPIO, "")) ? PROPIO : "monocromo";
+  }
   return ENFASIS.includes(modo) ? modo : "monocromo";
+}
+
+/** El personalizado y los guardados, de sus prefs (validados). */
+function leerPersonalizados() {
+  estado.propio = leerPropio(Services.prefs.getStringPref(PREF_PROPIO, ""));
+  estado.guardados = leerGuardados(Services.prefs.getStringPref(PREF_GUARDADOS, "[]"));
+}
+
+/**
+ * Pone en la raíz de un documento lo que necesita el personalizado: sus colores (siempre que haya uno, también para la
+ * muestra del «+») y, si es el elegido y tiene dos, el atributo del degradado. Lo usan este módulo (interfaz) y
+ * paginas/personalizar.sys.mjs (páginas de contenido); valida otra vez lo que recibe.
+ *
+ * @param {Element} raiz
+ * @param {string} modo
+ * @param {{c: string, c2?: string}|null} propio
+ */
+export function pintarPropio(raiz, modo, propio) {
+  const valido = validarAcento(propio);
+  if (valido) {
+    raiz.style.setProperty("--aegis-enfasis-propio", valido.c);
+    raiz.style.setProperty("--aegis-enfasis-propio-2", valido.c2 ?? valido.c);
+  } else {
+    raiz.style.removeProperty("--aegis-enfasis-propio");
+    raiz.style.removeProperty("--aegis-enfasis-propio-2");
+  }
+  raiz.toggleAttribute("aegis-enfasis-degradado", modo == PROPIO && !!valido?.c2);
 }
 
 /** Un color «oklch(L C H)» como los que escribe colorDeLosPixeles (nada más: va a una propiedad CSS). */
@@ -121,6 +194,7 @@ function pintar(doc) {
       raiz.style.removeProperty(variable);
     }
   }
+  pintarPropio(raiz, estado.modo, estado.propio);
 }
 
 function marcar(doc) {
@@ -147,10 +221,18 @@ function pintarTodos() {
 
 /** Publica el estado para las páginas de contenido (nueva pestaña, navegación privada…). */
 function publicar() {
-  const datos = { modo: estado.modo, fondo: estado.fondo, windows: estado.windows };
+  // sharedData llega a todos los procesos, también a los de las webs: del personalizado, solo sus colores (los pinta
+  // cualquier página propia). El nombre y «Mis énfasis» van por mensaje solo al proceso de las páginas privilegiadas
+  // (enviarPersonales).
+  const datos = {
+    modo: estado.modo,
+    fondo: estado.fondo,
+    windows: estado.windows,
+    propio: estado.propio ? { c: estado.propio.c, ...(estado.propio.c2 ? { c2: estado.propio.c2 } : {}) } : null,
+  };
   const sd = Services.ppmm.sharedData;
   const antes = sd.get(CLAVE_COMPARTIDA);
-  if (antes && antes.modo == datos.modo && antes.fondo == datos.fondo && antes.windows == datos.windows) {
+  if (antes && JSON.stringify(antes) == JSON.stringify(datos)) {
     return;
   }
   sd.set(CLAVE_COMPARTIDA, datos);
@@ -248,23 +330,6 @@ function huella(fuente) {
     h = Math.imul(h, 0x01000193) >>> 0;
   }
   return h.toString(16).padStart(8, "0");
-}
-
-/** sRGB (0–255) a OKLab. */
-function oklab(r, g, b) {
-  const lineal = v => {
-    v /= 255;
-    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-  };
-  const [R, G, B] = [lineal(r), lineal(g), lineal(b)];
-  const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B);
-  const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B);
-  const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
-  return [
-    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
-    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
-    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
-  ];
 }
 
 /**
@@ -421,10 +486,42 @@ function comprobarFondo() {
 
 // ── Cambios ───────────────────────────────────────────────────────────────────────────────────────────────────────
 
+/** Lo último que se envió con enviarPersonales (JSON), para no repetirlo. */
+let personalesEnviados = null;
+
+/**
+ * El personalizado con su nombre y los guardados, solo a los procesos de las páginas privilegiadas (la nueva pestaña),
+ * nunca a los de las webs: a uno que los pide o, si han cambiado, a todos. Las prefs no tienen valor de serie, así que
+ * Gecko tampoco copia su valor a los procesos de las webs ni a los precargados (Preferences.cpp,
+ * ShouldSanitizePreference; los demás procesos sí lo reciben, como cualquier pref).
+ *
+ * @param {nsIMessageSender} [destino]
+ */
+function enviarPersonales(destino) {
+  const datos = { propio: estado.propio, guardados: estado.guardados };
+  const json = JSON.stringify(datos);
+  if (destino) {
+    destino.sendAsyncMessage(MENSAJE_PROPIO, datos);
+    return;
+  }
+  if (json == personalesEnviados) {
+    return;
+  }
+  personalesEnviados = json;
+  for (let i = 0; i < Services.ppmm.childCount; i++) {
+    const proceso = Services.ppmm.getChildAt(i);
+    if (proceso.remoteType == "privilegedabout") {
+      proceso.sendAsyncMessage(MENSAJE_PROPIO, datos);
+    }
+  }
+}
+
 function alCambiarPref() {
+  leerPersonalizados();
   estado.modo = leerModo();
   pintarTodos();
   publicar();
+  enviarPersonales();
   if (estado.modo == "fondo") {
     comprobarFondo();
   }
@@ -443,6 +540,49 @@ function alCambiarElSistema() {
   }
 }
 
+// ── Énfasis personalizado ─────────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Usa un énfasis personalizado (lo valida antes: también llega de las páginas de contenido).
+ *
+ * @returns {boolean} si era válido
+ */
+function usarPropio(dato) {
+  const acento = validarAcento(dato);
+  if (!acento) {
+    return false;
+  }
+  Services.prefs.setStringPref(PREF_PROPIO, JSON.stringify(acento));
+  Services.prefs.setStringPref(PREF, PROPIO);
+  return true;
+}
+
+/**
+ * Guarda un énfasis en «Mis énfasis».
+ *
+ * @returns {"nuevo"|"actualizado"|"lleno"|"invalido"}
+ */
+function guardarPropio(dato) {
+  leerPersonalizados();
+  const { lista, resultado } = guardarEn(estado.guardados, dato);
+  if (resultado == "nuevo" || resultado == "actualizado") {
+    Services.prefs.setStringPref(PREF_GUARDADOS, JSON.stringify(lista));
+  }
+  return resultado;
+}
+
+/** Borra un énfasis de «Mis énfasis» por su clave (sus colores). Si es el que está en uso, sigue en uso. */
+function borrarPropio(laClave) {
+  if (typeof laClave != "string") {
+    return;
+  }
+  leerPersonalizados();
+  const lista = borrarDe(estado.guardados, laClave);
+  if (lista.length != estado.guardados.length) {
+    Services.prefs.setStringPref(PREF_GUARDADOS, JSON.stringify(lista));
+  }
+}
+
 // ── Mensajes de las páginas propias ───────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -451,6 +591,7 @@ function alCambiarElSistema() {
  * el proceso de las páginas privilegiadas.
  */
 const PREFS_DE_PAGINAS = {
+  // «propio» no: se elige con su mensaje (propio-usar), que trae los colores.
   [PREF]: v => ENFASIS.includes(v),
   "aegis.nuevapestana.fondo": v => ["liso", "degradado", "enfasis", "imagen"].includes(v),
   "aegis.nuevapestana.posicion": v => ["centro", "arriba"].includes(v),
@@ -537,9 +678,24 @@ function recibir(mensaje) {
       }
       break;
     }
+    // El selector del énfasis personalizado de la nueva pestaña (usarPropio y guardarPropio validan los datos).
+    case "propio-usar":
+      usarPropio(datos.acento);
+      break;
+    case "propio-guardar":
+      guardarPropio(datos.acento);
+      break;
+    case "propio-borrar":
+      borrarPropio(datos.clave);
+      break;
     case "fondo-escritorio":
       // Una muestra de «Fondo de escritorio» se ha abierto: que tenga su color aunque no sea el énfasis elegido.
       comprobarFondo();
+      break;
+    // «Personalizar» se ha abierto: el nombre del personalizado y «Mis énfasis».
+    case "pedir-propio":
+      leerPersonalizados();
+      enviarPersonales(proceso);
       break;
     case "pedir-imagen":
       leerImagen()
@@ -558,10 +714,32 @@ function recibir(mensaje) {
 export const AegisEnfasis = {
   ENFASIS,
   PREF,
+  PROPIO,
 
   /** El énfasis elegido (de la pref: vale también dentro de otro observador de la pref). */
   actual() {
     return leerModo();
+  },
+
+  /** El personalizado en uso y los guardados, recién leídos de sus prefs. */
+  personalizados() {
+    leerPersonalizados();
+    return { propio: estado.propio, guardados: estado.guardados };
+  },
+
+  /** Usa un énfasis personalizado ({c, c2?, n?}). */
+  usarPropio(acento) {
+    return usarPropio(acento);
+  },
+
+  /** Lo guarda en «Mis énfasis»: «nuevo», «actualizado», «lleno» o «invalido». */
+  guardarPropio(acento) {
+    return guardarPropio(acento);
+  },
+
+  /** Lo borra de «Mis énfasis» por su clave (enfasis-propio.sys.mjs, clave()). */
+  borrarPropio(laClave) {
+    borrarPropio(laClave);
   },
 
   /** Que la muestra «Fondo de escritorio» de un selector tenga su color (calcula solo si ha cambiado). */
@@ -575,6 +753,7 @@ export const AegisEnfasis = {
       return;
     }
     iniciado = true;
+    leerPersonalizados();
     estado.modo = leerModo();
     estado.fondo = colorValido(Services.prefs.getStringPref(PREF_FONDO_COLOR, ""));
     publicar();

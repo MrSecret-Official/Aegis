@@ -7,6 +7,7 @@
 # archivos son relativas, igual que en el modo desarrollo (resource://aegis/ apuntando al repo).
 
 EXTRA_JS_MODULES.aegis += [
+    "accesos.sys.mjs",
     "AegisArranque.sys.mjs",
     "ajustes.sys.mjs",
     "barra-lateral.sys.mjs",
@@ -15,6 +16,7 @@ EXTRA_JS_MODULES.aegis += [
     "conexiones.sys.mjs",
     "contrasenas-panel.sys.mjs",
     "contrasenas.sys.mjs",
+    "enfasis-propio.sys.mjs",
     "enfasis.sys.mjs",
     "escudos-ayuda.sys.mjs",
     "escudos.sys.mjs",
@@ -25,6 +27,7 @@ EXTRA_JS_MODULES.aegis += [
     "logos.sys.mjs",
     "marcadores.sys.mjs",
     "modos.sys.mjs",
+    "selector-enfasis.sys.mjs",
 ]
 
 EXTRA_JS_MODULES.aegis.estilos += [
@@ -43,6 +46,7 @@ EXTRA_JS_MODULES.aegis.estilos += [
     "estilos/lanzador.css",
     "estilos/mapeo-firefox.css",
     "estilos/marcadores.css",
+    "estilos/selector-enfasis.css",
     "estilos/tokens.css",
     "estilos/tor.css",
 ]

@@ -125,7 +125,9 @@
    del fondo de escritorio):
    - oscuro: L 0,72–0,80 y croma ≤ 0,11 → encima #0b0b0c ≥ 6:1 y marca ≥ 5,2:1 sobre bg, superficie y menú;
    - claro: L 0,40–0,48 y croma ≤ 0,10 → encima blanco ≥ 5,3:1 y marca ≥ 4,5:1 sobre bg, barra lateral y blanco.
-   Las muestras de los selectores llevan aegis-enfasis-muestra="<énfasis>" y reciben la misma fórmula. */
+   Las muestras de los selectores llevan aegis-enfasis-muestra="<énfasis>" y reciben la misma fórmula.
+   El personalizado («propio», enfasis-propio.sys.mjs) pasa por la misma fórmula: el usuario elige el tono, y la
+   luminosidad y el croma quedan en la banda. */
 :root {
   /* Bases de los temas fijos (oklch): sobrias, poco croma. */
   --aegis-enfasis-hielo: oklch(0.78 0.07 230);
@@ -135,6 +137,19 @@
   --aegis-enfasis-coral: oklch(0.76 0.10 35);
   --aegis-enfasis-lavanda: oklch(0.76 0.08 295);
   --aegis-enfasis-malva: oklch(0.76 0.07 350);
+  --aegis-enfasis-cobalto: oklch(0.74 0.10 262);
+  --aegis-enfasis-piedra: oklch(0.78 0.025 70);
+  --aegis-enfasis-laguna: oklch(0.78 0.07 190);
+  --aegis-enfasis-musgo: oklch(0.80 0.08 118);
+  --aegis-enfasis-frambuesa: oklch(0.74 0.10 8);
+  --aegis-enfasis-ciruela: oklch(0.74 0.08 322);
+
+  /* Selector del énfasis personalizado (selector-enfasis.sys.mjs, DISENO §9): el espectro de la barra de tono y los
+     extremos del cuadro de saturación y brillo. Es el contenido que se elige, no decoración (DISENO §2). */
+  --aegis-espectro: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+  --aegis-espectro-blanco: #ffffff;
+  --aegis-espectro-negro: #000000;
+  --aegis-espectro-cursor: rgb(0 0 0 / 0.45);
 }
 
 :root[aegis-enfasis="hielo"], [aegis-enfasis-muestra="hielo"] { --aegis-enfasis-base: var(--aegis-enfasis-hielo); }
@@ -144,6 +159,12 @@
 :root[aegis-enfasis="coral"], [aegis-enfasis-muestra="coral"] { --aegis-enfasis-base: var(--aegis-enfasis-coral); }
 :root[aegis-enfasis="lavanda"], [aegis-enfasis-muestra="lavanda"] { --aegis-enfasis-base: var(--aegis-enfasis-lavanda); }
 :root[aegis-enfasis="malva"], [aegis-enfasis-muestra="malva"] { --aegis-enfasis-base: var(--aegis-enfasis-malva); }
+:root[aegis-enfasis="cobalto"], [aegis-enfasis-muestra="cobalto"] { --aegis-enfasis-base: var(--aegis-enfasis-cobalto); }
+:root[aegis-enfasis="piedra"], [aegis-enfasis-muestra="piedra"] { --aegis-enfasis-base: var(--aegis-enfasis-piedra); }
+:root[aegis-enfasis="laguna"], [aegis-enfasis-muestra="laguna"] { --aegis-enfasis-base: var(--aegis-enfasis-laguna); }
+:root[aegis-enfasis="musgo"], [aegis-enfasis-muestra="musgo"] { --aegis-enfasis-base: var(--aegis-enfasis-musgo); }
+:root[aegis-enfasis="frambuesa"], [aegis-enfasis-muestra="frambuesa"] { --aegis-enfasis-base: var(--aegis-enfasis-frambuesa); }
+:root[aegis-enfasis="ciruela"], [aegis-enfasis-muestra="ciruela"] { --aegis-enfasis-base: var(--aegis-enfasis-ciruela); }
 /* Automáticos. Windows: el color de sistema AccentColor tal como lo ve la ventana del navegador, que enfasis.sys.mjs
    lee y pasa a cada documento (--aegis-enfasis-windows; las páginas en pestañas, como Ajustes o la nueva pestaña, solo
    verían un azul fijo) y vuelve a leer cuando Windows avisa de un cambio. Fondo de escritorio: el color que calcula
@@ -154,8 +175,20 @@
 :root[aegis-enfasis="fondo"], [aegis-enfasis-muestra="fondo"] {
   --aegis-enfasis-base: var(--aegis-enfasis-fondo, var(--aegis-sub));
 }
+/* Personalizado: los colores (#rrggbb, validados) que pone enfasis.sys.mjs en la raíz (o el selector en cada muestra)
+   como --aegis-enfasis-propio y, con degradado, --aegis-enfasis-propio-2. El segundo color solo llega a --aegis-accent-2,
+   que usan el marco, el filo de la pestaña activa y el fondo «Énfasis» de la nueva pestaña (abajo); lo demás es el
+   primero, sólido. */
+:root[aegis-enfasis="propio"], [aegis-enfasis-muestra="propio"] {
+  --aegis-enfasis-base: var(--aegis-enfasis-propio, var(--aegis-sub));
+  --aegis-enfasis-base-2: var(--aegis-enfasis-propio-2, var(--aegis-enfasis-base));
+}
 [aegis-enfasis-muestra="monocromo"] {
   --aegis-accent: var(--aegis-prim);
+}
+/* Una muestra que no es la personalizada no hereda el segundo color de la raíz. */
+[aegis-enfasis-muestra]:not([aegis-enfasis-muestra="propio"]) {
+  --aegis-enfasis-base-2: var(--aegis-enfasis-base);
 }
 
 :root:root[aegis-enfasis]:not([aegis-enfasis="monocromo"]),
@@ -163,6 +196,8 @@
   --aegis-accent: oklch(from var(--aegis-enfasis-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
   --aegis-accent-hover: oklch(from var(--aegis-enfasis-base) calc(clamp(0.72, l, 0.80) + 0.04) min(c, 0.11) h);
   --aegis-accent-down: oklch(from var(--aegis-enfasis-base) calc(clamp(0.72, l, 0.80) - 0.06) min(c, 0.11) h);
+  /* El segundo color del degradado (solo el personalizado lo tiene distinto): la misma fórmula. */
+  --aegis-accent-2: oklch(from var(--aegis-enfasis-base-2, var(--aegis-enfasis-base)) clamp(0.72, l, 0.80) min(c, 0.11) h);
   --aegis-on-accent: #0b0b0c;
   /* cMarca: con estas bandas el énfasis siempre llega a 3:1 sobre las superficies, así que es también el foco. */
   --aegis-focus: var(--aegis-accent);
@@ -179,10 +214,29 @@
     --aegis-accent: oklch(from var(--aegis-enfasis-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
     --aegis-accent-hover: oklch(from var(--aegis-enfasis-base) calc(clamp(0.40, l, 0.48) - 0.05) min(c, 0.10) h);
     --aegis-accent-down: oklch(from var(--aegis-enfasis-base) calc(clamp(0.40, l, 0.48) + 0.03) min(c, 0.10) h);
+    --aegis-accent-2: oklch(from var(--aegis-enfasis-base-2, var(--aegis-enfasis-base)) clamp(0.40, l, 0.48) min(c, 0.10) h);
     --aegis-on-accent: #ffffff;
     --aegis-grad-desde: oklch(from var(--aegis-accent) 0.975 calc(c * 0.25) h);
     --aegis-filo-desde: color-mix(in srgb, var(--aegis-accent) 60%, transparent);
     --aegis-filo-hasta: color-mix(in srgb, var(--aegis-accent) 6%, transparent);
+  }
+}
+
+/* Personalizado con degradado (atributo aegis-enfasis-degradado): solo lo que DISENO §11 deja llevar degradado toma el
+   segundo color. El marco va del tinte del primero (arriba) al del segundo, con la luminosidad del gris de serie
+   (#0a0a0b, L 0,145; en claro, #ececef, L 0,944) y el mismo 30 % (25 % en claro) del croma; el filo de la pestaña
+   activa va del primero al segundo, que se queda en el 45 % (40 % en claro) para que se vea. */
+:root:root[aegis-enfasis="propio"][aegis-enfasis-degradado],
+[aegis-enfasis-muestra="propio"][aegis-enfasis-degradado] {
+  --aegis-grad-hasta: oklch(from var(--aegis-accent-2) 0.145 calc(c * 0.3) h);
+  --aegis-filo-hasta: color-mix(in srgb, var(--aegis-accent-2) 45%, transparent);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:root[aegis-enfasis="propio"][aegis-enfasis-degradado],
+  [aegis-enfasis-muestra="propio"][aegis-enfasis-degradado] {
+    --aegis-grad-hasta: oklch(from var(--aegis-accent-2) 0.944 calc(c * 0.25) h);
+    --aegis-filo-hasta: color-mix(in srgb, var(--aegis-accent-2) 40%, transparent);
   }
 }
 

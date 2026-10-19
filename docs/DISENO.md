@@ -88,7 +88,8 @@ Solo cuando hay un problema o una confirmación de verdad, y siempre con texto.
 
 ### Énfasis
 
-Se elige en Ajustes › Apariencia › «Énfasis» o en «Personalizar» de la nueva pestaña (pref `aegis.enfasis`;
+Se elige en Ajustes › Apariencia › «Énfasis» o en «Personalizar» de la nueva pestaña, con las mismas muestras y el
+mismo «+» del personalizado (pref `aegis.enfasis`;
 `enfasis.sys.mjs` pone el atributo `aegis-enfasis` en la raíz de cada documento de la interfaz y de las páginas propias):
 - **Monocromo** (de serie): el énfasis es `--aegis-prim` (blanco en oscuro, casi negro en claro).
 - **Automáticos:**
@@ -109,12 +110,35 @@ Se elige en Ajustes › Apariencia › «Énfasis» o en «Personalizar» de la 
 | Coral | 0,76 0,10 35 | `#e99a86` | `#8d4635` |
 | Lavanda | 0,76 0,08 295 | `#b4a7df` | `#615486` |
 | Malva | 0,76 0,07 350 | `#d49fb7` | `#7c4d63` |
+| Cobalto | 0,74 0,10 262 | `#88abea` | `#3e5c96` |
+| Piedra | 0,78 0,025 70 | `#c2b5a7` | `#675b4f` |
+| Laguna | 0,78 0,07 190 | `#81c6c1` | `#226a66` |
+| Musgo | 0,80 0,08 118 | `#b9c58a` | `#5a642c` |
+| Frambuesa | 0,74 0,10 8 | `#e1909f` | `#8c4353` |
+| Ciruela | 0,74 0,08 322 | `#c39ac9` | `#734e78` |
+
+  Trece temas: con el «+» del personalizado, dos filas llenas de siete. Entre dos temas cualesquiera hay al menos 0,037
+  de distancia OKLab en los dos esquemas (la misma que ya había entre Hielo y Pizarra); lo comprueba
+  `tools/pruebas/enfasis-propio.mjs`.
+- **Personalizado** (el «+», el último de la rejilla): lo crea el usuario en el selector de §9 con un color o con dos
+  (**degradado**). Se guarda solo en el perfil (`aegis.enfasis.propio`, el que está en uso, y `aegis.enfasis.guardados`,
+  «Mis énfasis», como mucho 24; JSON validado por `enfasis-propio.sys.mjs`). Pasa por la misma fórmula que los temas:
+  el usuario elige el tono y la intensidad, y Aegis lleva la luminosidad a la banda y limita el croma (el selector lo
+  dice y enseña cómo queda). Con degradado:
+  - el **primer color** es el énfasis de todo (selección, foco, interruptores, cápsulas, deslizadores, el día de hoy);
+  - el **segundo** (`--aegis-accent-2`, misma fórmula) solo llega a lo que §11 deja llevar degradado: el **marco**
+    (`--aegis-grad-hasta`: la luminosidad del gris de serie, L 0,145 en oscuro y 0,944 en claro, con el 30 % —25 % en
+    claro— del croma), el **filo de la pestaña activa** (`--aegis-filo-hasta`: el segundo al 45 %, 40 % en claro) y el
+    fondo «Énfasis» de la nueva pestaña (un tinte del primero desde la izquierda y otro del segundo desde la derecha);
+  - sin ángulo: el marco y el filo los dibuja el navegador en horizontal, así que un ángulo no cambiaría nada.
 
 **Una sola fórmula** (en `tokens.css`) saca de cualquier base, también de las automáticas, todo lo demás, así que el
 contraste está garantizado sin comprobarlo color a color:
 - `--aegis-accent`: la base con la luminosidad en una banda y el croma limitado. Oscuro: L 0,72–0,80 y croma ≤ 0,11;
   claro: L 0,40–0,48 y croma ≤ 0,10. Encima del pulsado y del hover, igual (±0,04–0,06 de L).
-- `--aegis-on-accent`: `#0b0b0c` en oscuro (≥ 6:1) y blanco en claro (≥ 5,3:1).
+- `--aegis-on-accent`: `#0b0b0c` en oscuro y blanco en claro. En el peor caso de cualquier base (todos los tonos, croma
+  hasta el tope): en oscuro ≥ 7,4:1 en reposo, ≥ 8,6:1 encima y ≥ 5,9:1 pulsado; en claro ≥ 6:1 en reposo, ≥ 7,3:1
+  encima y ≥ 5,3:1 pulsado (`tools/pruebas/enfasis-propio.mjs`).
 - Marca sobre bg, barra lateral, superficie y menú: ≥ 5,2:1 en oscuro y ≥ 4,5:1 en claro. Por eso, con un énfasis de
   color, **el foco es el énfasis** (`--aegis-focus`), como pide `cMarca`.
 - **Color secundario:** el filo de la pestaña activa (`--aegis-filo-*`: el énfasis al 70 % → 8 %; en claro, 60 % → 6 %),
@@ -132,7 +156,11 @@ Dónde va el énfasis:
   si no, se usa `--aegis-focus`. Es la regla `cMarca` de SecretOS (con la fórmula de arriba, siempre llega).
 - En **Monocromo** (de serie), el foco es `--aegis-focus`: anillo de 2 px por fuera, o el borde del campo.
 - Muestras en los selectores: círculos de 28 (Ajustes) o 24 en una zona de 32 (Personalizar) con
-  `aegis-enfasis-muestra="<tema>"`, que reciben la misma fórmula; el borde de línea fuerte las separa del fondo.
+  `aegis-enfasis-muestra="<tema>"`, que reciben la misma fórmula; el borde de línea fuerte las separa del fondo. La de
+  un personalizado con degradado va **partida en diagonal** (las dos mitades con corte duro, no un degradado). El
+  último elemento es el **«+»**: un círculo del mismo tamaño, vacío, con el borde de línea fuerte y el «+» de línea de
+  16 en `--aegis-sub` (al pasar, `--aegis-hover` y `--aegis-text`); con el personalizado en uso, lleva su color y el «+»
+  en `--aegis-on-accent`, y se marca como las muestras elegidas. Es un botón (abre el selector), no una opción más.
 
 ### Temas de Aegis
 
@@ -223,7 +251,7 @@ puede notar que se ha cambiado su aspecto».
 | 13 | Loseta del icono de la app (a escala 64; §8) |
 | 14 | Sub-tarjetas de las páginas |
 | 20 | Tarjetas grandes (nueva pestaña, bienvenida) |
-| círculo | Avatares de perfil, puntos de estado, icono de página del instalador (56, como SecretOS), icono del diálogo de la contraseña principal (40), muestras de énfasis (28 en Ajustes; 24 en zona de 32 en Personalizar), botón del deslizador y botón de los interruptores |
+| círculo | Avatares de perfil, puntos de estado, icono de página del instalador (56, como SecretOS), icono del diálogo de la contraseña principal (40), muestras de énfasis y el «+» (28 en Ajustes; 24 en zona de 32 en Personalizar y en «Mis énfasis»), cursores del selector de color (16), botón del deslizador y botón de los interruptores |
 
 - **Concéntricos:** el de dentro es el de fuera menos la separación (solo cuando la separación es menor que el radio de
   fuera; si no, el de dentro toma su propio valor de la escala, como la inicial de radio 8 en una loseta de 12). Se aplica dentro de nuestros componentes; el radio
@@ -296,7 +324,7 @@ Tres capas: **marco → superficie → elevada** (menús, paneles, Glance). No s
 | **Botón principal** | `--aegis-prim`, texto `--aegis-on-prim` 14 px 600, alto 38, radio 8, al menos 112 de ancho, escala 0,97 al pulsar. Uno por pantalla. Desactivado: opacidad 0,28 |
 | **Botón secundario** | `--aegis-control` (7 → 10 → 14 %), texto normal 14 px, alto 38, radio 8 |
 | **Botón de icono** | 28 × 28, radio 7, sin fondo; al pasar `--aegis-hover`, pulsado `--aegis-control` |
-| **Nueva pestaña** | Como Brave: accesos arriba (losetas de 64 con radio 12, borde de línea, inicial sobre `--aegis-control` en un cuadro de radio 8, título de 12 px en `--aegis-sub` en una línea; el favicon, si lo hay, llena la caja del icono, también el de una dirección equivalente —otro esquema, «www», redirecciones—) y el buscador debajo (de 416 a 600 × 44, radio 12, superficie y borde). En el diálogo de añadir o editar un acceso, junto a «Usar una imagen personalizada», el enlace «Usar el logo de la web» con una línea de estado de 12 px en `--aegis-sub`. El «+» es una loseta vacía de 64. Personalizar: engranaje como botón de icono arriba a la derecha; el panel abre con las secciones de Aegis (etiqueta en versalitas y tarjeta): **Fondo** (Liso, Degradado del marco, Énfasis —un degradado radial suave del énfasis— o una Imagen del disco, que se guarda en el perfil y lleva un velo del fondo al 30 % y los nombres de los accesos en una etiqueta opaca), **Énfasis** (las muestras: arriba Monocromo y los automáticos, debajo los temas) y **Diseño** (mostrar el buscador; su posición: «En el centro» o «Más arriba», a unos 40 px del borde; los accesos encima o debajo del buscador; el espaciado entre las losetas y el buscador, de 36 a 64 px de 4 en 4; y el ancho del buscador, de 416 —el de Brave— a 600 px de 8 en 8, sin pasar nunca del ancho de la página). Debajo, los accesos y filas de Firefox y «Más ajustes». Sin logotipo, sin accesos de serie, sin temas ni fondos de Firefox (se descargan) |
+| **Nueva pestaña** | Como Brave: accesos arriba (losetas de 64 con radio 12, borde de línea, inicial sobre `--aegis-control` en un cuadro de radio 8, título de 12 px en `--aegis-sub` en una línea; el favicon, si lo hay, llena la caja del icono, también el de una dirección equivalente —otro esquema, «www», redirecciones—) y el buscador debajo (de 416 a 600 × 44, radio 12, superficie y borde). En el diálogo de añadir o editar un acceso, junto a «Usar una imagen personalizada», el enlace «Usar el logo de la web» con una línea de estado de 12 px en `--aegis-sub`. El «+» es una loseta vacía de 64. Personalizar: engranaje como botón de icono arriba a la derecha; el panel abre con las secciones de Aegis (etiqueta en versalitas y tarjeta): **Fondo** (Liso, Degradado del marco, Énfasis —un degradado radial suave del énfasis— o una Imagen del disco, que se guarda en el perfil y lleva un velo del fondo al 30 % y los nombres de los accesos en una etiqueta opaca), **Énfasis** (las muestras: arriba Monocromo y los automáticos, debajo los trece temas y el «+» del personalizado, en dos filas llenas de siete) y **Diseño** (mostrar el buscador; su posición: «En el centro» o «Más arriba», a unos 40 px del borde; los accesos encima o debajo del buscador; el espaciado entre las losetas y el buscador, de 36 a 64 px de 4 en 4; y el ancho del buscador, de 416 —el de Brave— a 600 px de 8 en 8, sin pasar nunca del ancho de la página). Debajo, los accesos y filas de Firefox y «Más ajustes». Sin logotipo, sin accesos de serie, sin temas ni fondos de Firefox (se descargan) |
 | **Instalador** (Aegis Setup) | Como el asistente de SecretOS: icono de página en círculo de 56, título de 24, tarjetas de opción con miniatura quieta y monocroma (modo, Escudos, apariencia) y, sin miniatura, tarjetas compactas de radio 12 y relleno 16 en rejilla (buscador, 2 × 2). La elegida, como las «Tarjetas de nivel»: borde de 1 px del color del texto, relleno `--aegis-sel` y nombre en 600. La opción recomendada lleva «RECOMENDADO» como pestaña sobre el borde superior (11 px 600 en mayúsculas, `--aegis-sub`, radio 5, sin relleno de énfasis: no pide atención). El contador de la miniatura de Escudos es parte del dibujo (la pastilla de §4 a escala), no texto de la interfaz: por eso puede bajar de 11 px. Flechas y Tab entre tarjetas. Pie con pasos en rayitas, «Atrás» secundario y «Continuar» principal. Excepción heredada de SecretOS: filas de 40 (resumen de la bienvenida), 50 (carpeta) y 60 (casilla con dos líneas) además de las de 44. Todo con teclado y anillo de foco de 2 px (§5) |
 | **Buscador de la barra lateral** (Ajustes) | Alto 32, radio 8, superficie: como el del Centro de SecretOS |
 | **Campo** | Alto 34, radio 7, relleno al 4 % (7 % con foco), borde al 10 % (`--aegis-focus` con foco, o el énfasis según cMarca) |
@@ -334,6 +362,7 @@ Tres capas: **marco → superficie → elevada** (menús, paneles, Glance). No s
 | **about:escudos** («Cómo funcionan los Escudos») | Página de lectura: índice de 200 a la izquierda, fijo al desplazarse (arriba y en fila por debajo de 920 px), con etiqueta de sección y enlaces de 13 px en filas de 32 con radio 7 en `--aegis-sub` (al pasar, `--aegis-hover` y el color del texto); columna de 680 con título de 30 px 600 (−0,4), entradilla en `--aegis-sub` y una sub-tarjeta por sección (superficie, borde de línea, radio 14, relleno de 16 × 24, separadas 12) con título de 16 px 600 y cuerpo de 14 px. Nada se mueve |
 | **Fila «Usar <buscador> como predeterminado»** (menú de la lupa) | Una fila del menú como las demás: 32 de alto, radio 7, texto de 12 px y el glifo de línea `predeterminado.svg` de 16. Sale solo si el buscador elegido para esta búsqueda no es el predeterminado, detrás de la línea del pie y antes de «Ajustes» |
 | **Deslizador de ancho del buscador** (Personalizar › Diseño) | El deslizador de §9: rótulo de 13 px y, a la derecha, el valor en 12 px tabulares `--aegis-sub` («600 px»); pista de 4 (radio 2) en `--aegis-track`, progreso del énfasis y botón de 16 en `--aegis-prim` con borde de línea fuerte. De 416 a 600 px de 8 en 8 (de serie, 600); el buscador nunca pasa del ancho de la página |
+| **Selector del énfasis personalizado** (`selector-enfasis.sys.mjs`, `estilos/selector-enfasis.css`; lo abre el «+» de Ajustes y de Personalizar) | Diálogo modal (`<dialog>`: foco atrapado, Esc lo cierra y el foco vuelve al «+») con el marco de los diálogos de Aegis: 440 de ancho (nunca más que la ventana menos 16 por lado), relleno 24, `--aegis-dialog`, borde de línea, radio 12 y sombra suave. **Sin velo**: es una capa elevada (§6) y detrás se ve cómo cambia la página. Cabecera: título de 16 px 600 y el botón de icono de cerrar (28, radio 7). Debajo, las dos pestañas, **Crear** y **Mis énfasis**, con la forma de los segmentos (la elegida, la cápsula del énfasis) y el teclado de unas pestañas (flechas, Inicio y Fin). **Crear**: la fila «Degradado» con su interruptor (rótulo de 13 px y ayuda de 12 en `--aegis-sub`); con él encendido, dos segmentos «Primer color» / «Segundo color» con un punto de 12 del color que se edita. El **cuadro de saturación y brillo** (alto 136, radio 8, siempre de izquierda a derecha; con el teclado, flechas de 1 en 1, Mayúsculas de 10 en 10, Re Pág y Av Pág para el brillo, Inicio y Fin para la saturación) y la **barra de tono** (pista de 10 con radio 5; un `range` nativo) se eligen frente a una rueda porque son el modelo HSV del código hexadecimal tal cual, se manejan como dos deslizadores y caben en el ancho sin esquinas vacías. Sus cursores son círculos de 16 con aro blanco de 2 y línea oscura de 1 (parte del dibujo: se ven sobre cualquier color). El espectro y los extremos del cuadro son tokens (`--aegis-espectro*`): son el contenido que se elige, no decoración. Debajo, en una fila, el **código** (campo de 34 de 120 de ancho, JetBrains Mono; acepta «#88C0DC», «88c0dc» o «#8cd»; mientras se escribe solo se aplica un código completo y, al salir o con Intro, si no es válido, borde `--aegis-err-fill` y el error de 12 px en `--aegis-err`) y el **nombre** (opcional, 24 caracteres). **Así queda**: etiqueta de 12 px y una tarjeta de superficie (radio 12, relleno 12) con el marco (radio 8) y su pestaña activa (radio 5 a 3 px, con el filo de 1 px), un interruptor encendido y una cápsula «Aa», todo con la fórmula; debajo, la línea de honestidad («Aegis ajusta el brillo y la intensidad…»). Línea de estado de 12 px (guardado, ya estaba, lleno en `--aegis-err`) y el pie a la derecha: «Guardar» (secundario) y «Usar» (principal, 112 como mínimo), de 34 y radio 8. **Mis énfasis**: «n de 24» (12 px tabulares `--aegis-sub`), las muestras de 24 en zonas de 32, ocho por fila (24 = tres filas llenas), como radios (un clic las usa; la que está en uso, con el anillo del énfasis), una línea de ayuda y, separada por la línea, la fila de 44 del detalle (nombre de 13 px 600 y códigos de 12 px en JetBrains Mono) con «Editar» (la lleva a Crear) y «Borrar» compactos. Borrar (o Supr sobre la muestra) cambia esa fila por la pregunta «¿Borrar «…»? No se puede deshacer.» con «Cancelar» y «Borrar» compactos (el foco va a «Cancelar»; el botón sigue en blanco y negro, avisa el texto). Vacío: la gota de línea de 32 en `--aegis-sub`, título de 15 px 600, una frase de 12 y «Crear uno» secundario. Nada se mueve en reposo |
 
 ## 10. Escritura
 
@@ -349,7 +378,10 @@ Tres capas: **marco → superficie → elevada** (menús, paneles, Glance). No s
 - Colores de marca, degradados de color o brillos; teñir la interfaz con el color de la web. Los degradados
   **monocromos** sí se permiten donde están definidos: el marco, el filo de la pestaña activa y el icono de la app; con
   un énfasis de color elegido por el usuario, el marco, el filo y el fondo «Énfasis» de la nueva pestaña llevan su
-  tinte suave (§2), nunca otro color.
+  tinte suave (§2), nunca otro color. Un personalizado con degradado lleva su segundo color **solo** ahí (y en su
+  muestra partida); todo lo demás usa el primero, sólido. Tampoco es decoración el espectro del selector del énfasis
+  personalizado (§9): la barra de tono y los extremos del cuadro de saturación y brillo (`--aegis-espectro*`, en
+  `tokens.css`) son el contenido que se elige, y solo salen ahí.
 - Emojis, iconos de colores, iconografía mezclada.
 - Más de una acción principal por pantalla.
 - Mayúsculas fuera de las etiquetas de sección.

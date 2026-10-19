@@ -16,8 +16,9 @@ import { logos } from "./logos.sys.mjs";
 const COMUNES = ["../estilos/tokens.css", "comun.css"];
 /** Hojas de cada página, por el principio de su dirección. */
 const POR_PAGINA = [
-  ["about:newtab", ["nueva-pestana.css"]],
-  ["about:home", ["nueva-pestana.css"]],
+  // Con el selector del énfasis personalizado (Personalizar › Énfasis).
+  ["about:newtab", ["nueva-pestana.css", "../estilos/selector-enfasis.css"]],
+  ["about:home", ["nueva-pestana.css", "../estilos/selector-enfasis.css"]],
   ["about:logins", ["contrasenas.css"]],
   ["about:privatebrowsing", ["privada.css"]],
 ];

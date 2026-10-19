@@ -330,6 +330,67 @@ aegis-enfasis-ambar = Ámbar
 aegis-enfasis-coral = Coral
 aegis-enfasis-lavanda = Lavanda
 aegis-enfasis-malva = Malva
+aegis-enfasis-cobalto = Cobalto
+aegis-enfasis-piedra = Piedra
+aegis-enfasis-laguna = Laguna
+aegis-enfasis-musgo = Musgo
+aegis-enfasis-frambuesa = Frambuesa
+aegis-enfasis-ciruela = Ciruela
+
+## Énfasis personalizado: el «+» de los selectores y su ventana («Crear» y «Mis énfasis»)
+
+# Nombre de la opción del «+» en Ajustes y principio de sus etiquetas.
+aegis-enfasis-propio = A medida
+# Etiqueta (y descripción emergente) del «+» sin ningún personalizado en uso.
+aegis-enfasis-propio-abrir = A medida: crea uno o elige uno guardado
+# El «+» con un personalizado en uso. $nombre: su nombre o sus códigos (p. ej. #88C0DC)
+aegis-enfasis-propio-abrir-activo = A medida: { $nombre }
+# Línea del elegido, bajo las muestras de la nueva pestaña. $nombre: su nombre o sus códigos
+aegis-enfasis-propio-actual = A medida: { $nombre }
+aegis-enfasis-propio-titulo = Énfasis personalizado
+aegis-enfasis-propio-cerrar = Cerrar
+# Las dos pestañas de la ventana.
+aegis-enfasis-propio-crear = Crear
+aegis-enfasis-propio-mis = Mis énfasis
+aegis-enfasis-propio-degradado = Degradado
+aegis-enfasis-propio-degradado-ayuda = Un segundo color para el marco y el borde de la pestaña activa. Lo demás usa el primero.
+# Para lectores de pantalla: los dos segmentos que eligen qué color se edita.
+aegis-enfasis-propio-editando = Color que editas
+aegis-enfasis-propio-color-1 = Primer color
+aegis-enfasis-propio-color-2 = Segundo color
+# El cuadro de color, para lectores de pantalla. $saturacion y $brillo: de 0 a 100
+aegis-enfasis-propio-area = Saturación y brillo
+aegis-enfasis-propio-area-valor = Saturación { $saturacion } %, brillo { $brillo } %
+aegis-enfasis-propio-tono = Tono
+# Campo del color en hexadecimal (#RRGGBB).
+aegis-enfasis-propio-hex = Código
+aegis-enfasis-propio-hex-error = Escribe un color en hexadecimal, como #88C0DC.
+aegis-enfasis-propio-nombre = Nombre
+aegis-enfasis-propio-nombre-ejemplo = Opcional
+aegis-enfasis-propio-vista = Así queda
+aegis-enfasis-propio-ajuste = { -brand-short-name } ajusta el brillo y la intensidad para que se lea bien en claro y en oscuro.
+aegis-enfasis-propio-guardar = Guardar
+aegis-enfasis-propio-usar = Usar
+aegis-enfasis-propio-guardado = Guardado en «Mis énfasis».
+aegis-enfasis-propio-actualizado = Ya estaba en «Mis énfasis».
+# $maximo: cuántos se pueden guardar (24)
+aegis-enfasis-propio-lleno = Ya tienes { $maximo } guardados. Borra alguno en «Mis énfasis» para guardar otro.
+# $cuantos: los guardados; $maximo: el límite (24)
+aegis-enfasis-propio-cuenta = { $cuantos } de { $maximo }
+# Supr (Delete): la tecla que borra el guardado con el foco.
+aegis-enfasis-propio-mis-ayuda = Elige uno para usarlo. Supr lo borra.
+aegis-enfasis-propio-sin-nombre = Sin nombre
+aegis-enfasis-propio-editar = Editar
+aegis-enfasis-propio-borrar = Borrar
+# $nombre: el nombre del guardado (o el texto de «sin nombre»)
+aegis-enfasis-propio-borrar-pregunta = ¿Borrar «{ $nombre }»? No se puede deshacer.
+aegis-enfasis-propio-borrar-confirmar = Borrar
+aegis-enfasis-propio-cancelar = Cancelar
+aegis-enfasis-propio-borrado = «{ $nombre }» se ha borrado.
+aegis-enfasis-propio-vacio-titulo = Aún no hay ninguno guardado
+# Estado vacío de «Mis énfasis». $maximo: cuántos se pueden guardar (24)
+aegis-enfasis-propio-vacio = Crea un énfasis y pulsa «Guardar»: aparecerá aquí para usarlo con un clic. Caben { $maximo }.
+aegis-enfasis-propio-ir-crear = Crear uno
 
 ## Nueva pestaña › Personalizar: fondo, diseño (buscador, accesos y espaciado)
 

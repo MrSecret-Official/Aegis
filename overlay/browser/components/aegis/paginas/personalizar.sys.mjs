@@ -8,14 +8,28 @@
  * - énfasis (todas las páginas propias): el estado que publica enfasis.sys.mjs en sharedData, en la raíz;
  * - nueva pestaña (about:newtab, about:home): el fondo, la posición del buscador, el orden y la separación de los
  *   accesos y el buscador, el ancho del buscador (prefs aegis.nuevapestana.*, docs/DISENO.md §9) y las secciones
- *   de Aegis en «Personalizar»: Fondo, Énfasis y Diseño, delante de los accesos de Firefox y de «Más ajustes».
+ *   de Aegis en «Personalizar»: Fondo, Énfasis y Diseño, delante de los accesos de Firefox y de «Más ajustes». En
+ *   Énfasis, el «+» abre el selector del personalizado (selector-enfasis.sys.mjs); lo que elige o guarda se pide al
+ *   proceso principal (mensajes propio-usar, propio-guardar y propio-borrar, que enfasis.sys.mjs valida).
  *
  * Un proceso de contenido no escribe prefs: los cambios se piden al proceso principal (enfasis.sys.mjs comprueba el
  * nombre y el valor). Las prefs sí se leen aquí, y su observador aplica cada cambio en todas las pestañas nuevas
  * abiertas. Sin red y sin temporizadores: solo eventos.
  */
 
-import { ANCHO, CLAVE_COMPARTIDA, ENFASIS, ESPACIADO, MENSAJE, MENSAJE_IMAGEN } from "../enfasis.sys.mjs";
+import {
+  ANCHO,
+  CLAVE_COMPARTIDA,
+  ENFASIS,
+  ESPACIADO,
+  MENSAJE,
+  MENSAJE_IMAGEN,
+  MENSAJE_PROPIO,
+  PROPIO,
+  pintarPropio,
+} from "../enfasis.sys.mjs";
+import { clave, leerGuardados, validarAcento } from "../enfasis-propio.sys.mjs";
+import { abrirSelector, botonMas, nombreDe } from "../selector-enfasis.sys.mjs";
 
 const RAMA = "aegis.nuevapestana.";
 const PREF_FONDO = RAMA + "fondo";
@@ -86,11 +100,13 @@ function enfasis(win) {
     if (!raiz || !datos) {
       return;
     }
-    if (datos.modo == "monocromo" || !ENFASIS.includes(datos.modo)) {
+    if (datos.modo == "monocromo" || !(ENFASIS.includes(datos.modo) || datos.modo == PROPIO)) {
       raiz.removeAttribute("aegis-enfasis");
     } else {
       raiz.setAttribute("aegis-enfasis", datos.modo);
     }
+    // Los colores del personalizado (validados otra vez allí) y, si es el elegido y tiene dos, el degradado.
+    pintarPropio(raiz, datos.modo, datos.propio);
     // Siempre que se sepan: también las usan las muestras de «Personalizar».
     for (const [variable, valor] of [
       ["--aegis-enfasis-windows", datos.windows],
@@ -137,6 +153,50 @@ function seguirImagen(aviso) {
   }
   avisos.add(aviso);
   return () => avisos.delete(aviso);
+}
+
+// ── El personalizado con su nombre y «Mis énfasis» ────────────────────────────────────────────────────────────────
+
+/**
+ * Lo que no va a sharedData (que ven también los procesos de las webs): el personalizado en uso con su nombre y los
+ * guardados. enfasis.sys.mjs los manda solo a este proceso (el de las páginas privilegiadas), al pedirlos al abrir
+ * «Personalizar» y cada vez que cambian. Se validan otra vez aquí.
+ */
+let personales = { propio: null, guardados: [] };
+const avisosPersonales = new Set();
+let escuchandoPersonales = false;
+
+function recibirPersonales(mensaje) {
+  const datos = mensaje.data ?? {};
+  personales = {
+    propio: validarAcento(datos.propio),
+    guardados: leerGuardados(JSON.stringify(Array.isArray(datos.guardados) ? datos.guardados : [])),
+  };
+  for (const aviso of avisosPersonales) {
+    aviso();
+  }
+}
+
+/** Sigue los personales (y los pide al proceso principal); devuelve cómo dejar de seguirlos. */
+function seguirPersonales(aviso) {
+  if (!escuchandoPersonales) {
+    escuchandoPersonales = true;
+    Services.cpmm.addMessageListener(MENSAJE_PROPIO, recibirPersonales);
+  }
+  avisosPersonales.add(aviso);
+  Services.cpmm.sendAsyncMessage(MENSAJE, { tipo: "pedir-propio" });
+  return () => avisosPersonales.delete(aviso);
+}
+
+/**
+ * El énfasis elegido (sharedData) con el personalizado en uso y los guardados: el nombre solo si los colores son los
+ * del que está en uso ahora (el mensaje y sharedData pueden llegar en cualquier orden).
+ */
+function estadoEnfasis() {
+  const datos = Services.cpmm.sharedData.get(CLAVE_COMPARTIDA) ?? {};
+  const colores = validarAcento(datos.propio);
+  const conNombre = colores && personales.propio && clave(personales.propio) == clave(colores) ? personales.propio : colores;
+  return { modo: datos.modo ?? "monocromo", propio: conNombre, guardados: personales.guardados };
 }
 
 // ── Nueva pestaña ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -263,11 +323,13 @@ function construir(doc, aplicar) {
   filaImagen.append(cambiar, archivo);
   tarjetaFondo.append(fondos, filaImagen, error);
 
-  // Énfasis: las mismas opciones que Ajustes › Apariencia.
+  // Énfasis: las mismas opciones que Ajustes › Apariencia, y al final el «+» del personalizado (un botón que abre su
+  // selector, selector-enfasis.sys.mjs). Las muestras (radios) y el «+» comparten la rejilla de siete.
   const [seccionEnfasis, tarjetaEnfasis] = seccion(doc, "aegis-np-enfasis-titulo", texto("aegis-enfasis-titulo"));
+  const rejillaEnfasis = crear(doc, "div", { class: "aegis-np-muestras" });
   const muestras = grupo(doc, {
     nombre: "aegis-np-enfasis",
-    clase: "aegis-np-muestras",
+    clase: "aegis-np-muestras-grupo",
     etiqueta: "aegis-np-enfasis-titulo",
     opciones: ENFASIS.map(valor => {
       const nombre = texto(`aegis-enfasis-${valor}`);
@@ -282,8 +344,23 @@ function construir(doc, aplicar) {
       };
     }),
   });
+  const mas = botonMas(doc, { clase: "aegis-np-muestra", claseCirculo: "aegis-enfasis-circulo", texto });
+  rejillaEnfasis.append(muestras, mas.boton);
   const elegido = crear(doc, "p", { class: "aegis-np-elegido" });
-  tarjetaEnfasis.append(muestras, elegido);
+  tarjetaEnfasis.append(rejillaEnfasis, elegido);
+  let selector = null;
+  mas.boton.addEventListener("click", () => {
+    selector = abrirSelector(doc, {
+      texto,
+      estado: estadoEnfasis(),
+      // El proceso principal valida y escribe las prefs (enfasis.sys.mjs); el estado nuevo vuelve por sharedData (el
+      // modo y los colores) y por MENSAJE_PROPIO (el nombre y los guardados).
+      usar: acento => Services.cpmm.sendAsyncMessage(MENSAJE, { tipo: "propio-usar", acento }),
+      guardar: acento => Services.cpmm.sendAsyncMessage(MENSAJE, { tipo: "propio-guardar", acento }),
+      borrar: clave => Services.cpmm.sendAsyncMessage(MENSAJE, { tipo: "propio-borrar", clave }),
+      abridor: mas.boton,
+    });
+  });
 
   // Diseño: buscador, su posición, los accesos y la separación.
   const [diseno, tarjetaDiseno] = seccion(doc, "aegis-np-diseno-titulo", texto("aegis-np-diseno-titulo"));
@@ -325,9 +402,18 @@ function construir(doc, aplicar) {
     const f = prefTexto(PREF_FONDO, FONDOS, "liso");
     marcarGrupo(fondos, f);
     filaImagen.hidden = f != "imagen";
-    const e = Services.prefs.getStringPref(PREF_ENFASIS, "monocromo");
+    // El elegido sale de lo publicado (con «propio», validado allí); la pref puede llegar antes, así que vale de reserva.
+    const enfasisActual = estadoEnfasis();
+    const e = Services.cpmm.sharedData.has(CLAVE_COMPARTIDA)
+      ? enfasisActual.modo
+      : Services.prefs.getStringPref(PREF_ENFASIS, "monocromo");
     marcarGrupo(muestras, e);
-    elegido.textContent = texto(`aegis-enfasis-${ENFASIS.includes(e) ? e : "monocromo"}`);
+    mas.marcar(e, enfasisActual.propio);
+    elegido.textContent =
+      e == PROPIO && enfasisActual.propio
+        ? texto("aegis-enfasis-propio-actual", { nombre: nombreDe(enfasisActual.propio) })
+        : texto(`aegis-enfasis-${ENFASIS.includes(e) ? e : "monocromo"}`);
+    selector?.actualizar(enfasisActual);
     interruptor.checked = Services.prefs.getBoolPref(PREF_BUSCADOR, true);
     marcarGrupo(posicion, prefTexto(PREF_POSICION, ["centro", "arriba"], "centro"));
     marcarGrupo(accesos, prefTexto(PREF_ACCESOS, ["arriba", "abajo"], "arriba"));
@@ -429,6 +515,15 @@ function nuevaPestana(win) {
   Services.prefs.addObserver(RAMA, observador);
   Services.prefs.addObserver(PREF_BUSCADOR, observador);
   Services.prefs.addObserver(PREF_ENFASIS, observador);
+  // El énfasis elegido y los colores del personalizado llegan por sharedData; su nombre y los guardados, por mensaje
+  // (seguirPersonales, que se pide al montar «Personalizar»).
+  const alCambiarEnfasis = e => {
+    if (e.changedKeys.includes(CLAVE_COMPARTIDA)) {
+      interfaz?.actualizar();
+    }
+  };
+  Services.cpmm.sharedData.addEventListener("change", alCambiarEnfasis);
+  let dejarPersonales = null;
   aplicar();
 
   // «Personalizar» lo monta React: se espera a que exista su lista de secciones y se vuelve a poner si React la
@@ -443,6 +538,8 @@ function nuevaPestana(win) {
       interfaz = construir(doc, { espaciado: aplicarEspaciado, ancho: aplicarAncho });
       // Que la muestra «Fondo de escritorio» tenga su color.
       Services.cpmm.sendAsyncMessage(MENSAJE, { tipo: "fondo-escritorio" });
+      // El nombre del personalizado y «Mis énfasis».
+      dejarPersonales = seguirPersonales(() => interfaz?.actualizar());
     }
     if (!interfaz.raiz.isConnected || interfaz.raiz.parentNode != lista) {
       lista.insertBefore(interfaz.raiz, lista.querySelector(":scope > .settings-toggles"));
@@ -472,6 +569,8 @@ function nuevaPestana(win) {
     Services.prefs.removeObserver(RAMA, observador);
     Services.prefs.removeObserver(PREF_BUSCADOR, observador);
     Services.prefs.removeObserver(PREF_ENFASIS, observador);
+    Services.cpmm.sharedData.removeEventListener("change", alCambiarEnfasis);
+    dejarPersonales?.();
     dejarImagen();
     observadorPagina?.disconnect();
     observadorPanel?.disconnect();

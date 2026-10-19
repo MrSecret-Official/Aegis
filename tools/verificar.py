@@ -613,6 +613,103 @@ def contrasenas(v, rapido):
         ok(f"contraseñas: los puntos de Firefox que usa la protección siguen en Firefox {v}")
 
 
+def nueva_pestana(v, rapido):
+    """La nueva pestaña de Aegis se apoya en piezas de Firefox sin parchearlas: nueva-pestana.css coloca el buscador y
+    los accesos en la rejilla de Nova (con 3 o 4 filas el buscador sale de .content) y da al «+» el tamaño de las
+    losetas, y accesos.sys.mjs envuelve NewTabUtils.blockedLinks para que «Descartar» quite el sitio entero. Si
+    cambian, la rejilla se descolocaría o «Descartar» volvería a quitar solo una página, sin más aviso que la consola."""
+    src = None if rapido else arbol(v)
+    if not src:
+        aviso(f"nueva pestaña: sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
+        return
+    nt = "browser/extensions/newtab/"
+    esperado = {
+        "toolkit/modules/NewTabUtils.sys.mjs":
+            ["var BlockedLinks = {", "block: function BlockedLinks_block(aLink) {",
+             "unblock: function BlockedLinks_unblock(aLink) {", "isBlocked: function BlockedLinks_isBlocked(aLink) {",
+             "save: function BlockedLinks_save() {", "blockedLinks: BlockedLinks,",
+             # Se quitan las bloqueadas y luego se agrupa por sitio así (accesos.sys.mjs, sitio()).
+             "links = links.filter(link => !BlockedLinks.isBlocked(link));",
+             r"url => url.match(/:\/\/(?:www\.)?([^\/]+)/),"],
+        nt + "lib/PlacesFeed.sys.mjs": ["lazy.NewTabUtils.activityStreamLinks.blockURL({ url, pocket_id });"],
+        # «Añadir acceso directo» desbloquea así el sitio (accesos.sys.mjs envuelve unblock para quitarlo entero).
+        nt + "lib/TopSitesFeed.sys.mjs": ["lazy.NewTabUtils.blockedLinks.unblock({ url: site.url });"],
+        # accesos.sys.mjs lee los accesos de la página en activityStream.store.getState().TopSites.rows.
+        nt + "common/Reducers.sys.mjs":
+            ["function TopSites(prevState = INITIAL_STATE.TopSites, action) {",
+             "{ initialized: true, rows: action.data.links },"],
+        "browser/modules/AboutNewTab.sys.mjs": ["activityStream: null,",
+                                                "this.activityStream.store.getState().TopSites.rows"],
+        nt + "content-src/lib/link-menu-options.mjs": ["url: site.original_url || site.open_url || site.url,"],
+        nt + "content-src/components/Base/Base.jsx":
+            ["const hasManyTopSitesRows = topSitesEnabled && prefs.topSitesRows > 2;",
+             '${logoShouldBeCentered ? " logo-in-content" : ""}', "{!logoShouldBeCentered && searchArea}"],
+        nt + "content-src/components/Base/_Grid.scss":
+            ["grid-template-rows: repeat(2, var(--row-height));", ".nova-enabled.container > .search-wrapper {",
+             "gap: var(--space-medium);"],
+        nt + "content-src/components/TopSites/TopSite.jsx": ['{...(this.props.inGrid && { size: "large" })}'],
+        "toolkit/content/widgets/moz-button/moz-button.css":
+            ["width: var(--button-size-icon-large);", "min-height: var(--button-min-height-large);"],
+    }
+    antes = len(fallos)
+    for rel, trozos in esperado.items():
+        try:
+            with open(os.path.join(src, *rel.split("/")), encoding="utf-8", errors="replace") as h:
+                texto = h.read()
+        except OSError:
+            mal(f"nueva pestaña: no existe {rel} en Firefox {v}")
+            continue
+        for t in trozos:
+            if t not in texto:
+                mal(f"nueva pestaña: {rel} ya no contiene «{t}» (Firefox {v}); revisar paginas/nueva-pestana.css y "
+                    "accesos.sys.mjs")
+    if len(fallos) == antes:
+        ok(f"nueva pestaña: los puntos de Firefox que usan la rejilla y «Descartar» siguen en Firefox {v}")
+
+
+def enfasis_propio(v, rapido):
+    """El énfasis personalizado guarda nombres y colores del usuario en aegis.enfasis.propio y .guardados. No tienen
+    valor de serie a propósito: así Gecko no copia su valor a los procesos de las webs ni a los precargados
+    (ShouldSanitizePreference sanea las prefs de texto sin valor de serie, y fission.omitBlocklistedPrefsInSubprocesses
+    hace que se omitan de verdad). Si alguien les da valor de serie, o Firefox cambia esa regla, sus valores llegarían
+    a los procesos de las webs."""
+    nombres = ("aegis.enfasis.propio", "aegis.enfasis.guardados")
+    antes = len(fallos)
+    for rel in archivos():
+        if rel.startswith("settings/prefs/") and rel.endswith(".js"):
+            texto = leer_bytes(rel).decode("utf-8")
+            for n in nombres:
+                if re.search(r'^\s*(?:pref|sticky_pref|lockPref)\(\s*"' + re.escape(n) + '"', texto, re.M):
+                    mal(f"énfasis: {rel} da valor de serie a {n}; tiene que quedarse sin él (si no, Gecko copia su "
+                        "valor, con los nombres del usuario, a los procesos de las webs; ver 62-enfasis.js)")
+    src = None if rapido else arbol(v)
+    if not src:
+        aviso(f"énfasis: el saneado de prefs sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
+    else:
+        try:
+            with open(os.path.join(src, "modules", "libpref", "init", "StaticPrefList.yaml"), encoding="utf-8") as h:
+                yaml = h.read()
+            with open(os.path.join(src, "modules", "libpref", "Preferences.cpp"), encoding="utf-8", errors="replace") as h:
+                cpp = h.read()
+        except OSError as e:
+            mal(f"énfasis: no se puede leer libpref de Firefox {v}: {e}")
+        else:
+            m = re.search(r"^- name: fission\.omitBlocklistedPrefsInSubprocesses\n(.*?)(?=^- name:|\Z)", yaml, re.M | re.S)
+            if not m or not re.search(r"^\s+value: true\s*$", m.group(1), re.M):
+                mal(f"énfasis: en Firefox {v}, fission.omitBlocklistedPrefsInSubprocesses ya no es true "
+                    "(StaticPrefList.yaml): los valores de aegis.enfasis.propio y .guardados podrían llegar a los "
+                    "procesos de las webs; revisar enfasis.sys.mjs y 62-enfasis.js")
+            f = re.search(r"static bool ShouldSanitizePreference\(const Pref\* const aPref\) \{\n(.*?)\n\}\n", cpp, re.S)
+            regla = "if (aPref->Type() == PrefType::String && !aPref->HasDefaultValue()) {"
+            if not f or regla not in f.group(1):
+                mal(f"énfasis: en Firefox {v}, ShouldSanitizePreference (Preferences.cpp) ya no tiene la regla «{regla}»: "
+                    "las prefs de texto sin valor de serie (aegis.enfasis.propio y .guardados) podrían dejar de "
+                    "sanearse para los procesos de las webs; revisar enfasis.sys.mjs y 62-enfasis.js")
+    if len(fallos) == antes:
+        ok("énfasis: aegis.enfasis.propio y .guardados sin valor de serie"
+           + ("" if not src else f", y Firefox {v} sigue sin copiarlas a los procesos de las webs"))
+
+
 def migracion(v, rapido):
     """Importar de otros navegadores (overlay/…/aegis/migracion/ y el parche 0900-migracion/0001) se apoya en piezas de
     Firefox sin parchearlas: la clase base de los migradores, los envoltorios de MigrationUtils, la página del CSV de
@@ -1294,8 +1391,10 @@ def main():
     textos()
     tokens()
     prefs(v, rapido)
+    enfasis_propio(v, rapido)
     huella(v, rapido)
     contrasenas(v, rapido)
+    nueva_pestana(v, rapido)
     migracion(v, rapido)
     transferencia()
     extensiones(v, rapido)

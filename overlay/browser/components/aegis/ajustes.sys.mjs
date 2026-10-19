@@ -18,6 +18,7 @@
 import { AegisConexiones } from "./conexiones.sys.mjs";
 import { minutosDeBloqueo, OPCIONES_BLOQUEO, PREF_BLOQUEO } from "./contrasenas.sys.mjs";
 import { AegisEnfasis } from "./enfasis.sys.mjs";
+import { abrirSelector, botonMas } from "./selector-enfasis.sys.mjs";
 import { AegisEscudosAyuda } from "./escudos-ayuda.sys.mjs";
 import { AegisEscudosAjustes } from "./escudos/ajustes.sys.mjs";
 import { AegisHuella } from "./huella.sys.mjs";
@@ -320,13 +321,19 @@ function iconoDeLaApp(doc) {
 
 /**
  * Apariencia › «Énfasis» (enfasis.sys.mjs, DISENO §2): Monocromo, los dos automáticos (Windows y el fondo de
- * escritorio) y los temas fijos, como muestras redondas con su nombre. Cada muestra lleva aegis-enfasis-muestra y
+ * escritorio) y los temas fijos, como muestras redondas con su nombre, y al final el «+» del personalizado, que abre su
+ * selector (selector-enfasis.sys.mjs: «Crear» y «Mis énfasis»). Cada muestra lleva aegis-enfasis-muestra y
  * tokens.css le da su color con la misma fórmula que a la interfaz. Va detrás del icono de la app (o, sin él, delante
  * de la densidad de la ventana); se coloca en cada «paneshown», como el icono (idempotente).
  */
 function enfasisDeLaInterfaz(doc) {
   const win = doc.defaultView;
   let seccion = null;
+  /** El «+» del personalizado y su selector, si está abierto (selector-enfasis.sys.mjs). */
+  let mas = null;
+  let selector = null;
+  const textoSimple = (id, args) => texto(id, args).value ?? "";
+  const estadoEnfasis = () => ({ modo: AegisEnfasis.actual(), ...AegisEnfasis.personalizados() });
 
   const construir = () => {
     seccion = doc.createElement("div");
@@ -345,8 +352,11 @@ function enfasisDeLaInterfaz(doc) {
 
     const tarjeta = doc.createElement("div");
     tarjeta.className = "aegis-enfasis-tarjeta";
+    // Las muestras (radios) y, al final, el «+» del personalizado (un botón que abre su selector) en la misma rejilla.
+    const rejilla = doc.createElement("div");
+    rejilla.className = "aegis-enfasis-opciones";
     const opciones = doc.createElement("div");
-    opciones.className = "aegis-enfasis-opciones";
+    opciones.className = "aegis-enfasis-grupo";
     opciones.setAttribute("role", "radiogroup");
     opciones.setAttribute("aria-labelledby", titulo.id);
     opciones.setAttribute("aria-describedby", ayuda.id);
@@ -366,21 +376,42 @@ function enfasisDeLaInterfaz(doc) {
       opciones.append(opcion);
     }
     opciones.addEventListener("change", e => Services.prefs.setStringPref(AegisEnfasis.PREF, e.target.value));
+    mas = botonMas(doc, {
+      clase: "aegis-enfasis-opcion",
+      claseCirculo: "aegis-enfasis-circulo",
+      texto: textoSimple,
+      conNombre: true,
+    });
+    mas.boton.addEventListener("click", () => {
+      selector = abrirSelector(doc, {
+        texto: textoSimple,
+        estado: estadoEnfasis(),
+        // enfasis.sys.mjs valida y escribe las prefs; su observador (marcar) le pasa el estado nuevo al selector.
+        usar: acento => AegisEnfasis.usarPropio(acento),
+        guardar: acento => AegisEnfasis.guardarPropio(acento),
+        borrar: clave => AegisEnfasis.borrarPropio(clave),
+        abridor: mas.boton,
+      });
+    });
+    rejilla.append(opciones, mas.boton);
     const nota = doc.createElement("p");
     nota.className = "aegis-enfasis-nota";
     nota.textContent = texto("aegis-enfasis-automatico").value ?? "";
-    tarjeta.append(opciones, nota);
+    tarjeta.append(rejilla, nota);
     seccion.append(titulo, ayuda, tarjeta);
     // Que la muestra «Fondo de escritorio» tenga su color aunque no sea el énfasis elegido.
     AegisEnfasis.comprobarFondo();
   };
 
-  // Refleja la pref (también si cambia desde la nueva pestaña, otra ventana de Ajustes o about:config).
+  // Refleja las prefs (también si cambian desde la nueva pestaña, otra ventana de Ajustes o about:config). El
+  // observador de aegis.enfasis también salta con aegis.enfasis.propio y .guardados (empiezan igual).
   const marcar = () => {
-    const elegido = AegisEnfasis.actual();
-    for (const radio of seccion?.querySelectorAll("input") ?? []) {
-      radio.checked = radio.value == elegido;
+    const estado = estadoEnfasis();
+    for (const radio of seccion?.querySelectorAll(".aegis-enfasis-grupo input") ?? []) {
+      radio.checked = radio.value == estado.modo;
     }
+    mas?.marcar(estado.modo, estado.propio);
+    selector?.actualizar(estado);
   };
 
   const colocar = () => {
