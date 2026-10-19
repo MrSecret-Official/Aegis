@@ -1,0 +1,1079 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · about:bienvenida (bienvenida.sys.mjs). La pone AegisArranque junto a tokens.css y comun.css. Copia en HTML del
+   asistente de Aegis Setup (packaging/instalador/ui/instalador.slint, componentes.slint y miniaturas.slint; DISENO §9
+   «Instalador»), medida a medida: marca arriba a la izquierda, contenido centrado de 600, icono de página en un
+   círculo de 56, título de 24 (30 en el primer paso), tarjetas con miniatura (radio 12, la elegida con borde del color
+   del texto, relleno --aegis-sel y nombre en 600; «Recomendado» como pestaña sobre el borde), tarjetas compactas en
+   rejilla de 2 × 2 y el pie fijo de 76 con los pasos en rayitas, «Paso N de 5» y los dos botones. Las tarjetas son
+   radios nativos (escondidos): el foco se ve en la lámina, con el anillo de 2 px por fuera (§5).
+   Nada se mueve en reposo: solo la entrada de un paso (se desliza 30 px y aparece) y el cambio de las rayitas, con
+   OutCubic y nada con el movimiento reducido (§7). Solo var(--aegis-*); los colores, fuera de alto contraste (salvo las
+   miniaturas, que son un dibujo). */
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  font: 14px/1.4 var(--aegis-font);
+}
+
+/* Marca: el icono de 20 y «Aegis» en 16 px 600, a 28 y 24 del borde (como la ventana del instalador). */
+.bienvenida-marca {
+  position: absolute;
+  top: var(--aegis-s-24);
+  inset-inline-start: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.bienvenida-marca-icono {
+  width: 20px;
+  height: 20px;
+  background: url("../estilos/iconos/aegis-pequeno.svg") center / contain no-repeat;
+}
+
+/* Contenido: 600 de ancho, centrado en lo que deja el pie (64 arriba, como el instalador). */
+.bienvenida {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 64px var(--aegis-s-16) var(--aegis-s-8);
+}
+
+.bienvenida-paso {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--aegis-s-8);
+  width: min(600px, 100%);
+  text-align: center;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+/* Cabecera de cada paso: icono de página (círculo de 56 con el glifo de 26), título y subtítulo. */
+.bienvenida-icono {
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  margin-block-end: 6px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: center / 26px no-repeat;
+}
+:is(.bienvenida-icono, .bienvenida-glifo)[data-icono="modo"] {
+  background-image: url("../estilos/iconos/bienvenida-modo.svg");
+}
+:is(.bienvenida-icono, .bienvenida-glifo)[data-icono="escudos"] {
+  background-image: url("../estilos/iconos/bienvenida-escudos.svg");
+}
+:is(.bienvenida-icono, .bienvenida-glifo)[data-icono="buscador"] {
+  background-image: url("../estilos/iconos/bienvenida-buscador.svg");
+}
+:is(.bienvenida-icono, .bienvenida-glifo)[data-icono="apariencia"] {
+  background-image: url("../estilos/iconos/bienvenida-apariencia.svg");
+}
+.bienvenida-icono,
+.bienvenida-glifo,
+.bienvenida-chevron {
+  -moz-context-properties: fill;
+}
+
+.bienvenida-titulo {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
+
+  /* Recibe el foco al cambiar de paso (para que se lea el paso nuevo), pero no es un control: sin anillo. */
+  &:focus {
+    outline: none;
+  }
+}
+.bienvenida-titulo-grande {
+  font-size: 30px;
+}
+.bienvenida-subtitulo {
+  margin: 0;
+  padding-inline: 30px;
+}
+.bienvenida-nota {
+  margin: 0;
+  font-size: 12px;
+}
+.bienvenida-nota-ancha {
+  padding-inline: 40px;
+}
+
+/* ── 1. Bienvenida: logo, nombre y el resumen en un grupo de filas de 40 (cada una lleva a su paso) ─────────────── */
+.bienvenida-logo {
+  width: 64px;
+  height: 64px;
+  margin-block-end: var(--aegis-s-12);
+}
+.bienvenida-seccion {
+  align-self: stretch;
+  margin: 6px 0 0;
+  padding-inline-start: 44px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-align: start;
+  text-transform: uppercase;
+}
+.bienvenida-grupo {
+  box-sizing: border-box;
+  width: min(520px, 100%);
+  margin: 0;
+  padding: 1px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+  list-style: none;
+
+  & li {
+    position: relative;
+  }
+  /* Separador sangrado 16 (como Fila en componentes.slint). */
+  & li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    inset-inline: var(--aegis-s-16);
+    bottom: 0;
+    height: 1px;
+  }
+}
+.bienvenida-fila {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 40px;
+  margin: 0;
+  padding: 0 var(--aegis-s-16);
+  border: none;
+  border-radius: var(--aegis-r-10);
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  /* Resalte de radio 7 a 4 px del borde. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: var(--aegis-s-4);
+    border-radius: var(--aegis-r-7);
+  }
+  & > * {
+    position: relative;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: -3px;
+  }
+}
+.bienvenida-glifo {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-inline-end: var(--aegis-s-12);
+  background: center / 18px no-repeat;
+  opacity: 0.85;
+}
+.bienvenida-fila-nombre {
+  flex: none;
+  width: 180px;
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bienvenida-fila-valor {
+  flex: 1;
+  min-width: 0;
+  margin-inline-end: var(--aegis-s-8);
+  overflow: hidden;
+  font-size: 13px;
+  text-align: end;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bienvenida-chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background: url("../estilos/iconos/escudo-chevron.svg") center / 16px no-repeat;
+}
+
+/* ── Tarjetas con miniatura (Tarjeta de componentes.slint) ───────────────────────────────────────────────────────── */
+.bienvenida-tarjetas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--aegis-s-24);
+  margin-block: 20px 14px;
+}
+/* 12 como en los demás pasos y 8 más para la insignia, que asoma por encima de la tarjeta. */
+.bienvenida-con-insignia {
+  margin-block-start: 28px;
+}
+
+.bienvenida-tarjeta,
+.bienvenida-compacta {
+  position: relative;
+  cursor: pointer;
+
+  /* El radio nativo, escondido: da el teclado (Tab entra en el grupo, las flechas eligen) y lo que lee el lector de
+     pantalla. Se ve la tarjeta. */
+  & input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    appearance: none;
+    pointer-events: none;
+  }
+}
+.bienvenida-tarjeta {
+  display: flex;
+  flex-direction: column;
+  width: 184px;
+  text-align: center;
+}
+.bienvenida-tarjetas-anchas .bienvenida-tarjeta {
+  width: 244px;
+}
+
+/* La lámina: superficie de radio 12 con la miniatura a 12 del borde (11 + el borde de 1). */
+.bienvenida-lamina {
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  height: 100px;
+  padding: 11px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+
+  /* El relleno de la elegida, por encima de la superficie y por debajo del dibujo. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+}
+.bienvenida-tarjetas-anchas .bienvenida-lamina {
+  height: 132px;
+}
+.bienvenida-tarjeta:has(input:focus-visible) .bienvenida-lamina,
+.bienvenida-compacta:has(input:focus-visible) {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: 1px;
+}
+
+.bienvenida-tarjeta-nombre {
+  font-size: 14px;
+  font-weight: 400;
+}
+.bienvenida-tarjeta .bienvenida-tarjeta-nombre {
+  margin-block-start: 10px;
+}
+.bienvenida-tarjeta-detalle {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.bienvenida-tarjeta .bienvenida-tarjeta-detalle {
+  margin-block-start: 2px;
+}
+:is(.bienvenida-tarjeta, .bienvenida-compacta):has(input:checked) .bienvenida-tarjeta-nombre {
+  font-weight: 600;
+}
+
+/* «Recomendado»: etiqueta de sección (11 px 600 en mayúsculas, en --aegis-sub) en una pestaña de radio 5 centrada
+   sobre el borde de arriba; tapa la línea con el fondo de la página y no lleva relleno de énfasis. */
+.bienvenida-insignia {
+  position: absolute;
+  top: -9px;
+  inset-inline-start: 50%;
+  box-sizing: border-box;
+  height: 18px;
+  padding: 0 var(--aegis-s-8);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-5);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  line-height: 16px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+/* ── Buscador: tarjetas compactas (TarjetaCompacta) en dos columnas de 264 con 16 entre ellas ──────────────────── */
+.bienvenida-rejilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 264px));
+  justify-content: center;
+  gap: var(--aegis-s-16);
+  width: 100%;
+  margin-block-start: 20px;
+}
+.bienvenida-compacta {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-4);
+  min-height: 76px;
+  padding: 15px;
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+  text-align: start;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  & > span {
+    position: relative;
+  }
+}
+@media (max-width: 560px) {
+  .bienvenida-rejilla {
+    grid-template-columns: minmax(0, 264px);
+  }
+}
+
+/* ── Pie: fijo abajo, 76 de alto con la línea arriba ─────────────────────────────────────────────────────────── */
+.bienvenida-pie {
+  position: sticky;
+  bottom: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aegis-s-8) var(--aegis-s-16);
+  min-height: 76px;
+  padding: 18px 28px;
+  border-block-start: 1px solid transparent;
+}
+/* Los pasos en rayitas de 12 (la actual, 26), separadas 6; las hechas, del color del texto. */
+.bienvenida-rayitas {
+  display: flex;
+  gap: 6px;
+
+  & span {
+    width: 12px;
+    height: 4px;
+    border-radius: var(--aegis-r-2);
+  }
+  & span[actual] {
+    width: 26px;
+  }
+}
+.bienvenida-paso-n {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bienvenida-botones {
+  display: flex;
+  gap: 10px;
+  margin-inline-start: auto;
+
+  & button {
+    min-height: 38px;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: var(--aegis-r-8);
+    /* Solo la familia: «font: inherit» pisaría el peso del principal (600). */
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.28;
+      cursor: default;
+    }
+  }
+}
+.bienvenida-secundario {
+  min-width: 96px;
+  padding: 0 18px;
+  font-weight: 400;
+}
+.bienvenida-principal {
+  min-width: 112px;
+  padding: 0 20px;
+  font-weight: 600;
+}
+
+:focus-visible {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: 2px;
+}
+
+/* ── Colores (fuera de alto contraste) ─────────────────────────────────────────────────────────────────────────── */
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  body,
+  .bienvenida-pie {
+    background-color: var(--aegis-bg);
+    color: var(--aegis-text);
+  }
+  .bienvenida-subtitulo,
+  .bienvenida-fila-valor,
+  .bienvenida-insignia,
+  .bienvenida-compacta .bienvenida-tarjeta-detalle {
+    color: var(--aegis-sub);
+  }
+  .bienvenida-nota,
+  .bienvenida-seccion,
+  .bienvenida-tarjeta .bienvenida-tarjeta-detalle,
+  .bienvenida-paso-n {
+    color: var(--aegis-muted);
+  }
+  .bienvenida-icono {
+    border-color: var(--aegis-line);
+    background-color: var(--aegis-control);
+  }
+  .bienvenida-icono,
+  .bienvenida-glifo {
+    fill: var(--aegis-text);
+  }
+  .bienvenida-chevron {
+    fill: var(--aegis-muted);
+  }
+
+  .bienvenida-grupo {
+    border-color: var(--aegis-line);
+    background-color: var(--aegis-surface);
+
+    & li:not(:last-child)::after {
+      background-color: var(--aegis-line);
+    }
+  }
+  .bienvenida-fila {
+    color: var(--aegis-text);
+
+    &:hover::before {
+      background-color: var(--aegis-hover);
+    }
+    &:hover:active::before {
+      background-color: var(--aegis-control);
+    }
+    /* Sobre el resalte, el apagado no llega a 4,5:1 (DISENO §2). */
+    &:hover .bienvenida-chevron {
+      fill: var(--aegis-sub);
+    }
+  }
+
+  .bienvenida-lamina,
+  .bienvenida-compacta {
+    border-color: var(--aegis-line);
+    background-color: var(--aegis-surface);
+  }
+  :is(.bienvenida-tarjeta:hover .bienvenida-lamina, .bienvenida-compacta:hover) {
+    border-color: var(--aegis-line-strong);
+  }
+  :is(.bienvenida-tarjeta:has(input:checked) .bienvenida-lamina, .bienvenida-compacta:has(input:checked)) {
+    border-color: var(--aegis-text);
+
+    &::before {
+      background-color: var(--aegis-sel);
+    }
+  }
+  .bienvenida-insignia {
+    border-color: var(--aegis-line-strong);
+    background-color: var(--aegis-bg);
+  }
+  .bienvenida-tarjeta:has(input:checked) .bienvenida-insignia {
+    border-color: var(--aegis-text);
+  }
+
+  .bienvenida-pie {
+    border-block-start-color: var(--aegis-line);
+  }
+  .bienvenida-rayitas span {
+    background-color: var(--aegis-track);
+
+    &[hecho] {
+      background-color: var(--aegis-text);
+    }
+  }
+  .bienvenida-principal {
+    background-color: var(--aegis-prim);
+    color: var(--aegis-on-prim);
+
+    &:hover:not(:disabled) {
+      background-color: var(--aegis-prim-hover);
+    }
+    &:hover:active:not(:disabled) {
+      background-color: var(--aegis-prim-down);
+    }
+  }
+  .bienvenida-secundario {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+
+    &:hover:not(:disabled) {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active:not(:disabled) {
+      background-color: var(--aegis-control-down);
+    }
+  }
+}
+
+/* Alto contraste: colores del sistema y bordes visibles; la elegida, con el borde del color de selección. */
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .bienvenida-icono,
+  .bienvenida-grupo,
+  .bienvenida-lamina,
+  .bienvenida-compacta,
+  .bienvenida-insignia,
+  .bienvenida-botones button {
+    border-color: currentColor;
+  }
+  .bienvenida-pie {
+    border-block-start-color: currentColor;
+    background-color: Canvas;
+  }
+  .bienvenida-grupo li:not(:last-child)::after {
+    background-color: currentColor;
+  }
+  .bienvenida-icono,
+  .bienvenida-glifo,
+  .bienvenida-chevron {
+    fill: CanvasText;
+  }
+  :is(.bienvenida-tarjeta:has(input:checked) .bienvenida-lamina, .bienvenida-compacta:has(input:checked)) {
+    border-color: Highlight;
+    outline: 1px solid Highlight;
+  }
+  .bienvenida-rayitas span {
+    background-color: GrayText;
+
+    &[hecho] {
+      background-color: CanvasText;
+    }
+  }
+}
+
+/* ── Movimiento (§7): la entrada de un paso y las rayitas; con el movimiento reducido, nada ───────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .bienvenida-paso:not([hidden]) {
+    animation: bienvenida-entra var(--aegis-t-slide) var(--aegis-ease);
+  }
+  .bienvenida[data-direccion="atras"] .bienvenida-paso:not([hidden]) {
+    animation-name: bienvenida-vuelve;
+  }
+  .bienvenida-rayitas span {
+    transition:
+      width var(--aegis-t-slide) var(--aegis-ease),
+      background-color var(--aegis-t-hover) var(--aegis-ease);
+  }
+  .bienvenida-lamina,
+  .bienvenida-compacta,
+  .bienvenida-insignia {
+    transition: border-color var(--aegis-t-hover) var(--aegis-ease);
+  }
+  :is(.bienvenida-lamina, .bienvenida-compacta, .bienvenida-fila)::before {
+    transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+  }
+  .bienvenida-botones button {
+    transition:
+      background-color var(--aegis-t-hover) var(--aegis-ease),
+      transform var(--aegis-t-press) var(--aegis-ease);
+
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+  }
+}
+@keyframes bienvenida-entra {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+@keyframes bienvenida-vuelve {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+/* ── Miniaturas (miniaturas.slint): solo rectángulos, nítidos a cualquier escala. Un dibujo, no la interfaz: lleva
+   sus colores también en alto contraste. La tinta (--t) es la del tema de la página o, en las de Apariencia, la del
+   tema que enseñan; f(a) de miniaturas.slint es color-mix(… a %, transparent). ─────────────────────────────────── */
+.bienvenida-mini,
+.bienvenida-mini-auto {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  forced-color-adjust: none;
+}
+.bienvenida-mini {
+  --t: var(--aegis-tinta);
+  --hoja: color-mix(in srgb, var(--t) 5%, transparent);
+  border-radius: var(--aegis-r-8);
+  background-color: color-mix(in srgb, var(--t) 2.5%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t) 12%, transparent);
+
+  &[data-tono="oscuro"] {
+    --t: var(--aegis-tema-oscuro-tinta);
+    --hoja: var(--aegis-tema-oscuro-superficie);
+    background-color: var(--aegis-tema-oscuro-bg);
+  }
+  &[data-tono="claro"] {
+    --t: var(--aegis-tema-claro-tinta);
+    --hoja: var(--aegis-tema-claro-superficie);
+    background-color: var(--aegis-tema-claro-bg);
+  }
+  & span {
+    position: absolute;
+    display: block;
+  }
+}
+/* Automático: la mitad izquierda oscura y la derecha clara, cada una con el navegador entero recortado. */
+.bienvenida-mitad {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  overflow: hidden;
+
+  & + & {
+    left: 50%;
+  }
+  & > .bienvenida-mini {
+    position: absolute;
+    left: 0;
+    width: 200%;
+  }
+  & + & > .bienvenida-mini {
+    left: -100%;
+  }
+}
+
+/* Rayas de texto: 3 de alto, en píldora y centradas en su caja. */
+.bienvenida-mini .m-raya {
+  top: calc(50% - 1.5px);
+  height: 3px;
+  border-radius: var(--aegis-mini-r-pildora);
+}
+
+/* Estándar: pestañas arriba, barra de direcciones, marcadores y la página. */
+.m-pestana {
+  top: 5px;
+  height: 9px;
+  border-radius: var(--aegis-mini-r-3);
+
+  & .m-raya {
+    left: 4px;
+  }
+}
+.m-activa {
+  left: 6px;
+  width: 24%;
+  background-color: color-mix(in srgb, var(--t) 12%, transparent);
+
+  & .m-raya {
+    width: 55%;
+    background-color: color-mix(in srgb, var(--t) 38%, transparent);
+  }
+}
+.m-otra {
+  width: 17%;
+  background-color: color-mix(in srgb, var(--t) 5%, transparent);
+
+  & .m-raya {
+    width: 50%;
+    background-color: color-mix(in srgb, var(--t) 20%, transparent);
+  }
+}
+.m-otra-1 {
+  left: calc(9px + 24%);
+}
+.m-otra-2 {
+  left: calc(9px + 43%);
+}
+.m-punto {
+  top: 19px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--t) 28%, transparent);
+}
+.m-punto-1 {
+  left: 6px;
+}
+.m-punto-2 {
+  left: 14px;
+}
+.m-punto-3 {
+  left: 22px;
+}
+.m-direccion,
+.m-buscar {
+  height: 9px;
+  border-radius: var(--aegis-mini-r-pildora);
+  background-color: color-mix(in srgb, var(--t) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t) 10%, transparent);
+
+  & .m-raya {
+    background-color: color-mix(in srgb, var(--t) 28%, transparent);
+  }
+}
+.m-direccion {
+  top: 17px;
+  left: 32px;
+  width: calc(100% - 52px);
+
+  & .m-raya {
+    left: 6px;
+    width: 40%;
+  }
+}
+.m-boton {
+  top: 17px;
+  left: calc(100% - 15px);
+  width: 9px;
+  height: 9px;
+  border-radius: var(--aegis-r-2);
+  background-color: color-mix(in srgb, var(--t) 28%, transparent);
+}
+.bienvenida-mini .m-marcadores {
+  top: 30px;
+  left: 8px;
+  display: flex;
+  gap: 6px;
+  width: calc(100% - 16px);
+  height: 3px;
+
+  & .m-raya {
+    position: static;
+    flex: none;
+    background-color: color-mix(in srgb, var(--t) 16%, transparent);
+  }
+}
+.m-m1 {
+  width: 16px;
+}
+.m-m2 {
+  width: 20px;
+}
+.m-m3 {
+  width: 12px;
+}
+.m-m4 {
+  width: 18px;
+}
+.m-hoja {
+  top: 38px;
+  left: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 42px);
+  overflow: hidden;
+  border-radius: var(--aegis-r-5);
+  background-color: var(--hoja);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t) 10%, transparent);
+
+  & .m-raya {
+    left: 10px;
+  }
+}
+.bienvenida-mini .m-titular {
+  top: 9px;
+  width: 38%;
+  height: 5px;
+  border-radius: var(--aegis-r-2);
+  background-color: color-mix(in srgb, var(--t) 30%, transparent);
+}
+.m-linea {
+  background-color: color-mix(in srgb, var(--t) 14%, transparent);
+}
+.bienvenida-mini .m-l1 {
+  top: 20px;
+  width: 72%;
+}
+.bienvenida-mini .m-l2 {
+  top: 27px;
+  width: 58%;
+}
+.bienvenida-mini .m-l3 {
+  top: 34px;
+  width: 66%;
+}
+.bienvenida-mini .m-l4 {
+  top: 41px;
+  width: 50%;
+}
+
+/* Workflow: barra lateral (30 %) con el buscador, los esenciales, las pestañas verticales y los espacios; la página
+   a la derecha. */
+.m-buscar {
+  top: 5px;
+  left: 5px;
+  width: calc(30% - 10px);
+
+  & .m-raya {
+    left: 5px;
+    width: 45%;
+  }
+}
+.m-esencial {
+  top: 19px;
+  width: calc(10% - 6px);
+  height: 9px;
+  border-radius: var(--aegis-mini-r-3);
+  background-color: color-mix(in srgb, var(--t) 8%, transparent);
+}
+.m-esencial-1 {
+  left: 5px;
+}
+.m-esencial-2 {
+  left: calc(10% + 3px);
+}
+.m-esencial-3 {
+  left: calc(20% + 1px);
+}
+.m-vertical {
+  left: 4px;
+  width: calc(30% - 8px);
+  height: 9px;
+  border-radius: var(--aegis-mini-r-3);
+
+  & .m-icono {
+    top: 2.5px;
+    left: 4px;
+    width: 4px;
+    height: 4px;
+    border-radius: var(--aegis-mini-r-1);
+    background-color: color-mix(in srgb, var(--t) 30%, transparent);
+  }
+  & .m-raya {
+    left: 11px;
+    width: calc((100% - 16px) * 0.68);
+    background-color: color-mix(in srgb, var(--t) 20%, transparent);
+  }
+}
+.m-v1 {
+  top: 34px;
+  background-color: color-mix(in srgb, var(--t) 10%, transparent);
+
+  & .m-raya {
+    width: calc((100% - 16px) * 0.8);
+    background-color: color-mix(in srgb, var(--t) 42%, transparent);
+  }
+}
+.m-v2 {
+  top: 45px;
+}
+.m-v3 {
+  top: 56px;
+
+  & .m-raya {
+    width: calc((100% - 16px) * 0.5);
+  }
+}
+.m-v4 {
+  top: 67px;
+}
+.m-v5 {
+  top: 78px;
+}
+.m-espacio {
+  bottom: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--t) 18%, transparent);
+}
+.m-espacio-1 {
+  left: calc(15% - 11.5px);
+  background-color: color-mix(in srgb, var(--t) 45%, transparent);
+}
+.m-espacio-2 {
+  left: calc(15% - 2.5px);
+}
+.m-espacio-3 {
+  left: calc(15% + 6.5px);
+}
+.bienvenida-mini .m-hoja-lateral {
+  top: 4px;
+  left: 30%;
+  width: calc(70% - 4px);
+  height: calc(100% - 8px);
+
+  & .m-titular {
+    top: 10px;
+    width: 42%;
+  }
+  & .m-l1 {
+    top: 21px;
+    width: 74%;
+  }
+  & .m-l2 {
+    top: 28px;
+    width: 60%;
+  }
+  & .m-l3 {
+    top: 35px;
+    width: 68%;
+  }
+  & .m-l4 {
+    top: 42px;
+    width: 52%;
+  }
+  & .m-l5 {
+    top: 49px;
+    width: 64%;
+  }
+  & .m-l6 {
+    top: 56px;
+    width: 46%;
+  }
+}
+
+/* Escudos: la barra con el botón (el anillo) y su contador, y las peticiones de la página. Cada nivel tacha más y el
+   contador sube. El contador es la pastilla de §4 a escala: parte del dibujo, por eso puede bajar de 11 px. */
+.bienvenida-mini .m-direccion-escudos {
+  top: 6px;
+  left: 6px;
+  width: calc(100% - 38px);
+}
+.m-anillo {
+  top: 5px;
+  left: calc(100% - 26px);
+  box-sizing: border-box;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid color-mix(in srgb, var(--t) 55%, transparent);
+  border-radius: 50%;
+}
+.bienvenida-mini .m-contador {
+  top: 3px;
+  left: calc(100% - 19px);
+  box-sizing: border-box;
+  min-width: 10px;
+  height: 10px;
+  padding: 0 2.5px;
+  border-radius: var(--aegis-mini-r-3);
+  background-color: var(--aegis-prim);
+  color: var(--aegis-on-prim);
+  font-size: 8px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 10px;
+  text-align: center;
+
+  & .m-cifra {
+    position: static;
+  }
+}
+.m-pagina {
+  top: 21px;
+  left: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 25px);
+  overflow: hidden;
+  border-radius: var(--aegis-r-5);
+  background-color: color-mix(in srgb, var(--t) 5%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t) 10%, transparent);
+}
+.m-peticion {
+  left: 0;
+  width: 100%;
+  height: 3px;
+
+  & .m-icono {
+    top: 0;
+    left: 9px;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: color-mix(in srgb, var(--t) 30%, transparent);
+  }
+  & .m-raya {
+    top: 0;
+    left: 17px;
+    width: calc((100% - 30px) * var(--k));
+    background-color: color-mix(in srgb, var(--t) 22%, transparent);
+  }
+  /* Tachada: una línea de 1 sobre la petición, que sobresale 3 por cada lado (no toca el punto). */
+  & .m-tachado {
+    display: none;
+    top: 1px;
+    left: 14px;
+    width: calc((100% - 30px) * var(--k) + 6px);
+    height: 1px;
+    background-color: color-mix(in srgb, var(--t) 55%, transparent);
+  }
+}
+/* La primera es la propia página: nunca se bloquea. */
+.m-p1 {
+  top: 7px;
+  --k: 0.46;
+
+  & .m-icono {
+    background-color: color-mix(in srgb, var(--t) 40%, transparent);
+  }
+  & .m-raya {
+    background-color: color-mix(in srgb, var(--t) 34%, transparent);
+  }
+}
+.m-p2 {
+  top: 16px;
+  --k: 0.7;
+}
+.m-p3 {
+  top: 25px;
+  --k: 0.56;
+}
+.m-p4 {
+  top: 34px;
+  --k: 0.78;
+}
+.m-p5 {
+  top: 43px;
+  --k: 0.62;
+}
+/* Bloqueadas: Normal, la 2 y la 4; Estricto, todas menos la última; Estricto+, todas. */
+:is(.bienvenida-mini[data-nivel="0"] :is(.m-p2, .m-p4),
+    .bienvenida-mini[data-nivel="1"] :is(.m-p2, .m-p3, .m-p4),
+    .bienvenida-mini[data-nivel="2"] :is(.m-p2, .m-p3, .m-p4, .m-p5)) {
+  & .m-icono,
+  & .m-raya {
+    background-color: color-mix(in srgb, var(--t) 12%, transparent);
+  }
+  & .m-tachado {
+    display: block;
+  }
+}

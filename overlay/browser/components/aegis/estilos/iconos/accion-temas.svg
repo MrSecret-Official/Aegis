@@ -1,0 +1,8 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Aegis · acción de la barra de direcciones (acciones.sys.mjs), temas: el pincel del Centro de SecretOS. Rejilla de 24, trazo de 1,5, extremos
+     redondos, context-fill (DISENO §8). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="context-fill" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M18.6 3.6l1.8 1.8l-8.9 8.9l-1.8 -1.8zM8.8 13.6c-2.3 0 -3.8 1.4 -3.8 3.4c0 1.1 -.5 2.1 -1.4 2.8c2.9 .5 6.9 -.3 6.9 -4.1"/>
+</svg>

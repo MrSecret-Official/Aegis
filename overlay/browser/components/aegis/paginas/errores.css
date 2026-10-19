@@ -1,0 +1,48 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · páginas de error de Firefox (about:neterror, about:certerror, about:httpsonlyerror, about:tabcrashed y
+   about:restartrequired). Las pone el actor AegisPaginas (AegisPaginasChild.sys.mjs) como hoja de autor, después de
+   tokens.css y comun.css, que ya cambian los colores de Firefox (el violeta de los botones y enlaces) por los de Aegis y
+   la letra por Inter. Lo de dentro de la tarjeta nueva (net-error-card, shadow DOM) va en errores-sombra.css.
+   La ilustración del zorro la quita browser.netError.illustration.enabled (50-interfaz.js). about:blocked (webs
+   peligrosas) no se toca: es seguridad. */
+
+/* «Learn more» y «Más información» llevan a support.mozilla.org: fuera, con su párrafo (DISENO §11; Ajustes y
+   Complementos hacen lo mismo). La explicación de cada error ya está en la página. El de los errores de DNS sobre
+   HTTPS (#trrOnlylearnMoreLink) solo se queda cuando lleva a los ajustes del propio navegador
+   (about:preferences#privacy-doh, si falla el servidor DoH); en los demás casos aboutNetError.mjs lo apunta a la
+   documentación de Mozilla (network.trr_ui.skip_reason_learn_more_url) y se oculta como el resto. */
+a[is="moz-support-link"],
+#learnMoreContainer,
+#learnMoreLink,
+#trrOnlylearnMoreLink:not([href^="about:"]),
+#learn-more-container,
+.search-cta-learn-more {
+  display: none !important;
+}
+
+/* Certificado interceptado (MOZILLA_PKIX_ERROR_MITM_DETECTED, página clásica): fuera «<navegador> está respaldado por
+   la organización sin ánimo de lucro Mozilla…», que en Aegis es falso. El párrafo siguiente (usa el almacén de
+   autoridades de Mozilla) sí es cierto: Aegis usa el de NSS, el mismo. */
+[data-l10n-id="cert-error-mitm-mozilla"] {
+  display: none !important;
+}
+
+/* Nunca negrita (DISENO §3): el peso por defecto del navegador para b, strong y los h4 («Why now?» de
+   about:restartrequired) es 700. h4.closer gana a un h4 suelto, de ahí el !important. */
+b,
+strong,
+h4,
+.closer {
+  font-weight: 600 !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* Fondo del marco de Aegis, como las demás páginas propias (Firefox pone el suyo, gris violáceo). */
+  :root {
+    --in-content-page-background: var(--aegis-bg) !important;
+    background-color: var(--aegis-bg);
+  }
+}

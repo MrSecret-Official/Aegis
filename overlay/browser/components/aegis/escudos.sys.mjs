@@ -40,6 +40,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 ChromeUtils.defineESModuleGetters(lazy, {
   AegisHuella: new URL("huella.sys.mjs", import.meta.url).href,
   AegisWebsOscuro: new URL("webs-oscuro/webs-oscuro.sys.mjs", import.meta.url).href,
+  // Perezoso: busqueda-limpia.sys.mjs importa este módulo (AegisEscudos.anotar).
+  AegisBusquedaLimpia: new URL("busqueda-limpia.sys.mjs", import.meta.url).href,
   AegisEscudosAyuda: new URL("escudos-ayuda.sys.mjs", import.meta.url).href,
   AegisEscudosAjustes: new URL("escudos/ajustes.sys.mjs", import.meta.url).href,
   AegisEscudosExcepciones: new URL("escudos/excepciones.sys.mjs", import.meta.url).href,
@@ -580,6 +582,26 @@ function recargar(win) {
   win.BrowserCommands.reload();
 }
 
+/**
+ * Sube (encender) o baja los Escudos en el sitio de la pestaña visible, recarga y repinta: el interruptor de la
+ * cabecera del panel y la acción «Bajar/Subir los Escudos en este sitio» de la barra de direcciones (acciones.sys.mjs).
+ *
+ * @param {Window} win
+ * @param {boolean} encender
+ */
+function ponerSitio(win, encender) {
+  const browser = win.gBrowser.selectedBrowser;
+  if (encender) {
+    lazy.ContentBlockingAllowList.remove(browser);
+    // Y la de un nombre superior, si la hay (Ajustes › Escudos la pone para todo el sitio).
+    lazy.AegisEscudosExcepciones.permitirTodo(principalBajados(browser), false);
+  } else {
+    lazy.ContentBlockingAllowList.add(browser);
+  }
+  recargar(win);
+  actualizar(win);
+}
+
 function crearPanel(win) {
   const doc = win.document;
   const e = ventanas.get(win);
@@ -595,23 +617,7 @@ function crearPanel(win) {
   const favicon = h(doc, "img", { className: "aegis-escudos-favicon", alt: "" });
   const dominio = h(doc, "span", { className: "aegis-escudos-dominio", id: "aegis-escudos-dominio" });
   const estado = h(doc, "span", { className: "aegis-escudos-estado", id: "aegis-escudos-estado" });
-  const sitio = interruptor(
-    doc,
-    "aegis-escudos-estado",
-    encender => {
-      const browser = navegador();
-      if (encender) {
-        lazy.ContentBlockingAllowList.remove(browser);
-        // Y la de un nombre superior, si la hay (Ajustes › Escudos la pone para todo el sitio).
-        lazy.AegisEscudosExcepciones.permitirTodo(principalBajados(browser), false);
-      } else {
-        lazy.ContentBlockingAllowList.add(browser);
-      }
-      recargar(win);
-      actualizar(win);
-    },
-    true
-  );
+  const sitio = interruptor(doc, "aegis-escudos-estado", encender => ponerSitio(win, encender), true);
   const cabecera = h(
     doc,
     "div",
@@ -812,6 +818,37 @@ function crearPanel(win) {
   });
   const cajaFuerte = h(doc, "div", { className: "aegis-escudos-tarjeta", hidden: true }, filaPermiso);
 
+  // Buscador (busqueda-limpia.sys.mjs): un ajuste que decide cada persona, en su propia tarjeta y solo en su buscador
+  // (pintarBuscador). En DuckDuckGo, pedirle que no muestre anuncios (k1=-1: DuckDuckGo pide que sea decisión de cada
+  // uno, así que va apagado); en Bing, dejar o no que sume puntos de Microsoft Rewards.
+  const ddgAnuncios = interruptor(doc, "aegis-escudos-ddg-anuncios-titulo", quitar => {
+    lazy.AegisBusquedaLimpia.ponerSinAnuncios(win, quitar);
+    pintarPanel(win);
+  });
+  const filaDdgAnuncios = fila(doc, {
+    id: "aegis-escudos-ddg-anuncios",
+    glifoNombre: "escudo-rastreadores",
+    titulo: texto("aegis-escudos-ddg-anuncios").value,
+    control: ddgAnuncios,
+  });
+  const bingRewards = interruptor(doc, "aegis-escudos-bing-rewards-titulo", dejar => {
+    lazy.AegisBusquedaLimpia.ponerRewards(dejar);
+    pintarPanel(win);
+  });
+  const filaBingRewards = fila(doc, {
+    id: "aegis-escudos-bing-rewards",
+    glifoNombre: "escudo-rastreadores",
+    titulo: texto("aegis-escudos-bing-rewards").value,
+    control: bingRewards,
+  });
+  const buscador = h(
+    doc,
+    "div",
+    { className: "aegis-escudos-tarjeta", id: "aegis-escudos-buscador", hidden: true },
+    filaDdgAnuncios,
+    filaBingRewards
+  );
+
   // Webs en oscuro (webs-oscuro.sys.mjs): oscurecer o no este sitio, al momento y sin recargar. La fila solo se ve con
   // la función encendida en Ajustes › Apariencia (pintarPanel).
   const oscuro = interruptor(doc, "aegis-escudos-oscuro-titulo", encender => {
@@ -859,6 +896,7 @@ function crearPanel(win) {
     cabecera,
     tarjeta,
     cajaFuerte,
+    buscador,
     plegar,
     avanzadas,
     botones,
@@ -929,6 +967,11 @@ function crearPanel(win) {
     permiso,
     filaPermiso,
     cajaFuerte,
+    ddgAnuncios,
+    filaDdgAnuncios,
+    bingRewards,
+    filaBingRewards,
+    buscador,
     cookies,
     filaCookies,
     olvidar,
@@ -1041,6 +1084,7 @@ function pintarPanel(win, datos) {
   ).value;
 
   pintarHuella(win, browser);
+  pintarBuscador(win, browser, abajo);
   p.cookies.poner(Services.prefs.getIntPref(PREFS_COOKIES[0], 0));
 
   const enPrivada = privada(win);
@@ -1103,6 +1147,45 @@ function pintarMolestias(win, browser) {
   p.filaExcepciones.detalle.textContent = nombres.length
     ? new Intl.ListFormat(Services.locale.appLocaleAsBCP47, { type: "conjunction" }).format(nombres)
     : texto("aegis-escudos-excepciones-ninguna").value;
+}
+
+/**
+ * La tarjeta del buscador: solo en DuckDuckGo (anuncios) o en Bing (Microsoft Rewards), con la búsqueda limpia
+ * encendida y los Escudos subidos en el sitio (con ellos bajados, busqueda-limpia.sys.mjs no actúa en la página).
+ */
+function pintarBuscador(win, browser, abajo) {
+  const p = ventanas.get(win).partes;
+  let buscador = null;
+  try {
+    buscador = abajo ? null : lazy.AegisBusquedaLimpia.buscadorDe(browser);
+  } catch (ex) {
+    console.error("Aegis: Escudos, búsqueda limpia", ex);
+  }
+  p.buscador.hidden = !buscador;
+  p.filaDdgAnuncios.hidden = buscador != "duckduckgo";
+  p.filaBingRewards.hidden = buscador != "bing";
+  // Solo la fila que toca dentro de la tarjeta: con la otra oculta como hermana, la visible no sería :last-child y
+  // escudos.css le pondría el separador y las esquinas de una tarjeta de dos filas. Solo si cambia: sacar del DOM la
+  // fila que ya está le quitaría el foco al interruptor en cada repintado.
+  if (buscador) {
+    const filaBuscador = buscador == "duckduckgo" ? p.filaDdgAnuncios : p.filaBingRewards;
+    if (p.buscador.childElementCount != 1 || p.buscador.firstElementChild != filaBuscador) {
+      p.buscador.replaceChildren(filaBuscador);
+    }
+  }
+  if (buscador == "duckduckgo") {
+    const quitar = lazy.AegisBusquedaLimpia.sinAnuncios;
+    marcar(p.ddgAnuncios, quitar);
+    p.filaDdgAnuncios.detalle.textContent = texto(
+      quitar ? "aegis-escudos-ddg-anuncios-activo" : "aegis-escudos-ddg-anuncios-apagado"
+    ).value;
+  } else if (buscador == "bing") {
+    const dejar = lazy.AegisBusquedaLimpia.rewards;
+    marcar(p.bingRewards, dejar);
+    p.filaBingRewards.detalle.textContent = texto(
+      dejar ? "aegis-escudos-bing-rewards-activo" : "aegis-escudos-bing-rewards-apagado"
+    ).value;
+  }
 }
 
 /** Huella digital: nivel, glifo (el uróboros en Caja fuerte) y la tarjeta del permiso por sitio. */
@@ -1296,5 +1379,35 @@ export const AegisEscudos = {
     if (win && win.gBrowser?.selectedBrowser == browser) {
       programar(win);
     }
+  },
+
+  /**
+   * Barra de direcciones (acciones.sys.mjs): ¿hay Escudos en la pestaña visible (una web) y están bajados?
+   *
+   * @param {Window} win
+   * @returns {{bajados: boolean}?} null si la pestaña no es una web que los Escudos traten
+   */
+  sitio(win) {
+    const browser = win?.gBrowser?.selectedBrowser;
+    return browser && ventanas.has(win) && aplicable(browser) ? { bajados: bajados(browser) } : null;
+  },
+
+  ponerSitio,
+
+  /**
+   * Abre el panel de Escudos de la ventana (acciones.sys.mjs). No hace nada si el botón no se ve en esta pestaña.
+   *
+   * @param {Window} win
+   * @returns {boolean} si se ha abierto (o ya estaba abierto)
+   */
+  abrirPanel(win) {
+    const e = ventanas.get(win);
+    if (!e || e.boton.hidden) {
+      return false;
+    }
+    if (e.panel?.state != "open" && e.panel?.state != "showing") {
+      alternarPanel(win);
+    }
+    return true;
   },
 };

@@ -135,7 +135,7 @@ de los Escudos y antes de que arranquen el bloqueador y los modos, lee el archiv
 `distribution` de la aplicación) y aplica cada valor con las mismas funciones que la interfaz, como preferencias de
 usuario: lo que el usuario cambie después manda. Apunta `aegis.instalador.aplicado` en el primer arranque de cualquier
 perfil, haya archivo o no, y no vuelve a leerlo nunca. Si falta, no se entiende (JSON roto, más de 64 KB) o el formato
-es otro, no hace nada; un valor desconocido se salta. Sin red ni temporizadores.
+es otro, no aplica nada (y sale la bienvenida, abajo); un valor desconocido se salta. Sin red ni temporizadores.
 
 | Clave | Cómo se aplica |
 |---|---|
@@ -143,7 +143,38 @@ es otro, no hace nada; un valor desconocido se salta. Sin red ni temporizadores.
 | `escudos` | `ponerNivel` de `escudos.sys.mjs` (como el panel de Escudos): `standard`, `strict` o `strict+` |
 | `buscador` | `SearchService.setDefault`, después de que Aegis ponga DuckDuckGo de serie. Startpage y Brave Search no están en la configuración de búsqueda de todas las regiones: si faltan, se añaden como buscador del usuario (`addUserEngine`, como «Añadir buscador» de Ajustes), sin conexión (`docs/CONEXIONES.md`, «Buscadores del instalador») |
 | `apariencia` | el tema Oscuro o Claro con `AddonManager`, como la bienvenida (`auto` es el de serie, que sigue al sistema: no se toca). Se pone al terminar de abrirse la primera ventana, después de `AddonManagerPrivate.databaseReady` y `BuiltInThemes.ensureBuiltInThemes()`: al arrancar un perfil nuevo, Firefox aún está instalando sus temas integrados y activar uno en medio los dejaba todos desactivados. Por eso la primera ventana puede salir un instante con el tema de serie |
-| `idioma` | **todavía no se aplica.** La build solo trae la interfaz de Firefox en inglés, y pedir otro idioma de la aplicación solo traduciría 4 de los 18 sitios con textos de Aegis: los otros 14 (panel de Escudos, Ajustes, `about:conexiones`…) van junto a `branding/brand.ftl`, que solo existe en inglés, y Fluent deja en inglés el grupo entero (comprobado el 2026-10-16). Además, las webs verían por `Intl` un idioma distinto del de `Accept-Language`, una combinación más rara. Se aplicará con `Services.locale.requestedLocales` cuando la build traiga los paquetes de idioma (`docs/PLANNING.md`, «Build multi-idioma») |
+| `idioma` | La build es multi-idioma (en-US, es-ES, pt-BR, fr, de, it; `docs/GUIA.md`, «Construir» › «Idiomas») y de serie sigue al idioma de Windows (`intl.locale.requested` vacía, `50-interfaz.js`). Solo si el idioma del archivo da, entre los seis, otro que el de Windows (p. ej. con `--idioma`), se pide con `Services.locale.requestedLocales`, como Ajustes › Idioma; si da el mismo (`es-MX` y un Windows en español: los dos, es-ES), no se toca nada y Aegis sigue a Windows. Uno que la build no trae (`ja-JP`) se salta. Las webs ven el mismo idioma por `Intl` y por `Accept-Language`: en Firefox 158 los dos salen del idioma de la aplicación (`intl.accept_languages` vale `und` de serie y se deriva de él) |
+
+### Sin el instalador: la bienvenida del navegador
+
+La versión de la **Microsoft Store** (MSIX, `docs/TIENDA.md`) y el **zip** no pasan por Aegis Setup: no hay
+`aegis-instalador.json`. Para que nadie se quede sin elegir, el navegador hace las mismas preguntas en
+`about:bienvenida` (`overlay/browser/components/aegis/bienvenida.sys.mjs`, `paginas/bienvenida.html` y `.css`):
+
+- **Cuándo:** solo en el primer arranque de un perfil nuevo **sin archivo** del instalador (también si el archivo no se
+  entiende): `AegisInstalador.inicio()` lo dice y `AegisArranque` deja la marca `aegis.bienvenida.pendiente`. Con el
+  archivo no sale nunca. Tampoco en la instancia con Tor. La primera ventana la abre **antes** que `about:conexiones`
+  (en su lugar); si se cierra sin terminar, sale otra vez en el siguiente arranque, y hasta entonces se queda lo de
+  serie.
+- **Qué:** cinco pasos con el aspecto del asistente (DISENO §9, «Bienvenida del navegador»): el resumen («Tu
+  configuración», cada fila lleva a su paso), cómo navegar, Escudos, buscador y apariencia, con las mismas tarjetas,
+  miniaturas, textos (en Fluent, en `aegis.ftl`, con la redacción de los `.po` del instalador) y el mismo pie («Paso N
+  de 5», Atrás y Continuar). Sale elegido lo recomendado (`RECOMENDADO` de `instalador.sys.mjs`).
+- **Saltar:** en el primer paso, el principal es **«Usar lo recomendado»** (aplica lo de serie y sigue); si se ha
+  cambiado algo y se vuelve al resumen, dice «Usar esta configuración». «Personalizar» recorre los pasos.
+- **Al terminar:** aplica lo elegido con `AegisInstalador.aplicar()`, que usa las mismas funciones y valores que el
+  archivo (`AegisModos.aplicar`, `ponerNivel`, `SearchService` con Startpage y Brave Search añadidos sin conexión, y el
+  tema con `AddonManager` después de `databaseReady` y `ensureBuiltInThemes`; el buscador, siempre después del de
+  serie). Quita la marca (no vuelve a salir) y lleva la misma pestaña a `about:conexiones`, sin dejar la bienvenida en
+  el historial. La puerta de la red no cambia: hasta «Aceptar» allí no sale nada.
+- **Teclado y accesibilidad:** las tarjetas son radios nativos (Tab entra en el grupo por la elegida; flechas izquierda
+  y derecha, y en la rejilla del buscador también arriba y abajo, sin dar la vuelta); Intro hace la acción principal
+  (en un botón, la suya) y Esc vuelve un paso. Al cambiar de paso, el foco va a su título, que lee el lector de
+  pantalla; cada tarjeta tiene nombre («Estricto+ (recomendado)») y descripción.
+- **Sin red ni temporizadores:** la página es HTML estático sin scripts con la CSP de las demás páginas propias (solo
+  archivos del navegador); el módulo solo trabaja cuando el usuario pulsa algo.
+
+Probado el 2026-10-19 en Gecko con perfiles nuevos y el código del repo (`out/pruebas/2026-10-19-bienvenida/`).
 
 ## Tecnología
 

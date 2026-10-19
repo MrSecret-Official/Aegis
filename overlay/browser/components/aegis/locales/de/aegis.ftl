@@ -442,6 +442,15 @@ aegis-escudos-oscuro-propio = Diese Website hat schon einen Dunkelmodus
 aegis-escudos-oscuro-claro = Nur wenn { -brand-short-name } dunkel ist
 aegis-escudos-oscuro-excepcion = Wird auf dieser Website nicht abgedunkelt
 
+## Schilde-Panel: Einstellung der Suchmaschine (busqueda-limpia.sys.mjs). Nur auf DuckDuckGo oder Bing sichtbar.
+
+aegis-escudos-ddg-anuncios = DuckDuckGo-Werbung ausblenden
+aegis-escudos-ddg-anuncios-apagado = Aus: Die Schilde verbergen die Werbung, die sie erkennen
+aegis-escudos-ddg-anuncios-activo = Nutzt die DuckDuckGo-Einstellung, um sie nicht anzuzeigen
+aegis-escudos-bing-rewards = Microsoft-Rewards-Punkte sammeln
+aegis-escudos-bing-rewards-apagado = Aus: Deine Aktivität wird nicht gesendet, Suchen bringen keine Punkte
+aegis-escudos-bing-rewards-activo = Bing erhält deine Suchaktivität, um Punkte gutzuschreiben
+
 ## Fingerprinting (Einstellungen › Datenschutz, Schilde-Panel und Hinweis des Tresors)
 
 aegis-huella-titulo = Fingerprinting
@@ -869,3 +878,102 @@ aegis-recibir-borrar-texto = Du brauchst sie nicht mehr, und mit ihr und dem Cod
 aegis-recibir-borrar = Datei löschen
 aegis-recibir-borrado = Datei gelöscht.
 aegis-recibir-borrar-error = Sie konnte nicht gelöscht werden. Lösche sie in ihrem Ordner.
+
+## about:bienvenida (paginas/bienvenida.html; bienvenida.sys.mjs): las preguntas de Aegis Setup dentro del navegador,
+## para quien no pasa por el instalador (Microsoft Store, zip). Sale en el primer arranque, antes de «Tú decides qué se
+## conecta». Misma redacción que el asistente del instalador (packaging/instalador/traducciones/): si cambia uno, cambia
+## el otro. Los nombres de los buscadores (DuckDuckGo, Startpage, Brave Search, Google) y «Workflow» no se traducen.
+
+aegis-bienvenida-pestana = Willkommen
+aegis-bienvenida-nombre = { -brand-short-name }
+aegis-bienvenida-lema = Ein privater Browser, aufgeräumt und schnell
+# Etiqueta de sección del resumen (se muestra en mayúsculas).
+aegis-bienvenida-resumen = Deine Einstellungen
+aegis-bienvenida-fila-modo = Modus
+aegis-bienvenida-fila-escudos = Schilde
+aegis-bienvenida-fila-buscador = Suchmaschine
+aegis-bienvenida-fila-apariencia = Aussehen
+aegis-bienvenida-resumen-nota = Du kannst alles jederzeit in den Einstellungen ändern.
+aegis-bienvenida-modo-titulo = Wie möchtest du surfen?
+aegis-bienvenida-modo-subtitulo = Wähle einen Modus. Du kannst ihn jederzeit in den Einstellungen ändern.
+aegis-bienvenida-modo-estandar = Standard
+aegis-bienvenida-modo-estandar-detalle = Tabs oben, wie immer
+aegis-bienvenida-modo-workflow = Workflow
+aegis-bienvenida-modo-workflow-detalle = Vertikale Tabs und Bereiche
+aegis-bienvenida-modo-nota-estandar = Eine aufgeräumte Leiste mit Tabs oben und dezenter Lesezeichen-Symbolleiste.
+aegis-bienvenida-modo-nota-workflow = Tabs an der Seite und Bereiche, um Arbeit und Freizeit zu trennen.
+aegis-bienvenida-escudos-titulo = Wie viel möchtest du blockieren?
+aegis-bienvenida-escudos-subtitulo = Die Schilde blockieren Werbung und Tracker ab der ersten Minute.
+aegis-bienvenida-escudos-normal = Normal
+aegis-bienvenida-escudos-normal-detalle = Blockiert bekannte Tracker und Werbung. Kaum eine Website geht dabei kaputt.
+aegis-bienvenida-escudos-estricto = Streng
+aegis-bienvenida-escudos-estricto-detalle = Blockiert auch Social-Buttons und Videos, die dich verfolgen. Manche Websites wirken unvollständig.
+aegis-bienvenida-escudos-estricto-mas = Streng+
+# Nombre que lee el lector de pantalla para la tarjeta de Estricto+ (la insignia es parte del dibujo).
+aegis-bienvenida-escudos-estricto-mas-accesible =
+    .aria-label = Streng+ (empfohlen)
+aegis-bienvenida-escudos-estricto-mas-detalle = Alles aus Streng und eine umfangreichere Tracking-Liste. Braucht etwas mehr Speicher.
+# Insignia sobre la tarjeta de Estricto+ (se muestra en mayúsculas).
+aegis-bienvenida-recomendado = Empfohlen
+aegis-bienvenida-escudos-nota = Du kannst es jederzeit unter Einstellungen › Schilde ändern.
+aegis-bienvenida-buscador-titulo = Womit möchtest du suchen?
+aegis-bienvenida-buscador-subtitulo = Die Suchmaschine für die Adressleiste. Du kannst sie jederzeit in den Einstellungen ändern.
+aegis-bienvenida-buscador-duckduckgo = Speichert nicht, wonach du suchst.
+aegis-bienvenida-buscador-startpage = Google-Ergebnisse, ohne dass Google weiß, wer du bist.
+aegis-bienvenida-buscador-brave = Eigener, unabhängiger Index, ohne Profile.
+aegis-bienvenida-buscador-google = Die gewohnten Ergebnisse. Google speichert, wonach du suchst.
+aegis-bienvenida-apariencia-titulo = Wähle das Aussehen
+aegis-bienvenida-apariencia-subtitulo = { -brand-short-name } bleibt schwarz-weiß: Die Farbe kommt aus dem Web.
+aegis-bienvenida-apariencia-oscuro = Dunkel
+aegis-bienvenida-apariencia-oscuro-detalle = Schwarz und Grautöne
+aegis-bienvenida-apariencia-claro = Hell
+aegis-bienvenida-apariencia-claro-detalle = Weiß und Grautöne
+aegis-bienvenida-apariencia-auto = Automatisch
+# Automático sigue el tema del sistema: en Windows, como en el instalador.
+aegis-bienvenida-apariencia-auto-detalle =
+    { PLATFORM() ->
+        [windows] Wie Windows
+       *[other] Wie das System
+    }
+aegis-bienvenida-apariencia-nota = Du kannst es jederzeit unter Einstellungen › Aussehen ändern.
+# Pie: los pasos. $n es el paso en el que se está y $total, cuántos hay (5).
+aegis-bienvenida-paso = Schritt { $n } von { $total }
+aegis-bienvenida-atras = Zurück
+aegis-bienvenida-continuar = Weiter
+# Primer paso: ver y cambiar cada pregunta.
+aegis-bienvenida-personalizar = Anpassen
+# Primer paso, sin haber cambiado nada: aplica lo recomendado y sigue (se salta las preguntas).
+aegis-bienvenida-usar-recomendado = Empfehlung übernehmen
+# Primer paso, después de cambiar algo: aplica lo elegido y sigue.
+aegis-bienvenida-usar-eleccion = Diese Einstellungen übernehmen
+
+## Barra de direcciones: modo «Acciones» (escribir «>» o elegir Acciones en el menú de la lupa) y la fila de botones
+## que sale al escribir una palabra clave (acciones.sys.mjs). Cada acción es un botón pequeño: textos cortos, como los
+## de las acciones del navegador («Ver descargas»). Los «-claves» son las palabras que la buscan: separadas por comas,
+## en minúsculas y en el idioma de la interfaz (Aegis las busca también sin tildes). No se traducen palabra por
+## palabra: las que usaría alguien de ese idioma para encontrar la acción.
+
+aegis-accion-escudos = Schilde-Panel öffnen
+aegis-accion-escudos-claves = schilde, blocker, werbeblocker, werbung, tracker, schilde-panel
+aegis-accion-escudos-bajar = Schilde für diese Website deaktivieren
+aegis-accion-escudos-subir = Schilde für diese Website aktivieren
+aegis-accion-escudos-sitio-claves = schilde, schilde deaktivieren, schilde aktivieren, blocker deaktivieren, werbung erlauben
+aegis-accion-escudos-ajustes = Schilde-Einstellungen
+aegis-accion-escudos-ajustes-claves = schilde, schilde-einstellungen, ausnahmen, filterlisten, filter
+aegis-accion-conexiones = Festlegen, was sich verbindet
+aegis-accion-conexiones-claves = verbindungen, verbinden, netzwerk, datenschutz
+aegis-accion-modo-workflow = Zum Workflow-Modus wechseln
+aegis-accion-modo-estandar = Zum Standard-Modus wechseln
+aegis-accion-modo-claves = modus, workflow, standard, vertikale tabs
+aegis-accion-apariencia = Erscheinungsbild und Akzentfarbe
+aegis-accion-apariencia-claves = erscheinungsbild, akzentfarbe, farbe, dunkles theme, helles theme
+aegis-accion-tor = Neues privates Fenster mit Tor
+aegis-accion-tor-claves = tor, tor-fenster, anonym, onion
+aegis-accion-contrasenas = Passwörter öffnen
+aegis-accion-contrasenas-claves = passwörter, zugangsdaten, konten, bestätigungscodes
+aegis-accion-pasar = Passwörter an ein anderes { -brand-short-name } übertragen
+aegis-accion-pasar-claves = passwörter übertragen, passwörter exportieren, übertragung, passwörter
+aegis-accion-recibir = Passwörter von einem anderen { -brand-short-name } empfangen
+aegis-accion-recibir-claves = passwörter empfangen, übertragung, übertragungscode, passwörter
+aegis-accion-importar = Daten aus einem anderen Browser importieren
+aegis-accion-importar-claves = importieren, daten importieren, chrome, edge, brave, migrieren

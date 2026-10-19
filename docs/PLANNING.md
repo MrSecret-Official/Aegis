@@ -133,8 +133,8 @@ Fechas reales en `product-details.mozilla.org` (`NEXT_RELEASE_DATE`). **Firefox 
 - [x] Aegis aplica las elecciones del instalador en el primer arranque de un perfil nuevo
       (`overlay/browser/components/aegis/instalador.sys.mjs`): modo, Escudos, buscador y tema probados con la build
       del 2026-10-16 22:16 (el tema, que fallaba por una carrera con los temas integrados, se pone al abrirse la
-      primera ventana). El idioma se lee pero aún no se aplica (solo traduciría parte de los textos de Aegis y
-      cambiaría el idioma que ven las webs): con la build multi-idioma.
+      primera ventana). El idioma, desde la build multi-idioma (2026-10-20): Aegis sigue al de Windows y solo pide el
+      del instalador si da otro de los seis (`--idioma`); uno que la build no trae se salta.
 - [ ] Distribución sin firma: la página de descarga explica el aviso de SmartScreen la primera vez y que con el
       Control inteligente de aplicaciones Windows no deja abrirlo (texto en `docs/INSTALADOR.md`).
 - [ ] Revisión de inspector-visual con capturas reales en Windows 10 y 11, a 100–200 %.
@@ -192,7 +192,22 @@ Fechas reales en `product-details.mozilla.org` (`NEXT_RELEASE_DATE`). **Firefox 
 - [x] Sin códigos de socio en las URL de búsqueda (parche `0400-privacidad/0002`); DuckDuckGo de serie.
 - [ ] Motores: DuckDuckGo, Startpage, Brave Search, Google limpio, Mullvad Leta, Qwant, Ecosia, Wikipedia; solo
       configuración local.
-- [ ] Build multi-idioma (en-US, es-ES, pt-BR, fr, de, it) y el idioma del sistema al primer arranque.
+- [x] Build multi-idioma (en-US, es-ES, pt-BR, fr, de, it) y el idioma del sistema al primer arranque (2026-10-20):
+      traducciones de Firefox de `mozilla-l10n/firefox-l10n` en el commit que fija `l10n-changesets.json` (`upstream.json`
+      › `l10n`, con sha256), `package` con `mach package-multi-locale`, la marca de Aegis en los seis y
+      `intl.locale.requested` vacía (el idioma de Windows). El MSIX declara los seis. Sin «Buscar más idiomas…»: no se
+      descargan idiomas. Los textos visibles de las traducciones que decían «Firefox» con todas las letras (pt-BR, de)
+      y lo que le falta a es-ES en el menú principal los corrige `fetch` (`tools/l10n-cambios.json`).
+- [ ] es-ES incompleto: al commit fijado le faltan 1089 textos de 158.0 (compare-locales; fr, de, it y pt-BR, 0), y
+      al más reciente de firefox-l10n (2026-10-19) todavía 1083: ningún commit lo completa. Se van rellenando a mano solo
+      los que se ven (`tools/l10n-cambios.json` › `anadidos`, hoy los del menú principal); el resto sale en inglés.
+      Revisar con cada versión de Firefox.
+- [ ] Ajustes no cambia de idioma en el momento: al elegir otro en Ajustes › Idiomas, lo de Firefox cambia al
+      instante, pero los textos que pone Aegis con `textContent` (cabecera y grupos de la barra lateral, Escudos, Tor,
+      huella, conexiones…; unas 50 llamadas a `texto()` en `ajustes.sys.mjs` y más en sus módulos) se quedan en el
+      idioma anterior hasta reiniciar o volver a abrir Ajustes. Arreglo: pasarlos a `document.l10n.setAttributes` (con
+      `aegis.ftl` añadido a los recursos del documento) para que Fluent los cambie solo; o, como mínimo, volver a montar
+      la página con `intl:app-locales-changed`. Visto el 2026-10-20 (`out/pruebas/2026-10-20-multi-idioma/`).
 - [~] `policies.json` mínimo y Safe Browsing apagado de serie; DRM (Widevine) y OpenH264 bajo demanda. Hecho:
       Safe Browsing apagado (y sin clave de Google en la build: no se ofrece), Widevine solo si una web pide DRM y el
       usuario lo activa, OpenH264 solo con «Códecs de vídeo» aceptado. Falta: la clave propia de Safe Browsing.
@@ -422,7 +437,11 @@ Antes de empezar: las apps OAuth registradas (ver «Lo que tienes que hacer tú�
       Microsoft como falso positivo (formulario de envío de archivos de Microsoft Security Intelligence).
 - [x] ~~Microsoft Store~~: descartada (identidad con documento oficial y revisión lenta de cada versión). Queda
       `aegis.py msix` y `docs/TIENDA.md` por si algún día cambia; no se usan.
-- [ ] Bienvenida final: idioma y apariencia, modo, conexiones, importar (Chrome, Edge, Brave, Firefox), Escudos y uBO.
+- [~] Bienvenida final: idioma y apariencia, modo, conexiones, importar (Chrome, Edge, Brave, Firefox), Escudos y uBO.
+      2026-10-19: `about:bienvenida` con las preguntas de Aegis Setup (modo, Escudos, buscador y apariencia, mismo
+      aspecto y mismas funciones), solo cuando no hay archivo del instalador (Microsoft Store, zip) y antes de
+      `about:conexiones` (`docs/INSTALADOR.md`, «Sin el instalador: la bienvenida del navegador»). Faltan idioma,
+      importar y uBO.
 - [ ] Repaso completo en Windows 10 y 11: todas las pruebas, los cinco revisores, `NOTICE.md`, licencias.
 - [ ] **1.0 para Windows** publicada en GitHub Releases.
 

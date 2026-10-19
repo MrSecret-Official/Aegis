@@ -1,0 +1,8 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Aegis · acción de la barra de direcciones (acciones.sys.mjs), hacer una captura: las cuatro esquinas del recorte y el objetivo. Rejilla de 24, trazo de 1,5, extremos
+     redondos, context-fill (DISENO §8). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="context-fill" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 8.5v-3a1.5 1.5 0 0 1 1.5 -1.5h3M15.5 4h3a1.5 1.5 0 0 1 1.5 1.5v3M20 15.5v3a1.5 1.5 0 0 1 -1.5 1.5h-3M8.5 20h-3a1.5 1.5 0 0 1 -1.5 -1.5v-3M9.5 12a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0"/>
+</svg>

@@ -24,3 +24,18 @@
 #bottomBox {
   padding: 15px 10px;
 }
+
+/* Restos de Firefox (decisión del usuario, 2026-10-19). Fuera los párrafos de Mozilla: «diseñado por Mozilla, una
+   comunidad global» (mozilla.org y about:credits), «¿Quieres ayudar? Haz un donativo o colabora» (la fundación y
+   mozilla.org/contribute) y, en la línea bajo la versión, «Ayuda de <navegador>» (support.mozilla.org) y «Enviar
+   opiniones» (Mozilla Connect). Se quedan la versión, las actualizaciones, «Licensing Information» y las condiciones y
+   la privacidad, que acerca.sys.mjs lleva a la web de Aegis. */
+#communityDesc,
+#communityExperimentalDesc,
+#contributeDesc,
+#contributeDescReferrals,
+#aboutDialogHelpLink,
+#submit-feedback,
+.text-blurb:has(> #submit-feedback) {
+  display: none !important;
+}

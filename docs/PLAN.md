@@ -36,7 +36,7 @@ Navegador **para todo el mundo** (Windows y Linux primero, macOS más adelante).
   - Fuentes Inter y JetBrains Mono, cargadas solo en la interfaz por `chrome://`, para que las webs no las vean.
   - Iconos de línea con `context-fill`.
 - `overlay/browser/branding/aegis/` y `branding/marca.json`: el nombre se define en un solo sitio, porque hay que comprobar antes la marca «Aegis» en EUIPO y USPTO.
-- `overlay/browser/components/aegis/locales/<idioma>/aegis.ftl` (en-US, es-ES, pt-BR, fr, de, it): Fluent para lo propio, registrado con `L10nFileSource`. Lo de Firefox llega con sus paquetes de idioma (build multi-idioma).
+- `overlay/browser/components/aegis/locales/<idioma>/aegis.ftl` (en-US, es-ES, pt-BR, fr, de, it): Fluent para lo propio, registrado con `L10nFileSource`. Lo de Firefox, en los mismos seis, va dentro de la build (hecho el 2026-10-20: `aegis.py package` multi-idioma con las traducciones de `mozilla-l10n/firefox-l10n` fijadas en `upstream.json` › `l10n`; sin paquetes de idioma de addons.mozilla.org, que traen la marca de Firefox). El idioma es el de Windows.
 - `settings/`:
   - `prefs/*.js`, compiladas como prefs por defecto y bloqueadas solo para la telemetría.
   - `policies.json` mínimo.
@@ -184,6 +184,16 @@ Regla general: Aegis habla con estas empresas **solo** cuando tú inicias sesió
 - **Sugerencias mientras escribes:** apagadas de serie, porque mandan cada tecla a Google. Se pueden activar.
 - **Honestidad:** Google sigue viendo tu IP y lo que buscas. Opción de enviar el contenedor de búsqueda por un proxy, con aviso de que por Tor Google pide muchos captchas.
 
+### Buscar sin ser rastreado en los demás buscadores
+- Lo mismo que con Google en DuckDuckGo (el de serie), Bing, Startpage, Qwant, Ecosia y Wikipedia: `busqueda-limpia.sys.mjs` (pref `aegis.buscadores.limpio`), sin parches.
+- **Sin códigos de socio** (parche `0400-privacidad/0002`) ni los parámetros fijos de la configuración de Firefox (`form=MOZLBR` en Bing, `sourceid=Mozilla-search` en Wikipedia).
+- **Limpieza:** parámetros de seguimiento de la búsqueda (`t`, `perf_id`, `cvid`, `form`, `wprov`…), enlaces de resultados directos (`duckduckgo.com/l/?uddg=`, `bing.com/ck/a`) y pings cortados (`improving.duckduckgo.com`, `bing.com/fd/ls/`, `vf.startpage.com`, `sp.ecosia.org`, `intake-analytics.wikimedia.org`…). Cada regla, de una lista de referencia (EasyPrivacy, AdGuard, uBlock filters, ClearURLs).
+- **DuckDuckGo sin IA:** las búsquedas hechas desde el navegador van a `noai.duckduckgo.com`, su versión sin IA (como su extensión oficial No-AI, sin sus marcas `t=noaiext` y `bext=noai`). En Bing, Qwant y Ecosia no hay un parámetro documentado: no se inventa.
+- **Lo que decide cada persona, en el panel de Escudos** (solo en su buscador): quitar los anuncios de DuckDuckGo (`k1=-1`, apagado de serie: DuckDuckGo pide que sea uso individual) y sumar puntos de Microsoft Rewards en Bing (apagado de serie: su actividad se corta y no se suman puntos).
+- **Sugerencias de Startpage** a su dirección pública (`/osuggestions`): la de la configuración de Firefox no contesta sin código de socio.
+- **Cuando Escudos tenga `$removeparam` y `urlskip`:** la limpieza de parámetros y los enlaces directos pueden pasar a una lista propia de Aegis; aquí quedarían noai, los interruptores del panel y las sugerencias.
+- **Honestidad:** el buscador sigue viendo tu IP y lo que buscas (`docs/PRIVACIDAD.md`).
+
 ### Rendimiento: lo mínimo, con fluidez
 - **Compilación:**
   - `--enable-release`, LTO cruzado y **PGO** (primero en Linux, luego en Windows).
@@ -243,6 +253,7 @@ las claves del registro y el nombre de remoting (abrir Aegis con Firefox abierto
 | `MOZ_APP_NAME` | `firefox` (sin tocar) | — | `firefox.exe`; los lectores de pantalla (NVDA, JAWS) y otros programas reconocen el navegador por ese nombre |
 | `MOZ_APP_ID` | `{ec8030f7-…}` (sin tocar) | — | compatibilidad y actualizaciones de las extensiones de AMO |
 | `MOZ_APP_DISPLAYNAME` | `Aegis` | `overlay/browser/branding/aegis/configure.sh` | nombre visible |
+| `CompanyName` y `LegalTrademarks` de `firefox.exe`, `private_browsing.exe` y `plugin-container.exe` | `Aegis` y vacío | parche `0200-branding/0002` (su `module.ver`; `aegis.py build` rehace el `.rc`) | Propiedades › Detalles del ejecutable en Windows (antes «Mozilla Corporation» y la marca de Firefox). `LegalCopyright` sigue siendo el de Firefox: es la atribución de la MPL. Las DLL (`xul.dll`…) siguen con los valores de serie |
 
 - Vendor y Profile son `project_flag` de Firefox: solo `imply_option` los fija (el mozconfig o el `configure.sh` de
   la marca no valen). Por eso hay un parche, de tres líneas.

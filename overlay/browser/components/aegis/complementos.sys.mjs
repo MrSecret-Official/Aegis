@@ -609,8 +609,9 @@ function montarPanel(win, vista) {
     onWidgetAdded: id => deExtension(id) && repintar(),
     onWidgetMoved: id => deExtension(id) && repintar(),
     onWidgetRemoved: id => deExtension(id) && repintar(),
-    onWidgetOverflow: nodo => nodo.ownerGlobal == win && repintar(),
-    onWidgetUnderflow: nodo => nodo.ownerGlobal == win && repintar(),
+    // ownerDocument.defaultView y no ownerGlobal: desde un módulo el nodo llega sin él y la comparación siempre fallaba.
+    onWidgetOverflow: nodo => nodo.ownerDocument?.defaultView == win && repintar(),
+    onWidgetUnderflow: nodo => nodo.ownerDocument?.defaultView == win && repintar(),
   };
   let escuchando = false;
   const alAbrir = () => {

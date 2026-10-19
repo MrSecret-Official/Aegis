@@ -18,9 +18,11 @@ import { pagina as paginaDeAjustes } from "./ajustes.sys.mjs";
 import { pagina as paginaDeComplementos, ventana as ventanaDeComplementos } from "./complementos.sys.mjs";
 import { AegisIcono } from "./icono.sys.mjs";
 import { AegisGoogle } from "./google.sys.mjs";
+import { AegisBusquedaLimpia } from "./busqueda-limpia.sys.mjs";
 import { AegisEscudos } from "./escudos.sys.mjs";
 import { AegisEscudosAyuda } from "./escudos-ayuda.sys.mjs";
 import { AegisConexiones } from "./conexiones.sys.mjs";
+import { AegisBienvenida } from "./bienvenida.sys.mjs";
 import { AegisHuella } from "./huella.sys.mjs";
 import { AegisBarraLateral } from "./barra-lateral.sys.mjs";
 import { AegisEnfasis } from "./enfasis.sys.mjs";
@@ -56,6 +58,8 @@ const HOJAS_POR_DOCUMENTO = [
   ["about:escudos", ["paginas/comun.css", "paginas/escudos-ayuda.css"]],
   // «Tú decides qué se conecta» (conexiones.sys.mjs): página propia en el proceso padre.
   ["about:conexiones", ["paginas/comun.css", "paginas/conexiones.css"]],
+  // La bienvenida sin el instalador (bienvenida.sys.mjs): página propia en el proceso padre.
+  ["about:bienvenida", ["paginas/comun.css", "paginas/bienvenida.css"]],
 ];
 const IDIOMAS = ["en-US", "es-ES", "pt-BR", "fr", "de", "it"];
 const FTL = "aegis.ftl";
@@ -246,6 +250,65 @@ async function buscadorDeSerieUnaVez() {
   Services.prefs.setBoolPref(MARCA, true);
 }
 
+/**
+ * «Restart (Developer)» y su atajo Ctrl+Alt+R: los crea browser-development-helpers.js en las builds sin
+ * MOZILLA_OFFICIAL (la de Aegis) en el mismo browser-window-delayed-startup, antes que Aegis (va antes en
+ * BrowserComponents.manifest). La fila la oculta interfaz.css; el atajo se desactiva aquí: una <key> con disabled no
+ * responde (GlobalKeyListener). Si aún no existe, se mira otra vez cuando acaba esa ronda de arranque, sin esperar más.
+ *
+ * @param {Window} win
+ */
+function sinReinicioDeDesarrollo(win) {
+  const desactivar = () => win.document.getElementById("key_quickRestart")?.setAttribute("disabled", "true");
+  if (!win.document.getElementById("key_quickRestart")) {
+    win.queueMicrotask(desactivar);
+    return;
+  }
+  desactivar();
+}
+
+/** El buscador de serie ya puesto (inicio()) y si ya se han mirado los de socio en esta sesión (ventana()). */
+let buscadorListo = Promise.resolve();
+let sociosLanzados = false;
+
+/** Buscadores de socio comerciales de la configuración de búsqueda de Mozilla (ids de search-config-v2). */
+const SOCIOS = /^(perplexity|ebay(-[a-z]+)?|mercadoli[bv]re(-[a-z]+)?|leo_ende_de)$/;
+
+/**
+ * Fuera de la lista de buscadores, una sola vez por buscador: los de socio comerciales que la configuración de Mozilla
+ * pone según el idioma (Perplexity, eBay, Mercado Livre y Mercado Libre, LEO). Quedan instalados y ocultos (hidden),
+ * como si el usuario los quitara en Ajustes › Búsqueda: allí puede volver a ponerlos, y lo que haga después se respeta.
+ * Se mira en cada arranque, pero cada id se trata una sola vez (aegis.busqueda.socios_vistos): así también se ocultan
+ * los que aparecen al cambiar el idioma de la app (con la build multi-idioma, p. ej. LEO en alemán). El predeterminado
+ * no se toca nunca.
+ */
+async function sociosOcultosUnaVez() {
+  const VISTOS = "aegis.busqueda.socios_vistos";
+  const ANTIGUA = "aegis.busqueda.socios_ocultos"; // la marca de antes: todos los de entonces ya se trataron
+  const buscador = lazy.SearchService;
+  await buscador.init();
+  const motores = await buscador.getEngines();
+  const socios = motores.filter(m => SOCIOS.test(m.id));
+  if (!Services.prefs.prefHasUserValue(VISTOS) && Services.prefs.getBoolPref(ANTIGUA, false)) {
+    Services.prefs.setStringPref(VISTOS, socios.map(m => m.id).join(","));
+    Services.prefs.clearUserPref(ANTIGUA);
+    return;
+  }
+  const vistos = new Set(Services.prefs.getStringPref(VISTOS, "").split(",").filter(Boolean));
+  const nuevos = socios.filter(m => !vistos.has(m.id));
+  if (!nuevos.length) {
+    return;
+  }
+  const predeterminado = await buscador.getDefault();
+  for (const motor of nuevos) {
+    if (motor.id != predeterminado?.id && !motor.hidden) {
+      motor.hidden = true;
+    }
+    vistos.add(motor.id);
+  }
+  Services.prefs.setStringPref(VISTOS, [...vistos].join(","));
+}
+
 const conHojas = new WeakSet();
 
 /**
@@ -315,6 +378,23 @@ function aplicarHojas(doc) {
       console.error("Aegis: about:conexiones", e);
     }
   }
+  // about:bienvenida: sus tarjetas, pasos y botones los atiende bienvenida.sys.mjs (la página no lleva scripts).
+  if (doc.documentURI.startsWith(AegisBienvenida.DIRECCION)) {
+    try {
+      AegisBienvenida.pagina(doc);
+    } catch (e) {
+      console.error("Aegis: about:bienvenida", e);
+    }
+  }
+  // Diálogo Acerca de: las condiciones y la privacidad de Aegis en lugar de las de Firefox (acerca.sys.mjs). Se importa
+  // aquí: si fallara al cargar, el diálogo sigue funcionando.
+  if (doc.documentURI == "chrome://browser/content/aboutDialog.xhtml") {
+    try {
+      ChromeUtils.importESModule(new URL("acerca.sys.mjs", import.meta.url).href).AegisAcerca.dialogo(doc);
+    } catch (e) {
+      console.error("Aegis: Acerca de", e);
+    }
+  }
 }
 
 /** Cada documento de la interfaz que se crea a partir de ahora recibe las hojas (sin temporizadores: un evento). */
@@ -338,6 +418,25 @@ function registrarPaginas() {
     },
     matches: ["about:home*", "about:logins*", "about:newtab*", "about:welcome*", "about:privatebrowsing*"],
   });
+  // Páginas de error de Firefox (paginas/errores.css: tokens e Inter, sin el violeta ni la ayuda de Mozilla). Las de
+  // red, certificado y Solo HTTPS se cargan en el proceso de la web que ha fallado (y también en marcos): por eso van
+  // en otro actor, marcado como seguro para esos procesos, igual que los de Firefox para estas páginas (NetError,
+  // AboutHttpsOnlyError en ActorManagerParent). Solo pone hojas: no tiene lado en el proceso principal.
+  ChromeUtils.registerWindowActor("AegisErrores", {
+    child: {
+      esModuleURI: new URL("paginas/AegisPaginasChild.sys.mjs", import.meta.url).href,
+      events: { DOMDocElementInserted: {} },
+    },
+    matches: [
+      "about:neterror?*",
+      "about:certerror?*",
+      "about:httpsonlyerror?*",
+      "about:tabcrashed*",
+      "about:restartrequired*",
+    ],
+    allFrames: true,
+    safeForUntrustedWebProcess: true,
+  });
 }
 
 export const AegisArranque = {
@@ -357,6 +456,8 @@ export const AegisArranque = {
       ["tor", () => AegisTor.inicio()],
       // La puerta de las conexiones de fondo, antes de que arranque ningún servicio que las use (y about:conexiones).
       ["conexiones", () => AegisConexiones.inicio()],
+      // about:bienvenida: las preguntas del instalador para quien no pasa por él (Microsoft Store, zip).
+      ["bienvenida", () => AegisBienvenida.inicio()],
       // Antes de que nadie pueda poner la contraseña principal (KDF) o guardar una contraseña.
       ["contraseñas", () => AegisContrasenas.inicio()],
       // Códigos de verificación (autenticador/): observadores y, solo si hay códigos guardados, el autorrelleno. Sin
@@ -376,11 +477,26 @@ export const AegisArranque = {
         "accesos descartados",
         () => ChromeUtils.importESModule(new URL("accesos.sys.mjs", import.meta.url).href).AegisAccesos.inicio(),
       ],
+      // Acciones de la barra de direcciones (modo «Acciones»): las de Aegis en vez de las de Firefox. Solo envuelve la
+      // carga de Firefox, que llega con la primera búsqueda (acciones.sys.mjs). Se importa aquí: si fallara al cargar,
+      // el resto de Aegis sigue funcionando.
+      [
+        "acciones de la barra",
+        () => ChromeUtils.importESModule(new URL("acciones.sys.mjs", import.meta.url).href).AegisAcciones.inicio(),
+      ],
       ["about:escudos", () => AegisEscudosAyuda.registrar()],
       ["protección estricta", aplicarEtpEstrictoUnaVez],
       // Las elecciones de Aegis Setup, solo en el primer arranque de un perfil nuevo (instalador.sys.mjs): después del
-      // nivel de serie (las pisan) y antes del bloqueador y de los modos, que leen lo que dejan puesto.
-      ["elecciones del instalador", () => AegisInstalador.inicio(perfilNuevo)],
+      // nivel de serie (las pisan) y antes del bloqueador y de los modos, que leen lo que dejan puesto. Sin su archivo
+      // (Microsoft Store, zip), las mismas preguntas en la bienvenida del navegador (bienvenida.sys.mjs).
+      [
+        "elecciones del instalador",
+        () => {
+          if (AegisInstalador.inicio(perfilNuevo)) {
+            AegisBienvenida.pedir();
+          }
+        },
+      ],
       // Después del nivel de serie (las listas dependen de él) y antes de que se carguen las pestañas: el bloqueador
       // propio (escudos/listas.sys.mjs) con la instantánea de la build o lo ya descargado. Sin red hasta la bienvenida.
       // Se importa aquí y no arriba: si el bloqueador fallara al cargar, el resto de Aegis sigue funcionando.
@@ -394,6 +510,7 @@ export const AegisArranque = {
       ["botón de modo", crearBotonModo],
       ["icono de la app", () => AegisIcono.inicio()],
       ["Google limpio", () => AegisGoogle.inicio()],
+      ["búsqueda limpia", () => AegisBusquedaLimpia.inicio()],
       ["webs en oscuro", () => AegisWebsOscuro.inicio()],
     ]) {
       try {
@@ -402,11 +519,13 @@ export const AegisArranque = {
         console.error(`Aegis: ${nombre}`, e);
       }
     }
-    buscadorDeSerieUnaVez()
-      .catch(e => console.error("Aegis: buscador de serie", e))
+    buscadorListo = buscadorDeSerieUnaVez().catch(e => console.error("Aegis: buscador de serie", e));
+    buscadorListo
       // Después del de serie: el elegido en Aegis Setup, si lo hay.
       .then(() => AegisInstalador.buscador())
       .catch(e => console.error("Aegis: buscador del instalador", e));
+    // Los buscadores de socio, aparte: miran SearchService en cada arranque, y eso no puede ir antes del primer pintado
+    // (Firefox 158 lo prohíbe: browser_startup.js). Se lanzan desde la primera ventana ya abierta (ventana()).
   },
 
   /**
@@ -420,6 +539,19 @@ export const AegisArranque = {
       return;
     }
     aplicarHojas(win.document);
+    // Una vez por sesión, con la primera ventana (browser-window-delayed-startup: ya después del primer pintado) y
+    // tras el buscador de serie.
+    if (!sociosLanzados) {
+      sociosLanzados = true;
+      buscadorListo
+        .then(() => sociosOcultosUnaVez())
+        .catch(e => console.error("Aegis: buscadores de socio", e));
+    }
+    try {
+      sinReinicioDeDesarrollo(win);
+    } catch (e) {
+      console.error("Aegis: atajo de reinicio", e);
+    }
     try {
       AegisEnfasis.ventana(win);
     } catch (e) {
@@ -468,9 +600,18 @@ export const AegisArranque = {
     } catch (e) {
       console.error("Aegis: tema del instalador", e);
     }
+    // Sin el archivo del instalador, la bienvenida va primero y lleva a about:conexiones al terminar.
+    let porLaBienvenida = false;
+    try {
+      porLaBienvenida = AegisBienvenida.ventana(win);
+    } catch (e) {
+      console.error("Aegis: bienvenida", e);
+    }
     try {
       // Mientras el usuario no elija qué se conecta, about:conexiones sale en la primera ventana de cada arranque.
-      AegisConexiones.ventana(win);
+      if (!porLaBienvenida) {
+        AegisConexiones.ventana(win);
+      }
     } catch (e) {
       console.error("Aegis: conexiones", e);
     }

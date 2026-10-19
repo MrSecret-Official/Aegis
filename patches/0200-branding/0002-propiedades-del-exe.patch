@@ -1,0 +1,65 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Propiedades de los ejecutables de Windows con el fabricante de Aegis
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: en Windows, Propiedades › Detalles de firefox.exe, private_browsing.exe
+y plugin-container.exe decía «Mozilla Corporation» como compañía y, en los dos
+primeros, «Firefox is a Trademark of The Mozilla Foundation.» como marcas
+registradas (su module.ver). Aegis no es de Mozilla y no puede usar su marca
+(docs/GUIA.md). Se añaden líneas al final de cada module.ver, sin tocar las de
+Firefox: config/create_rc.py lee module.ver entrada a entrada en un
+diccionario, así que la última gana. Así el parche no toca la línea del
+copyright, que va en Latin-1 (©) y no cabría en un parche UTF-8. Con ellas:
+- CompanyName: «Aegis»;
+- LegalTrademarks: vacío (sin el valor, create_rc.py pondría «Mozilla»);
+- LegalCopyright sigue siendo el de Firefox («©Firefox and Mozilla Developers;
+  available under the MPL 2 license.»; en plugin-container.exe, el de serie,
+  «License: MPL 2»): es la atribución del código, que la MPL-2.0 pide
+  conservar.
+ipc/app/module.ver va con CRLF en Firefox: las líneas nuevas también.
+Las DLL (xul.dll…) siguen con los valores de serie de create_rc.py.
+El .rc no depende de module.ver en config/rules.mk: aegis.py build borra el
+.rc y el .res de estos ejecutables si module.ver es más reciente.
+No cambia el nombre de los ejecutables, ni MOZ_APP_BASENAME, ni el User-Agent.
+Ver docs/GUIA.md, «Reglas al cambiar cosas».
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0200-branding/0002-propiedades-del-exe.patch
+
+diff --git a/browser/app/module.ver b/browser/app/module.ver
+index 5ef8d2a02a..c20b355a37 100644
+--- a/browser/app/module.ver
++++ b/browser/app/module.ver
+@@ -6,3 +6,6 @@ WIN32_MODULE_TRADEMARKS=Firefox is a Trademark of The Mozilla Foundation.
+ WIN32_MODULE_DESCRIPTION=@MOZ_APP_DISPLAYNAME@
+ WIN32_MODULE_PRODUCTNAME=@MOZ_APP_DISPLAYNAME@
+ WIN32_MODULE_NAME=@MOZ_APP_DISPLAYNAME@
++# Aegis (0200-branding/0002): fabricante propio y sin la marca registrada de Firefox.
++WIN32_MODULE_COMPANYNAME=Aegis
++WIN32_MODULE_TRADEMARKS=
+diff --git a/browser/app/pbproxy/module.ver b/browser/app/pbproxy/module.ver
+index 5ef8d2a02a..c20b355a37 100644
+--- a/browser/app/pbproxy/module.ver
++++ b/browser/app/pbproxy/module.ver
+@@ -6,3 +6,6 @@ WIN32_MODULE_TRADEMARKS=Firefox is a Trademark of The Mozilla Foundation.
+ WIN32_MODULE_DESCRIPTION=@MOZ_APP_DISPLAYNAME@
+ WIN32_MODULE_PRODUCTNAME=@MOZ_APP_DISPLAYNAME@
+ WIN32_MODULE_NAME=@MOZ_APP_DISPLAYNAME@
++# Aegis (0200-branding/0002): fabricante propio y sin la marca registrada de Firefox.
++WIN32_MODULE_COMPANYNAME=Aegis
++WIN32_MODULE_TRADEMARKS=
+diff --git a/ipc/app/module.ver b/ipc/app/module.ver
+index 8abbd23f0e..2492158ea6 100644
+--- a/ipc/app/module.ver
++++ b/ipc/app/module.ver
+@@ -4,3 +4,6 @@ WIN32_MODULE_PRODUCTVERSION_STRING=@MOZ_APP_VERSION@
+ WIN32_MODULE_DESCRIPTION=Plugin Container for @MOZ_APP_DISPLAYNAME@
+ WIN32_MODULE_PRODUCTNAME=@MOZ_APP_DISPLAYNAME@
+ WIN32_MODULE_NAME=@MOZ_APP_DISPLAYNAME@
++# Aegis (0200-branding/0002): fabricante propio y sin la marca registrada de Firefox.
++WIN32_MODULE_COMPANYNAME=Aegis
++WIN32_MODULE_TRADEMARKS=

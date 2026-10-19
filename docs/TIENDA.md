@@ -173,8 +173,10 @@ sin restricciones a internet. La clasificación sale sola y es la misma que la d
 
 ### Paquetes
 Arrastra el `.msix` de `salida/`. Partner Center lo valida al momento: si la identidad no coincide, lo dice aquí.
-- El paquete declara **un solo idioma** (inglés, `en-US`), porque la build de Firefox aún no es multilingüe (la
-  interfaz propia de Aegis sí va en seis idiomas). La Tienda mostrará «English» en los idiomas hasta que lo sea.
+- El paquete declara los **seis idiomas** de la interfaz (`en-US`, `de`, `es-ES`, `fr`, `it`, `pt-BR`): la build es
+  multi-idioma desde el 2026-10-20 (`docs/GUIA.md`, «Construir» › «Idiomas») y `aegis.py msix` los pone en
+  `<Resources>` del `AppxManifest.xml`. Aegis usa el idioma de Windows (`intl.locale.requested=""` en
+  `packaging/msix/distribution.ini`). La ficha de la Tienda se puede escribir en esos idiomas.
 
 ### Ficha de la Tienda (al menos en español y en inglés)
 - **Descripción:** puedes partir del principio de `README.md`. Honesta: Aegis no es Tor Browser y el bloqueador no es
@@ -216,6 +218,8 @@ la Tienda:
 2. **Obtener** → se instala como cualquier app de la Tienda.
 3. Abre Aegis desde el menú Inicio y comprueba:
    - que arranca (si el Control inteligente lo bloqueara, Windows lo diría con un aviso: pásame el mensaje);
+   - que sale la bienvenida (`about:bienvenida`: modo, Escudos, buscador y apariencia, como en Aegis Setup) y, al
+     terminarla, `about:conexiones` (`docs/INSTALADOR.md`, «Sin el instalador: la bienvenida del navegador»);
    - que «Acerca de» **no** busca actualizaciones (ver «Actualizaciones» más abajo);
    - que en `about:conexiones` todo está como en la versión de GitHub.
 4. Si va bien, haz el envío público (paso 8).
@@ -229,6 +233,7 @@ la Tienda:
 | Cuándo llega una versión | cuando Microsoft certifica el envío (de 1 a 3 días después) | en cuanto se publica |
 | Control inteligente de aplicaciones | pasa (firma de Microsoft) | puede bloquearlo (sin firma Authenticode) |
 | Perfil | dentro de la carpeta de la app (ver abajo) | `%APPDATA%\Aegis` y `%LOCALAPPDATA%\Aegis` |
+| Primeras preguntas (modo, Escudos, buscador, apariencia) | la bienvenida del navegador (`about:bienvenida`) | el asistente de Aegis Setup; con el zip, la bienvenida |
 
 - **Dentro del paquete de la Tienda, el updater de Aegis se apaga solo.** Es lo que hace Firefox: al arrancar con
   identidad de paquete de Windows, `Services.sysinfo` dice `isPackagedApp` y:
@@ -325,7 +330,7 @@ El paquete de pruebas tiene otro editor que el de la Tienda: Windows los trata c
 4. Recomendado antes del envío público:
    - el arreglo del botón «Buscar actualizaciones» en «Acerca de» dentro del paquete (ver «Actualizaciones»);
    - que `verificar.py` vuelva a avisar si la identidad sigue en `PENDIENTE` (desde el 2026-10-13 no lo hace);
-   - la build multilingüe, para que el paquete no declare solo inglés;
+   - ~~la build multilingüe, para que el paquete no declare solo inglés~~ (hecho el 2026-10-20: declara los seis);
    - decir en la ficha que desinstalar borra los datos del perfil que guarda la versión de la Tienda.
 5. La web de privacidad publicada en `https://mrsecret-official.github.io/Aegis/privacidad/` (la ficha la enlaza;
    ver `web/LEEME.md`).
@@ -335,7 +340,8 @@ El paquete de pruebas tiene otro editor que el de la Tienda: Windows los trata c
 `aegis.py msix` (en `tools/aegis.py`, sección «Microsoft Store (MSIX)»):
 
 1. Comprueba la identidad de `marca.json`, la fase 0, la marca, que el zip de `package` no lleve el cargador de
-   desarrollo y que los assets del árbol sean los de `overlay/`.
+   desarrollo y sea el multi-idioma (los seis idiomas y la marca de Aegis en todos), y que los assets del árbol sean
+   los de `overlay/`.
 2. Llama a **`mach repackage msix`** de Firefox (`python/mozbuild/mozbuild/repackaging/msix.py`) con `--input <zip>`,
    `--channel unofficial`, `--arch x86_64`, `--identity-name Aegis`, `--vendor Aegis`, `--publisher`,
    `--publisher-display-name` y `--version`. mach prepara la carpeta del paquete: el navegador en
@@ -349,6 +355,9 @@ El paquete de pruebas tiene otro editor que el de la Tienda: Windows los trata c
    - `BackgroundColor` = la loseta del icono (`#0a0a0b`, leída de `branding/icono/aegis.svg`), no el violeta de
      Firefox;
    - el alias de la línea de órdenes, `aegis.exe` en lugar de `firefox.exe` (chocaría con el Firefox de la Tienda);
+   - los idiomas (`<Resources>`): los seis de la build. mach solo declararía en-US y los de los paquetes de idioma de
+     `distribution/`, que Aegis no usa (los de addons.mozilla.org traen la marca de Firefox); cada uno se comprueba
+     contra la lista de idiomas que admite Windows (`msix-all-locales` de Firefox);
    - **fuera** la tarea en segundo plano con temporizador (`windows.backgroundTasks`, la del agente del navegador
      predeterminado, que Aegis no compila: `--disable-default-browser-agent`) y su servidor COM
      (`msixcomserver.dll`, que el zip no lleva). Nada de trabajo en reposo (docs/GUIA.md, principio 4).
@@ -358,8 +367,8 @@ El paquete de pruebas tiene otro editor que el de la Tienda: Windows los trata c
 4. Cambia `distribution/distribution.ini` (el de Firefox dice `mozilla-MSIX` y pone un texto de Mozilla en «Acerca
    de») por `packaging/msix/distribution.ini` (`aegis-msix`, sin texto; idioma de Windows, como en Firefox).
 5. Empaqueta con **makemsix** (`makemsix pack`), firma si es `--firma-local` (`makemsix sign`) y comprueba el
-   resultado: archivos del formato, identidad, versión, ejecutable, los 11 assets idénticos a los de `overlay/`, la
-   distribución y, al final, `makemsix unpack` lo desempaqueta entero comprobando el hash de cada archivo (y la firma).
+   resultado: archivos del formato, identidad, versión, idiomas, ejecutable, los 11 assets idénticos a los de
+   `overlay/`, la distribución y, al final, `makemsix unpack` lo desempaqueta entero comprobando el hash de cada archivo (y la firma).
    Todo en un `.parcial` que solo se renombra si pasa; la carpeta preparada (unos 400 MB) se borra.
 
 **Firefox 158 (2026-10-17):** la plantilla `AppxManifest.xml.in`, su `distribution.ini`, `priconfig.xml` y

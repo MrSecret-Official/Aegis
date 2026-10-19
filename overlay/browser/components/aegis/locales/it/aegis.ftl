@@ -442,6 +442,15 @@ aegis-escudos-oscuro-propio = Questo sito ha già una modalità scura
 aegis-escudos-oscuro-claro = Solo quando { -brand-short-name } è scuro
 aegis-escudos-oscuro-excepcion = Non viene scurito su questo sito
 
+## Pannello degli Scudi: impostazione del motore di ricerca (busqueda-limpia.sys.mjs). Solo su DuckDuckGo o Bing.
+
+aegis-escudos-ddg-anuncios = Togli la pubblicità di DuckDuckGo
+aegis-escudos-ddg-anuncios-apagado = Disattivato: gli Scudi nascondono quella che riconoscono
+aegis-escudos-ddg-anuncios-activo = Usa l’impostazione di DuckDuckGo per non mostrarla
+aegis-escudos-bing-rewards = Accumula punti Microsoft Rewards
+aegis-escudos-bing-rewards-apagado = Disattivato: la tua attività non viene inviata e le ricerche non danno punti
+aegis-escudos-bing-rewards-activo = Bing riceve la tua attività di ricerca per aggiungere punti
+
 ## Impronta digitale (Impostazioni › Privacy, pannello degli Scudi e avviso di Cassaforte)
 
 aegis-huella-titulo = Impronta digitale
@@ -869,3 +878,102 @@ aegis-recibir-borrar-texto = Non serve più e, con il file e il codice, chiunque
 aegis-recibir-borrar = Elimina il file
 aegis-recibir-borrado = File eliminato.
 aegis-recibir-borrar-error = Impossibile eliminarlo. Eliminalo dalla sua cartella.
+
+## about:bienvenida (paginas/bienvenida.html; bienvenida.sys.mjs): las preguntas de Aegis Setup dentro del navegador,
+## para quien no pasa por el instalador (Microsoft Store, zip). Sale en el primer arranque, antes de «Tú decides qué se
+## conecta». Misma redacción que el asistente del instalador (packaging/instalador/traducciones/): si cambia uno, cambia
+## el otro. Los nombres de los buscadores (DuckDuckGo, Startpage, Brave Search, Google) y «Workflow» no se traducen.
+
+aegis-bienvenida-pestana = Benvenuto
+aegis-bienvenida-nombre = { -brand-short-name }
+aegis-bienvenida-lema = Un browser privato, pulito e veloce
+# Etiqueta de sección del resumen (se muestra en mayúsculas).
+aegis-bienvenida-resumen = La tua configurazione
+aegis-bienvenida-fila-modo = Modalità
+aegis-bienvenida-fila-escudos = Scudi
+aegis-bienvenida-fila-buscador = Motore di ricerca
+aegis-bienvenida-fila-apariencia = Aspetto
+aegis-bienvenida-resumen-nota = Puoi cambiare tutto quando vuoi nelle Impostazioni.
+aegis-bienvenida-modo-titulo = Come vuoi navigare?
+aegis-bienvenida-modo-subtitulo = Scegli una modalità. Puoi cambiarla quando vuoi nelle Impostazioni.
+aegis-bienvenida-modo-estandar = Standard
+aegis-bienvenida-modo-estandar-detalle = Schede in alto, come sempre
+aegis-bienvenida-modo-workflow = Workflow
+aegis-bienvenida-modo-workflow-detalle = Schede verticali e spazi
+aegis-bienvenida-modo-nota-estandar = Una barra pulita, con le schede in alto e una barra dei segnalibri discreta.
+aegis-bienvenida-modo-nota-workflow = Schede di lato e spazi per separare lavoro e tempo libero.
+aegis-bienvenida-escudos-titulo = Quanto vuoi bloccare?
+aegis-bienvenida-escudos-subtitulo = Gli Scudi bloccano pubblicità e traccianti fin dal primo minuto.
+aegis-bienvenida-escudos-normal = Normale
+aegis-bienvenida-escudos-normal-detalle = Blocca i traccianti noti e la pubblicità. Quasi nessun sito si rompe.
+aegis-bienvenida-escudos-estricto = Rigoroso
+aegis-bienvenida-escudos-estricto-detalle = Blocca anche pulsanti social e video che tracciano. Alcuni siti potrebbero apparire incompleti.
+aegis-bienvenida-escudos-estricto-mas = Rigoroso+
+# Nombre que lee el lector de pantalla para la tarjeta de Estricto+ (la insignia es parte del dibujo).
+aegis-bienvenida-escudos-estricto-mas-accesible =
+    .aria-label = Rigoroso+ (consigliato)
+aegis-bienvenida-escudos-estricto-mas-detalle = Tutto ciò che fa Rigoroso più una lista di tracciamento più ampia. Usa un po’ più di memoria.
+# Insignia sobre la tarjeta de Estricto+ (se muestra en mayúsculas).
+aegis-bienvenida-recomendado = Consigliato
+aegis-bienvenida-escudos-nota = Puoi cambiarlo quando vuoi in Impostazioni › Scudi.
+aegis-bienvenida-buscador-titulo = Dove vuoi cercare?
+aegis-bienvenida-buscador-subtitulo = Il motore di ricerca della barra degli indirizzi. Puoi cambiarlo quando vuoi nelle Impostazioni.
+aegis-bienvenida-buscador-duckduckgo = Non conserva quello che cerchi.
+aegis-bienvenida-buscador-startpage = I risultati di Google senza che Google sappia chi sei.
+aegis-bienvenida-buscador-brave = Un indice proprio e indipendente, senza profili.
+aegis-bienvenida-buscador-google = I soliti risultati. Google conserva quello che cerchi.
+aegis-bienvenida-apariencia-titulo = Scegli l’aspetto
+aegis-bienvenida-apariencia-subtitulo = { -brand-short-name } resta in bianco e nero: il colore lo mette il web.
+aegis-bienvenida-apariencia-oscuro = Scuro
+aegis-bienvenida-apariencia-oscuro-detalle = Nero e grigi
+aegis-bienvenida-apariencia-claro = Chiaro
+aegis-bienvenida-apariencia-claro-detalle = Bianco e grigi
+aegis-bienvenida-apariencia-auto = Automatico
+# Automático sigue el tema del sistema: en Windows, como en el instalador.
+aegis-bienvenida-apariencia-auto-detalle =
+    { PLATFORM() ->
+        [windows] Come Windows
+       *[other] Come il sistema
+    }
+aegis-bienvenida-apariencia-nota = Puoi cambiarlo quando vuoi in Impostazioni › Aspetto.
+# Pie: los pasos. $n es el paso en el que se está y $total, cuántos hay (5).
+aegis-bienvenida-paso = Passo { $n } di { $total }
+aegis-bienvenida-atras = Indietro
+aegis-bienvenida-continuar = Continua
+# Primer paso: ver y cambiar cada pregunta.
+aegis-bienvenida-personalizar = Personalizza
+# Primer paso, sin haber cambiado nada: aplica lo recomendado y sigue (se salta las preguntas).
+aegis-bienvenida-usar-recomendado = Usa le impostazioni consigliate
+# Primer paso, después de cambiar algo: aplica lo elegido y sigue.
+aegis-bienvenida-usar-eleccion = Usa queste impostazioni
+
+## Barra de direcciones: modo «Acciones» (escribir «>» o elegir Acciones en el menú de la lupa) y la fila de botones
+## que sale al escribir una palabra clave (acciones.sys.mjs). Cada acción es un botón pequeño: textos cortos, como los
+## de las acciones del navegador («Ver descargas»). Los «-claves» son las palabras que la buscan: separadas por comas,
+## en minúsculas y en el idioma de la interfaz (Aegis las busca también sin tildes). No se traducen palabra por
+## palabra: las que usaría alguien de ese idioma para encontrar la acción.
+
+aegis-accion-escudos = Apri il pannello degli Scudi
+aegis-accion-escudos-claves = scudi, blocco, blocco pubblicità, pubblicità, traccianti, pannello degli scudi
+aegis-accion-escudos-bajar = Abbassa gli Scudi su questo sito
+aegis-accion-escudos-subir = Attiva gli Scudi su questo sito
+aegis-accion-escudos-sitio-claves = scudi, abbassa scudi, attiva scudi, disattiva blocco, consenti pubblicità
+aegis-accion-escudos-ajustes = Impostazioni degli Scudi
+aegis-accion-escudos-ajustes-claves = scudi, impostazioni degli scudi, eccezioni, liste di filtri, filtri
+aegis-accion-conexiones = Scegli cosa si connette
+aegis-accion-conexiones-claves = connessioni, connettere, rete, privacy
+aegis-accion-modo-workflow = Passa alla modalità Workflow
+aegis-accion-modo-estandar = Passa alla modalità Standard
+aegis-accion-modo-claves = modalità, workflow, standard, schede verticali
+aegis-accion-apariencia = Aspetto e colore d’accento
+aegis-accion-apariencia-claves = aspetto, colore d’accento, accento, colore, tema scuro, tema chiaro
+aegis-accion-tor = Nuova finestra anonima con Tor
+aegis-accion-tor-claves = tor, finestra tor, anonimo, onion
+aegis-accion-contrasenas = Apri le password
+aegis-accion-contrasenas-claves = password, credenziali, account, codici di verifica
+aegis-accion-pasar = Trasferisci le password a un altro { -brand-short-name }
+aegis-accion-pasar-claves = trasferisci password, esporta password, trasferimento, password
+aegis-accion-recibir = Ricevi le password da un altro { -brand-short-name }
+aegis-accion-recibir-claves = ricevi password, trasferimento, codice di trasferimento, password
+aegis-accion-importar = Importa dati da un altro browser
+aegis-accion-importar-claves = importa, importa dati, chrome, edge, brave, migra

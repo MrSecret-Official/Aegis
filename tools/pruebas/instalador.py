@@ -228,6 +228,11 @@ const esperado = arguments[0];
     tema_activo: temas.find(t => t.isActive)?.id,
     idiomas_pedidos: Services.locale.requestedLocales,
     idioma_app: Services.locale.appLocaleAsBCP47,
+    // El idioma de la build que corresponde al de Windows: el que usa Aegis con intl.locale.requested vacía.
+    idioma_windows: Services.locale.negotiateLanguages(
+      Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).systemLocales,
+      Services.locale.availableLocales, "", Services.locale.langNegStrategyFiltering)[0]
+      ?? Services.locale.defaultLocale,
     idiomas_disponibles: Services.locale.availableLocales,
     texto_aegis: l10n.formatValueSync("aegis-escudos-nivel-estricto-mas"),
     texto_firefox: new Localization(["browser/browser.ftl"], true).formatValueSync("browser-main-window-default-title")
@@ -376,11 +381,11 @@ def navegador(args):
             "prefs.aegis.instalador.aplicado": True, "prefs.browser.contentblocking.category": "strict",
             "prefs.aegis.escudos.estricto_mas": True, "prefs.aegis.modo": "estandar",
             "prefs.sidebar.verticalTabs": False, "buscador": "DuckDuckGo", "tema_activo": "default-theme@mozilla.org",
-            # El idioma todavía no se aplica (instalador.sys.mjs): la aplicación sigue en inglés.
-            "prefs.intl.locale.requested": None, "idioma_app": "en-US",
+            # El idioma del instalador es el de Windows: no se toca y la aplicación sigue a Windows (pref vacía).
+            "prefs.intl.locale.requested": "", "idioma_app": ea.get("idioma_windows"),
         })
 
-        # B · otras elecciones: Workflow, Normal, Startpage, oscuro y alemán (que todavía no se aplica).
+        # B · otras elecciones: Workflow, Normal, Startpage, oscuro y alemán (la build lo trae: la interfaz en alemán).
         otras = {**original, "modo": "workflow", "escudos": "normal", "buscador": "startpage",
                  "apariencia": "oscuro", "idioma": "de-DE"}
         escribir_elecciones(otras)
@@ -412,14 +417,14 @@ def navegador(args):
         fallos += comprobar("B", eb, {
             "prefs.aegis.instalador.aplicado": True, "prefs.browser.contentblocking.category": "standard",
             "prefs.aegis.modo": "workflow", "prefs.sidebar.verticalTabs": True, "buscador": "Startpage",
-            "tema_activo": "firefox-compact-dark@mozilla.org", "idioma_app": "en-US",
+            "tema_activo": "firefox-compact-dark@mozilla.org", "idioma_app": "de",
         })
         fallos += comprobar("B2", eb2, {
             "prefs.browser.contentblocking.category": "strict", "prefs.aegis.escudos.estricto_mas": False,
             "buscador": "Startpage", "tema_activo": "firefox-compact-dark@mozilla.org",
         })
 
-        # C · Estricto, Brave Search, claro y otro idioma (japonés).
+        # C · Estricto, Brave Search, claro y un idioma que la build no trae (japonés): se salta y sigue a Windows.
         brave = {**original, "modo": "estandar", "escudos": "estricto", "buscador": "brave", "apariencia": "claro",
                  "idioma": "ja-JP"}
         escribir_elecciones(brave)
@@ -431,7 +436,7 @@ def navegador(args):
         fallos += comprobar("C", ec, {
             "prefs.browser.contentblocking.category": "strict", "prefs.aegis.escudos.estricto_mas": False,
             "buscador": "Brave Search", "tema_activo": "firefox-compact-light@mozilla.org",
-            "prefs.intl.locale.requested": None, "idioma_app": "en-US",
+            "prefs.intl.locale.requested": "", "idioma_app": ec.get("idioma_windows"),
         })
 
         # D · perfil que ya había arrancado Aegis antes: no se aplica nada (solo la marca).

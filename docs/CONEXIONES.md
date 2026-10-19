@@ -7,7 +7,10 @@ aquí es un fallo (principio 1 de `docs/GUIA.md`). Lo revisa `auditor-privacidad
 
 Con un perfil nuevo, Aegis **no se conecta a nada** hasta que el usuario elige en `about:conexiones` («Tú decides qué
 se conecta»; `overlay/browser/components/aegis/conexiones.sys.mjs`). La página se abre sola en la primera ventana de
-cada arranque mientras no haya decidido, y se puede volver a ella desde Ajustes › Privacidad › Conexiones. Tiene un
+cada arranque mientras no haya decidido (sin el archivo de Aegis Setup, al terminar la bienvenida `about:bienvenida`,
+que no conecta nada: `docs/INSTALADOR.md`), y se puede volver a ella desde Ajustes › Privacidad › Conexiones. Si la
+bienvenida se cierra sin terminar, en ese arranque no sale `about:conexiones` y todo sigue cerrado: en el siguiente
+arranque vuelve a salir la bienvenida, que lleva a ella. Tiene un
 interruptor por grupo: «Aceptar» aplica lo elegido **al momento, sin reiniciar**, y pone en marcha ya lo que se acaba
 de encender (una comprobación de actualizaciones, un sondeo de Remote Settings y la comprobación de los códecs);
 «Ahora no» (o, ya aceptado, «No permitir ninguna») lo deja todo cerrado. Abrir una web que el usuario escribe o pulsa
@@ -68,15 +71,14 @@ reproducirse después: está abierto. Detalle en `docs/PLANNING.md` (fase 1).
 |---|---|---|---|---|
 | Comprobación de actualizaciones: `github.com/<repo>/releases/latest/download/update-<objetivo>-release.xml`, que redirige a `github.com/<repo>/releases/download/<tag>/…` y al CDN de archivos de GitHub (`release-assets.githubusercontent.com`; confirmar con una captura) | **Nunca antes de aceptar el grupo `actualizaciones`.** Al aceptarlo, una comprobación en ese momento; con un perfil nuevo, otra unos 30 s después del siguiente arranque (el temporizador de Firefox); después, cada 24 h con el navegador abierto (`app.update.interval`), cada vez que se abre Acerca de o Ajustes (con `?force=1`, como en Firefox), y siempre al pulsar «Buscar actualizaciones» (también antes de aceptar: lo pide el usuario) | La IP, el objetivo (`WINNT_x86_64-msvc-x64`, `Linux_x86_64-gcc3`…; en Windows incluye la arquitectura real de la CPU, x64 o ARM64, aunque se ejecute la build x64 en emulación) y el User-Agent (sistema y versión mayor, como cualquier web). **Sin cookies** (`mozAnon`) y con un `Accept-Language` fijo (`en-US,en;q=0.5`), igual en todos los Aegis y en todos los saltos de la redirección (parche `0400-privacidad/0001`) | Saber si hay versión nueva | `about:conexiones` › «Actualizaciones de Aegis» (`app.update.auto` solo decide si se descarga sola o pregunta); en paquetes de distribución, desactivada |
 | Descarga del MAR: `github.com/<repo>/releases/download/v<versión>/…mar` (redirige al CDN de archivos de GitHub) | Solo si hay versión nueva | La IP, el User-Agent y el `Accept-Language` del navegador, es decir, **el idioma del usuario** (p. ej. `es-ES,es;q=0.9,…`; quitarlo exigiría tocar C++ de Necko). Sin `?backgroundTaskMode` ni `X-BackgroundTaskMode` (parche `0400-privacidad/0004`). **Sin cookies** (`LOAD_ANONYMOUS`). En Windows también la hace el navegador, no BITS, el servicio de transferencias de Windows que Firefox usa de serie y que seguiría descargando con Aegis cerrado y fuera de su red (`app.update.BITS.enabled` en false, `60-actualizaciones.js`) | Actualizar | Igual que la anterior |
-| Remote Settings: `firefox.settings.services.mozilla.com/v1/buckets/monitor/collections/changes/changeset` (la lista de cambios de todas las colecciones) y el `changeset` de cada colección permitida que haya cambiado; adjuntos de `firefox-settings-attachments.cdn.mozilla.net` (filtros de CRLite, certificados intermedios, filtro de bloqueo de complementos, listas de rastreo); la cadena de certificados con la que se comprueba la firma de cada colección, de `content-signature-2.cdn.mozilla.net` | Solo con `seguridad` o `listas` aceptados. Al aceptar, un sondeo; después, uno cada 24 h (`services.settings.poll_interval`) y, con `push` aceptado, también al arrancar y cuando el servidor avisa de un cambio. Con `listas`, el clasificador pide sus listas cada 6 h, pero eso lee la copia local (a la red solo va un adjunto nuevo) | La IP, el User-Agent y, en la URL, marcas de tiempo (`_expected`, `_since`) iguales para todos. **Sin cookies** (`mozAnon`) y con un `Accept-Language` fijo (`en-US,en;q=0.5`), igual en todos los Aegis (parche `0400-privacidad/0003`) | Revocaciones de certificados, complementos peligrosos y listas de rastreo al día | `about:conexiones` › «Listas de seguridad» y «Listas de protección» |
+| Remote Settings: `firefox.settings.services.mozilla.com/v2/buckets/monitor/collections/changes/changeset` (la lista de cambios de todas las colecciones) y el `changeset` de cada colección permitida que haya cambiado; adjuntos de `firefox-settings-attachments.cdn.mozilla.net` (filtros de CRLite, certificados intermedios, filtro de bloqueo de complementos, listas de rastreo); la cadena de certificados con la que se comprueba la firma de cada colección, de `content-signature-2.cdn.mozilla.net` | Solo con `seguridad` o `listas` aceptados. Al aceptar, un sondeo; después, uno cada 24 h (`services.settings.poll_interval`) y, con `push` aceptado, también al arrancar y cuando el servidor avisa de un cambio. Con `listas`, el clasificador pide sus listas cada 6 h, pero eso lee la copia local (a la red solo va un adjunto nuevo) | La IP, el User-Agent y, en la URL, marcas de tiempo (`_expected`, `_since`) iguales para todos. **Sin cookies** (`mozAnon`) y con un `Accept-Language` fijo (`en-US,en;q=0.5`), igual en todos los Aegis (parche `0400-privacidad/0003`) | Revocaciones de certificados, complementos peligrosos y listas de rastreo al día | `about:conexiones` › «Listas de seguridad» y «Listas de protección» |
 | Códecs (GMP): `aus5.mozilla.org/update/3/GMP/…/update.xml` y, si hay versión nueva de OpenH264, su descarga de `ciscobinary.openh264.org`. Con el DRM activado por el usuario, también `update.googleapis.com` (versión de Widevine) y la descarga de Widevine de los servidores de Google (`*.gvt1.com`) | Solo con `codecs` aceptado (o con el DRM activado en el aviso de una web). Al aceptar, una comprobación; después, como mucho una vez al día, al arrancar | La URL de aus5 lleva la versión, el identificador de la build, el objetivo, el idioma, el canal, la versión de Windows y la distribución (`default/default` en el instalador y el zip; `aegis-msix/1.0` en el paquete de la Microsoft Store, así que Mozilla sabe que es el Aegis de la Tienda; igual en todos los equipos). La IP y el User-Agent. **Sin cookies** (`mozAnon`) | Videollamadas con H.264 (OpenH264) y vídeo con DRM (Widevine) | `about:conexiones` › «Códecs de vídeo»; el DRM, en Ajustes › General |
 | Notificaciones push: WebSocket con `push.services.mozilla.com` | Solo con `push` aceptado (apagado de serie): conexión abierta mientras el navegador está abierto | La IP, el User-Agent y el `Accept-Language` del usuario (en el saludo del WebSocket: fijarlo exigiría tocar C++ de Necko), y un identificador del navegador (UAID) que asigna el servidor; las suscripciones de las webs a las que el usuario da permiso | Que las webs avisen aunque no estén abiertas; Remote Settings se entera antes de los cambios | `about:conexiones` › «Notificaciones de webs» |
 | Traducción de páginas: los modelos de un idioma (adjuntos de `firefox-settings-attachments.cdn.mozilla.net`) y la lista de idiomas y el motor (Remote Settings, como la fila de arriba) | Solo con `traduccion` aceptado. Los modelos, solo cuando el usuario pulsa «Traducir» o descarga un idioma en Ajustes; la lista de idiomas, en el sondeo diario de Remote Settings o la primera vez que se ofrece traducir una página | Como Remote Settings (sin cookies, idioma fijo). Por los modelos que pide, el servidor sabe entre qué idiomas traduce el usuario; el texto de la página nunca sale del equipo | Traducir en el equipo | `about:conexiones` › «Traducción de páginas» |
 | Safe Browsing de Google: `safebrowsing.googleapis.com` | **No disponible:** sin clave de Google en la build, Firefox no descarga sus listas aunque se active | — | — | — |
 | Comprobación de revocación de certificados (OCSP): al servidor OCSP de la autoridad que emitió el certificado de la web (el que dice el propio certificado; p. ej. `r10.o.lencr.org`, `ocsp.digicert.com`), **a menudo por http sin cifrar** | Al abrir una web https cuyo certificado no cubre CRLite: siempre **antes de aceptar** y siempre con «Listas de seguridad» apagado (sin CRLite no hay otra forma de saberlo; `security.OCSP.enabled` = 1, el de Firefox). Con CRLite al día (`security.pki.crlite_mode` = 2), solo para los certificados EV (de validación extendida). Es parte de la navegación que pide el usuario, no una conexión de fondo, pero la hace el navegador y no la web | La IP y qué certificado se comprueba, es decir, a qué web se entra (por http, también a la vista de la red). Sin cookies | Saber si el certificado de la web está revocado | Aceptar «Listas de seguridad» (CRLite) las reduce; apagarlas del todo (`security.OCSP.enabled` = 0) quita esa comprobación y no se recomienda |
-| Sugerencias de búsqueda, al buscador elegido (DuckDuckGo: `ac.duckduckgo.com`; Google: `www.google.com/complete/search?client=firefox&channel=fen`, parámetros fijos que el formato de respuesta necesita y que no identifican a la persona) | **Apagadas de serie** (`settings/prefs/59-google.js`). Si el usuario las activa, mientras escribe en la barra de direcciones | Lo que se escribe, la IP y el User-Agent | Proponer búsquedas | Ajustes › Búsqueda › «Mostrar sugerencias de búsqueda» (`browser.search.suggest.enabled`) |
-
-| Logo de un acceso directo: la dirección del acceso (por https) y los iconos que declara su página (`<link rel="icon">` o `apple-touch-icon`, que pueden estar en otro dominio, como `github.githubassets.com`), del más grande al más pequeño, y al final `/favicon.ico` del sitio. Se queda con el primero sin fondo opaco (el `apple-touch-icon` suele tenerlo) y solo pide el siguiente mientras no lo encuentra; si ninguno vale, usa el primero. Como mucho la página y cuatro iconos, con un tope de 15 s (`logos.sys.mjs`) | **Solo al pulsar «Usar el logo de la web»** en el diálogo de añadir o editar un acceso de la nueva pestaña, y solo si el icono no está ya guardado en el equipo (Places). Nada automático | La IP, el User-Agent y el `Accept-Language` de serie, como cualquier visita a ese sitio. **Sin cookies** (`credentials: "omit"`), **sin Referer** y sin guardar nada en la caché (`no-store`). Solo https mientras Solo HTTPS esté activado (de serie): sin él, una redirección del sitio a http se seguiría | Poner el logo de la web como imagen del acceso | No pulsar el botón |
+| Sugerencias de búsqueda, al buscador elegido (DuckDuckGo: `ac.duckduckgo.com`; Google: `www.google.com/complete/search?client=firefox&channel=fen`, parámetros fijos que el formato de respuesta necesita y que no identifican a la persona; Bing: `www.bing.com/osjson.aspx`, sin `form=OSDJAS`; Startpage: `www.startpage.com/osuggestions`, la de su propio OpenSearch, porque la de la configuración de Firefox no contesta sin código de socio; detalle en «Otros buscadores») | **Apagadas de serie** (`settings/prefs/59-google.js`). Si el usuario las activa, mientras escribe en la barra de direcciones | Lo que se escribe, la IP y el User-Agent | Proponer búsquedas | Ajustes › Búsqueda › «Mostrar sugerencias de búsqueda» (`browser.search.suggest.enabled`) |
+| Logo de un acceso directo: la dirección del acceso (por https) y los iconos que declara su página (`<link rel="icon">` o `apple-touch-icon`, que pueden estar en otro dominio, como `github.githubassets.com`), del más grande al más pequeño, y al final `/favicon.ico` del sitio. Se queda con el primero de 32 px o más que no tenga fondo blanco o gris muy claro (el `apple-touch-icon` a veces lo tiene; uno oscuro o del color de la marca vale; uno transparente de menos de 32 px no detiene la búsqueda) y solo pide el siguiente mientras no lo encuentra; si ninguno vale, usa el primero. Como mucho la página y cuatro iconos, con un tope de 15 s (`logos.sys.mjs`) | **Solo al pulsar «Usar el logo de la web»** en el diálogo de añadir o editar un acceso de la nueva pestaña, y solo si el icono no está ya guardado en el equipo (Places). Nada automático | La IP, el User-Agent y el `Accept-Language` de serie, como cualquier visita a ese sitio. **Sin cookies** (`credentials: "omit"`), **sin Referer** y sin guardar nada en la caché (`no-store`). Solo https mientras Solo HTTPS esté activado (de serie): sin él, una redirección del sitio a http se seguiría | Poner el logo de la web como imagen del acceso | No pulsar el botón |
 
 - Los accesos que salen con la inicial aunque el favicon del sitio esté guardado para otra dirección equivalente (otro
   esquema, con o sin «www», redirecciones) lo enseñan sin ninguna conexión: solo se lee Places (`logos.sys.mjs`).
@@ -90,6 +92,8 @@ reproducirse después: está abierto. Detalle en `docs/PLANNING.md` (fase 1).
 |---|---|---|---|---|
 | Actualizaciones de complementos: `versioncheck-bg.addons.mozilla.org/update/VersionCheck.php` (`extensions.update.background.url`, la de Firefox; a mano desde `about:addons`, `versioncheck.addons.mozilla.org`, `extensions.update.url`) o, si el complemento declara su propio `update_url` (los que se distribuyen fuera de AMO, `XPIInstall.sys.mjs`), el servidor de su autor | **Solo si el usuario ha instalado algún complemento** (los integrados no se actualizan por aquí). Una vez al día (`extensions.update.interval`), con el temporizador compartido; no pasa por la puerta de `about:conexiones` | La IP, el User-Agent y, en la URL, el id y la versión de cada complemento, su estado, el id y la versión del navegador, el sistema (`appOS`, `appABI`) y el idioma. La lista de complementos puede distinguir al usuario. Con un `update_url` propio, ese servidor recibe la IP, el User-Agent y lo que pida su URL | Instalar versiones nuevas (a menudo, correcciones de seguridad) | `extensions.update.enabled` en false (`about:config`). La opción del engranaje de `about:addons` «Update Add-ons Automatically» solo cambia `extensions.update.autoUpdateDefault` (si se instalan solas): la consulta sigue (comprobado en `AddonManager.sys.mjs` de Firefox 158, `backgroundUpdateCheck` mira `updateEnabled`) |
 | Ubicación: el servicio de ubicación de Windows (`geo.provider.ms-windows-location`), que decide Windows cómo calcula (puede consultar a Microsoft) | Solo si una web la pide y el usuario la permite | Lo que Windows envíe según sus ajustes de ubicación; Aegis no manda nada a la red | Dar la ubicación a la web | No permitirla; o Configuración de Windows › Privacidad › Ubicación. **Sin ubicación por red:** en Windows, Firefox 158 no recurre a la red si el servicio de Windows falla; además `geo.provider.network.url` va vacía (`40-privacidad.js`), que lo garantiza también en Linux y si una versión futura lo cambiara |
+| Idiomas de la interfaz: ninguna. Aegis no descarga idiomas desde el navegador: los seis de la interfaz (en-US, es-ES, pt-BR, fr, de, it, de Firefox y de Aegis) vienen dentro de la build (`aegis.py package` multi-idioma, `docs/GUIA.md`) y se usa el de Windows (`intl.locale.requested` vacía, `50-interfaz.js`). Ajustes › Idioma solo ofrece esos seis: «Buscar más idiomas…» se quitó (2026-10-20; los paquetes de idioma de addons.mozilla.org traen la marca de Firefox), e `intl.multilingual.downloadEnabled` va en false (`50-interfaz.js`), que es lo que impide que los Ajustes nuevos de Firefox (`languages.mjs`, `BrowserLanguageRemoteLocalesSetting`) pidan la lista a `services.addons.mozilla.org` (`extensions.getAddons.langpacks.url`) solo con abrir el panel | Nunca | Nada | — | Nada que apagar. Si alguien encendiera `intl.multilingual.downloadEnabled` en `about:config`, el panel volvería a pedir la lista de idiomas a addons.mozilla.org al abrirse (IP, User-Agent y `Accept-Language`, sin cookies) y un paquete elegido sería un complemento más (fila de `versioncheck-bg.addons.mozilla.org`, arriba) |
+| Diccionarios de ortografía: `addons.mozilla.org/<idioma>/firefox/language-tools/` (`browser.dictionaries.download.url`, la de Firefox) | **Solo al pulsar** «Elegir más diccionarios» en Ajustes › Idioma o «Añadir diccionarios…» en el menú contextual de un campo de texto | Abre la web en una pestaña normal: la IP, el User-Agent, el `Accept-Language` y las cookies de AMO, como cualquier visita; la URL lleva el idioma de la app | Instalar un diccionario. Un diccionario instalado es un complemento más: entra en la comprobación de actualizaciones de complementos (fila de `versioncheck-bg.addons.mozilla.org`) | No pulsarlo, o vaciar `browser.dictionaries.download.url` |
 
 ## Escudos: listas de filtros
 
@@ -140,7 +144,8 @@ Ver `docs/ACTUALIZACIONES.md`.
 
 ## Buscadores del instalador
 
-Aegis Setup deja elegir DuckDuckGo, Startpage, Brave Search o Google (`instalador.sys.mjs`). Startpage y Brave Search no
+Aegis Setup deja elegir DuckDuckGo, Startpage, Brave Search o Google (`instalador.sys.mjs`), y también la bienvenida
+del navegador cuando no se pasa por él (`about:bienvenida`, con las mismas funciones). Startpage y Brave Search no
 están en la configuración de búsqueda de todas las regiones: si faltan, se añaden en el equipo como buscador del
 usuario (`https://www.startpage.com/sp/search?q=…` y `https://search.brave.com/search?q=…`, sin código de socio ni
 sugerencias), sin ninguna conexión al añadirlos (el icono sale solo de la caché local de favicons). No son conexiones
@@ -183,6 +188,109 @@ servicios. Lo que Aegis hace con ese tráfico (`google.sys.mjs`, pref `aegis.goo
   lanzador de apps) y `youtube.com/api/stats/playback` y `/watchtime` (historial de reproducciones y «seguir
   viendo»).
 - Lo que Google sigue viendo, en `docs/PRIVACIDAD.md`.
+
+## Otros buscadores
+
+DuckDuckGo (el de serie), Bing, Startpage, Qwant, Ecosia y Wikipedia tampoco son conexiones de Aegis: solo hay tráfico
+con ellos cuando el usuario busca o abre sus páginas. Lo que Aegis hace con ese tráfico (`busqueda-limpia.sys.mjs`, pref
+`aegis.buscadores.limpio`, de serie `true`; con `false` todo esto se apaga sin reiniciar; con los Escudos bajados en una
+página, no actúa en ella). Cada regla sale de una lista de referencia (EasyPrivacy, AdGuard Tracking Protection, AdGuard
+URL Tracking Protection, uBlock filters, ClearURLs) o de la documentación del buscador, y está comprobada en Aegis
+(`out/pruebas/2026-10-19-buscadores/`, sin red; `out/pruebas-reales/2026-10-19-buscadores/`, con los buscadores de
+verdad, búsquedas anónimas):
+
+- **Códigos de socio:** ninguno (parche `0400-privacidad/0002`: sin `t=` en DuckDuckGo, `pc=` en Bing, `segment=` en
+  Startpage, `client=` en Qwant ni `tt=` en Ecosia); el módulo los quita también si llegan en un enlace. Además se
+  quitan los parámetros fijos de la configuración de Firefox que dicen de dónde viene la búsqueda: `form=MOZLBR` de
+  Bing y `sourceid=Mozilla-search` de Wikipedia.
+- **Se limpia** (solo en las páginas de resultados de cada buscador; se quedan la búsqueda, la región, el idioma, la
+  página, el tipo de resultado y los ajustes):
+  - DuckDuckGo: `t`, `from`, `vis`, `perf_id`, `parent_perf_id`, `origin` y `experiment_*` (AdGuard URL Tracking
+    Protection). `atb` (la cohorte anónima de instalación) se deja, como hace AdGuard: con la extensión de DuckDuckGo,
+    quitarlo rompe su redirección. En el clic en un anuncio (`/y.js`), `ad_domain`, `ad_provider`, `ad_type`,
+    `click_metadata`, `iurl` y `vqd` (AdGuard).
+  - Bing (`/search`, `/images/search`, `/videos/search`…): `form`/`FORM`, `cvid`, `sk`, `sp`, `sc`, `qs` y `qp`
+    (ClearURLs). Solo en las páginas de resultados: quitar `FORM` en todo Bing rompía sus enlaces (AdGuard lo retiró).
+    Cuando se busca desde su propio cuadro, la página vuelve a escribir esos parámetros en la barra de direcciones con
+    su script, pero la petición sale sin ellos.
+  - Wikipedia: `wprov` (procedencia del enlace; AdGuard URL Tracking Protection).
+  - Al salir hacia otra web, el *query stripping* nativo quita además `msclkid` (clics de anuncios de Microsoft
+    Advertising: ClearURLs y AdGuard), junto a los de Google (`privacy.query_stripping.strip_list`).
+- **Enlaces directos:** `duckduckgo.com/l/?uddg=…` (su versión HTML y la ligera; ClearURLs y uBlock filters – Privacy)
+  y `bing.com/ck/a?…&u=a1…` (el destino va en base64; regla de uBlock filters – Privacy) van directos al destino si
+  el clic sale del propio buscador y el destino es `http(s)`. Las pestañas de Bing (Imágenes, Vídeos…) también pasan
+  por `/ck/a` con una ruta de Bing dentro: se resuelven contra Bing. Pegado en la barra o desde otra web, no se toca.
+  Startpage y Ecosia ya enlazan directo (comprobado el 2026-10-19). Qwant no se pudo comprobar con el navegador
+  automatizado (su protección contra robots pide una verificación, con el módulo y sin él); en su API los resultados
+  llevan la dirección directa, y su versión ligera (`lite.qwant.com/redirect/`) no se toca.
+- **DuckDuckGo sin IA (`noai.duckduckgo.com`):** las búsquedas hechas desde el navegador (barra de direcciones, nueva
+  pestaña, menú contextual) van a `https://noai.duckduckgo.com/?q=…`, la versión sin IA de DuckDuckGo
+  (https://duckduckgo.com/duckduckgo-help-pages/ai-features/about-noaiduckduckgocom), la misma dirección que usa su
+  extensión oficial «DuckDuckGo No-AI Search». Es una redirección interna: la búsqueda no llega a `duckduckgo.com`. Sí se ve su nombre en el DNS: sin proxy, el navegador resuelve `duckduckgo.com` al abrir la petición, justo antes de redirigirla (con un proxy HTTP o SOCKS con DNS remoto, como Tor, no).
+  Pref `aegis.buscadores.sin_ia`, de serie `true`.
+  - Qué cambia (código de duckduckgo.com y prueba del 2026-10-19): sin Search Assist ni botones de Duck.ai, y las
+    imágenes hechas con IA ocultas (la página pide sus resultados con `hide_ai_images=1`). Explore More (las preguntas
+    de seguimiento generadas, ajuste `kbl`) no está entre lo que noai apaga; en las pruebas no apareció ni en noai ni en
+    `duckduckgo.com`, así que no está comprobado.
+  - Lo que sigue igual: las búsquedas desde su cuadro, la paginación, las imágenes y la región se quedan en noai (comprobado).
+  - **Los ajustes guardados en `duckduckgo.com` no pasan a noai.** DuckDuckGo guarda cada ajuste en una cookie solo de
+    su host (sin `domain`; visto en su código y en las cookies del navegador): una región, un tema o una búsqueda
+    segura elegidos antes en `duckduckgo.com` no se ven en noai, y hay que volver a elegirlos allí una vez. Lo que se
+    elige en noai se conserva.
+  - Sugerencias: las del navegador siguen yendo a `ac.duckduckgo.com` (las de la configuración de Firefox; la extensión
+    oficial usa `noai.duckduckgo.com/ac/`; comparadas el 2026-10-19, las dos dan el mismo tipo de sugerencias, sin
+    filtrar nada de IA, y cambian de una petición a otra en las dos: no se añade ese host). Las que pide la propia página
+    de noai mientras se escribe en su cuadro van a `noai.duckduckgo.com/ac/`: es la web, no el navegador.
+  - La extensión oficial añade `t=noaiext` y `bext=noai`, que la identifican, y cuenta instalaciones con `atb.js` y
+    `/exti/`; Aegis no añade nada a la búsqueda y esas dos peticiones las corta (arriba).
+- **DuckDuckGo sin anuncios, a elección de cada uno:** interruptor «Quitar los anuncios de DuckDuckGo» en el panel de
+  Escudos, que solo sale en DuckDuckGo. Apagado de serie (`aegis.buscadores.sin_anuncios` en `false`): DuckDuckGo pide
+  que sus parámetros de ajustes sean de uso individual y que no se quite su publicidad
+  (https://duckduckgo.com/duckduckgo-help-pages/settings/params/). Encendido, las búsquedas del navegador llevan `k1=-1`
+  («Advertisements: Off») y la búsqueda abierta se recarga así; un `k1` que ya trae la URL se respeta. Apagado, los
+  Escudos ocultan igualmente los anuncios que reconocen sus listas.
+- **Bing, Qwant y Ecosia:** no hay un parámetro documentado que quite su IA (Copilot y «AI Mode» en Bing; las
+  respuestas de IA de Qwant; las de Ecosia, que solo se apagan en sus ajustes, guardados en una cookie). No se inventa
+  ninguno: se ve lo que muestre el buscador. Startpage y Wikipedia no tienen.
+- **Microsoft Rewards en Bing, a elección de cada uno:** interruptor «Sumar puntos de Microsoft Rewards» en el panel de
+  Escudos, que solo sale en Bing. Apagado de serie (`aegis.buscadores.bing_rewards` en `false`): se corta
+  `/rewardsapp/reportActivity`, la actividad de búsqueda que Bing envía para sumar puntos, y **las búsquedas no suman
+  puntos de Rewards**. Encendido, esa petición pasa. El resto de la telemetría de Bing se corta igual.
+- En la página de resultados de un buscador que Firefox conoce (Bing, Google, Wikipedia…), la barra de direcciones
+  enseña los términos de búsqueda y oculta los botones de la página (comportamiento de Firefox) salvo el de Escudos, que
+  Aegis deja visible (`estilos/interfaz.css`). En noai la barra enseña la dirección: Firefox no la reconoce como la
+  búsqueda de DuckDuckGo.
+- **Se cancela** (telemetría; nunca una página que abre el usuario):
+  - DuckDuckGo: `improving.duckduckgo.com` (sus píxeles de uso y los informes de errores de JavaScript), `*/t/`
+    (EasyPrivacy), `/atb.js` y `/exti/` (AdGuard Tracking Protection) y `/collect.js?type=fe-error` (informes de
+    errores de la página). El formulario de opinión (`/collect.js?type=feedback`) pasa.
+  - Bing: `/fd/ls/l`, `/fd/ls/lsp.aspx`, `*/GLinkPing.aspx`, `*/GLinkPingPost.aspx`, `/mouselog`,
+    `/geolocation/write` y, salvo que el usuario lo encienda (arriba), `/rewardsapp/reportActivity` (EasyPrivacy).
+    `/geolocation/write` envía la latitud, la longitud y la localidad que Bing deduce de la IP (visto el 2026-10-19).
+    uBlock filters – Unbreak anula las reglas de EasyPrivacy de `reportactivity?` y `geolocation/write?`
+    (`$badfilter`, uAssets #17650: con un error de red se rompía Bing Chat); Aegis las mantiene porque no contesta con
+    un error, sino con la respuesta neutra de Escudos (un 200 vacío).
+  - Startpage: `vf.startpage.com`, `/sp/cl`, `/sp/dplpxs`, `/sp/jst`, `/sp/elp`, `/sp/atq/ep2/sodar/` y cualquier
+    ping o baliza a `/sp/` (EasyPrivacy y AdGuard Tracking Protection).
+  - Qwant: `k.qwant.com` (Piwik PRO), `stats.qwant.com`, `/maps/events`, `/nemo-telemetry/` y los pings de clic
+    `/action/click_serp` (EasyPrivacy, AdGuard y uBlock filters). Su medición de rendimiento (`apm`) y el resto de sus
+    pings no los corta este módulo: uBlock filters los permite a propósito (`@@||qwant.com^$ping,1p`). Escudos sí corta
+    `apm.qwant.com` (EasyPrivacy).
+  - Ecosia: `sp.ecosia.org` (Snowplow) y `analytics.ecosia.org` (EasyPrivacy y AdGuard Tracking Protection).
+  - Wikipedia: `intake-analytics.wikimedia.org`, `intake-logging.wikimedia.org` y `wikipedia.org/beacon/`
+    (EasyPrivacy y AdGuard Tracking Protection).
+- **Sugerencias** (si el usuario las activa): las de Startpage se piden a `www.startpage.com/osuggestions?q=…`, la
+  dirección de su propio OpenSearch (`cdn.startpage.com/sp/cdn/opensearch/en/opensearch.xml`): la de la configuración de
+  Firefox (`/suggestions?partner=apex&format=opensearch&segment=…`) contesta vacía sin el código de socio. Las de Bing,
+  sin `form=OSDJAS` (la respuesta es la misma). Las demás, igual que en Firefox.
+- **Se deja pasar** (hace falta): los resultados (`links.duckduckgo.com/d.js`, `api.qwant.com`), las sugerencias de las
+  propias páginas, el inicio de sesión (`login.live.com`, `bing.com/fd/auth/`, `auth.wikimedia.org`), el contador de
+  Microsoft Rewards de quien tiene sesión (`/rewardsapp/ncheader`: enseña los puntos, no los suma), el clic en un
+  anuncio y el resto de pings de Qwant.
+- **Anuncios y avisos en la página:** los ocultan las listas de Escudos (EasyList, AdGuard, uBlock filters), como en
+  cualquier web. Algunas reglas (Bing, Startpage, Qwant) solo los sacan de la vista para que el buscador no detecte el
+  bloqueador.
+- Lo que los buscadores siguen viendo, en `docs/PRIVACIDAD.md`.
 
 ## Contraseñas, códigos de verificación y passkeys: ninguna
 
@@ -268,9 +376,18 @@ Para que se vea lo que se ha cerrado (cada una con la pref que la apaga, en `set
 | Lista de filtraciones de Mozilla Monitor | Avisos de contraseñas filtradas | `61-contrasenas.js` |
 | Firefox Relay, Firefox Sync y cuentas de Mozilla | Servicios con cuenta de Mozilla | `40-privacidad.js`, `50-interfaz.js` |
 | Buscar en addons.mozilla.org el equivalente de las extensiones de Chrome al importar (con la lista de las del usuario) | Instalar las mismas extensiones | `67-migracion.js` |
+| Enlaces a webs de Mozilla para opinar y para cambiar de equipo: «Compartir ideas y opiniones» (Mozilla Connect, `ideas.mozilla.org`, `app.feedback.baseURL`) en el menú Ayuda y «Enviar opiniones» (`#submit-feedback`, la misma dirección) en el diálogo Acerca de; «Share ideas» (`connect.mozilla.org`, `about-firefox.mjs`) en Ajustes › Acerca de › Soporte; y «Cambiar a un dispositivo nuevo» (soporte de Mozilla con parámetros de campaña `utm_*`; con el diseño Nova, un recuadro promocional en Ayuda). No conectaban solos, solo al pulsarlos; se quitan porque no son de Aegis | Opiniones y promoción de Mozilla | Sin pref (solo una política): `estilos/interfaz.css` los oculta en el menú Ayuda de la barra de menús y en el submenú Ayuda del menú principal (con Nova y sin él); `branding/aegis/content/aboutDialog.css`, en Acerca de; `estilos/ajustes.css` (el grupo «Soporte» y sus filas `#setting-control-supportGetHelp` y `#setting-control-supportShareIdeas`), en Ajustes |
+| Ayuda de Mozilla (`support.mozilla.org`): «Get help» en el menú Ayuda, «Ayuda de <navegador>» en Acerca de, «Get help» en Ajustes › Acerca de, y los «Learn more» de los paneles de la ventana (información del sitio, permisos, avisos emergentes) y de las páginas de error. Solo al pulsarlos | Ayuda de Firefox, no de Aegis | Sin pref: `estilos/interfaz.css`, `estilos/ajustes.css`, `aboutDialog.css` de la marca y `paginas/errores.css` y `errores-sombra.css` (los de Ajustes y Complementos ya los quitaban sus hojas) |
+| «Report Broken Site» (abre `webcompat.com` con la dirección de la web y datos del equipo: con la telemetría apagada, Firefox manda el formulario a la web) y «Report deceptive site…» / «This isn’t a deceptive site…» (`phish-report.mozilla.com`). Solo al pulsarlos | Informes a Mozilla | Sin pref: `estilos/interfaz.css` (los de sitio engañoso, solo mientras `browser.safebrowsing.phishing.enabled` esté apagada, como de serie) |
+| Diálogo Acerca de: «diseñado por Mozilla, una comunidad global» (`www.mozilla.org` y `about:credits`), «Haz un donativo» (`foundation.mozilla.org`) y «colabora» (`mozilla.org/contribute`); «Terms of Use» y «Privacy Notice» llevaban a las de Firefox en `mozilla.org`. Solo al pulsarlos | Comunidad y textos legales de Firefox | Los párrafos, `aboutDialog.css` de la marca. Las condiciones y la privacidad llevan ahora a la web de Aegis (`mrsecret-official.github.io/Aegis/legal/` y `…/privacidad/`, o `…/en/legal/` y `…/en/privacy/` si la interfaz no está en español; `acerca.sys.mjs`): un enlace, solo al pulsarlo |
+| «Extensions for Developers» (Herramientas del navegador): una colección de Mozilla en `addons.mozilla.org`. Solo al pulsarla | Promoción de complementos | Sin pref: `estilos/interfaz.css` |
+
+**Restos de Firefox que no son conexiones** (decisión del usuario, 2026-10-19: de Firefox, solo lo imprescindible), también fuera: la ilustración del zorro de las páginas de error (`browser.netError.illustration.enabled`, `50-interfaz.js`), el violeta y la letra de Firefox en esas páginas (`paginas/errores.css`), la etiqueta «Firefox Suggest» y las demás etiquetas de grupo de la barra de direcciones (`browser.urlbar.groupLabels.enabled`), la tarjeta «Haz de <navegador> tu editor de PDF» y el aviso de novedades de about:pdf y del visor de PDF (`browser.aboutpdf.promo.dismissed`, `pdfjs.featuresNotificationImpressionLimit`, `55-mensajes.js`), Firefox View, «Restart (Developer)» y su atajo, el dragón de Personalizar (`estilos/interfaz.css` y `AegisArranque.sys.mjs`), los buscadores de socio comerciales de la configuración de Mozilla (Perplexity, eBay, Mercado Livre y Mercado Libre, LEO: ocultos una vez cada uno en la lista de buscadores, también los que aparecen al cambiar el idioma de la app (se ocultan en el siguiente arranque), `AegisArranque.sys.mjs`, `aegis.busqueda.socios_vistos`; el usuario puede volver a ponerlos) y, en Propiedades › Detalles de `firefox.exe`, `private_browsing.exe` y `plugin-container.exe`, la compañía «Mozilla Corporation» y la marca registrada de Firefox (parche `0200-branding/0002`; el copyright de Firefox se queda: es la atribución de la MPL).
 
 Además, en las páginas de Google y YouTube (no son conexiones de Firefox, sino peticiones de esas webs), Google limpio
-corta su telemetría y su publicidad: `google.sys.mjs` (`aegis.google.limpio`); detalle en la sección «Google».
+corta su telemetría y su publicidad: `google.sys.mjs` (`aegis.google.limpio`); detalle en la sección «Google». Y en
+las de DuckDuckGo, Bing, Startpage, Qwant, Ecosia y Wikipedia, la búsqueda limpia corta su telemetría y quita sus
+parámetros de seguimiento: `busqueda-limpia.sys.mjs` (`aegis.buscadores.limpio`); detalle en «Otros buscadores».
 
 **Webs en oscuro** (apagado de serie) no hace ninguna conexión: el motor va dentro del navegador y solo usa lo que la
 página ya ha cargado.

@@ -392,6 +392,128 @@ def textos():
     ok(f"textos: {len(origen)} archivos .ftl de origen, {len(IDIOMAS) + 1} idiomas")
 
 
+L10N_URL = "https://codeload.github.com/mozilla-l10n/firefox-l10n/tar.gz/{commit}"
+
+
+def paquetes_windows(v):
+    """El zip de `aegis.py package` más reciente del objdir de Windows (visto desde WSL o desde Windows), o None."""
+    for base in ("/home/aegis/aegis/obj", r"\\wsl.localhost\archlinux\home\aegis\aegis\obj",
+                 r"\\wsl$\archlinux\home\aegis\aegis\obj"):
+        dist = os.path.join(base, f"firefox-{v}-windows-x86_64-cross", "dist")
+        try:
+            zips = [os.path.join(dist, n) for n in os.listdir(dist)
+                    if n.endswith(".zip") and ".langpack" not in n and "-symbols" not in n and "xpt_artifacts" not in n]
+        except OSError:
+            continue
+        return max(zips, key=os.path.getmtime) if zips else None
+    return None
+
+
+def idiomas(v, rapido):
+    """Build multi-idioma (docs/GUIA.md): los mismos seis idiomas en el código de Aegis (IDIOMAS de AegisArranque), en
+    sus traducciones (locales/<idioma>), en upstream.json › l10n y en el paquete; el commit de firefox-l10n es el que fija
+    Firefox; el idioma de la interfaz sigue a Windows (intl.locale.requested vacía) y `package` es multi-idioma."""
+    antes = len(fallos)
+    todos = {"en-US", *IDIOMAS}
+    arranque = leer_bytes("overlay/browser/components/aegis/AegisArranque.sys.mjs").decode("utf-8")
+    m = re.search(r"^const IDIOMAS = \[([^\]]*)\];", arranque, re.M)
+    en_codigo = set(re.findall(r'"([^"]+)"', m.group(1))) if m else set()
+    if en_codigo != todos:
+        mal(f"idiomas: IDIOMAS de AegisArranque.sys.mjs ({', '.join(sorted(en_codigo)) or 'nada'}) no son "
+            f"{', '.join(sorted(todos))}")
+    base = os.path.join(REPO, "overlay", "browser", "components", "aegis", "locales")
+    carpetas = {n for n in os.listdir(base) if os.path.isdir(os.path.join(base, n))}
+    if carpetas != todos:
+        mal(f"idiomas: las carpetas de locales/ ({', '.join(sorted(carpetas))}) no son {', '.join(sorted(todos))}")
+    try:
+        d = json.loads(leer_bytes("upstream.json").decode("utf-8"))["l10n"]
+    except (OSError, ValueError, KeyError):
+        mal("idiomas: upstream.json no tiene la sección «l10n» (traducciones de Firefox para la build multi-idioma)")
+        return
+    commit = d.get("commit", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        mal(f"idiomas: upstream.json › l10n › commit «{commit}» no es un commit completo")
+    if d.get("url") != L10N_URL.format(commit=commit):
+        mal(f"idiomas: upstream.json › l10n › url tiene que ser {L10N_URL.format(commit=commit)}")
+    if not re.fullmatch(r"[0-9a-f]{64}", d.get("sha256", "")):
+        mal("idiomas: upstream.json › l10n › sha256 no es un sha256 (lo calcula `aegis.py fetch`)")
+    if not isinstance(d.get("idiomas"), list) or sorted(d["idiomas"]) != sorted(IDIOMAS):
+        mal(f"idiomas: upstream.json › l10n › idiomas ({d.get('idiomas')}) no son {', '.join(IDIOMAS)}")
+    # El idioma de Windows: vacía en las prefs (instalador y zip) y en la distribución del paquete de la Tienda.
+    prefs_txt = "".join(leer_bytes(rel).decode("utf-8") for rel in archivos()
+                        if rel.startswith("settings/prefs/") and rel.endswith(".js"))
+    if not re.search(r'^pref\("intl\.locale\.requested",\s*""\);', prefs_txt, re.M):
+        mal('idiomas: settings/prefs tiene que llevar pref("intl.locale.requested", "") (el idioma de Windows)')
+    if 'intl.locale.requested=""' not in leer_bytes("packaging/msix/distribution.ini").decode("utf-8"):
+        mal('idiomas: packaging/msix/distribution.ini tiene que llevar intl.locale.requested="" (el de Windows)')
+    # aegis.py: package multi-idioma (sin Nightly), el manifiesto MSIX con los idiomas y la comprobación del paquete.
+    herramienta = leer_bytes("tools/aegis.py").decode("utf-8")
+    for trozo, que in (('"package-multi-locale", "--locales"', "package con mach package-multi-locale"),
+                       ('config_status_opcional("NIGHTLY_BUILD"', "package se niega con NIGHTLY_BUILD"),
+                       ('("Resources", r"<Resources>.*?</Resources>"', "msix declara los idiomas en el AppxManifest"),
+                       ("comprobar_idiomas_paquete(pkg", "package comprueba los idiomas y la marca del paquete"),
+                       ("build_zip != build_actual", "msix se niega con un zip de otra build (BuildID)")):
+        if trozo not in herramienta:
+            mal(f"idiomas: tools/aegis.py ya no hace «{que}»")
+    src = None if rapido else arbol(v)
+    if src:
+        try:
+            with open(os.path.join(src, "browser", "locales", "l10n-changesets.json"), encoding="utf-8") as f:
+                cs = json.load(f)
+            for i in IDIOMAS:
+                if (cs.get(i) or {}).get("revision") != commit:
+                    mal(f"idiomas: l10n-changesets.json de Firefox {v} fija {i} en "
+                        f"{(cs.get(i) or {}).get('revision')}, no en el commit de upstream.json › l10n")
+        except (OSError, ValueError) as e:
+            mal(f"idiomas: no se puede leer l10n-changesets.json de Firefox {v}: {e}")
+    # Los cambios de Aegis a las traducciones de Firefox (tools/l10n-cambios.json; los aplica `aegis.py fetch`).
+    cambios = []
+    try:
+        c = json.loads(leer_bytes("tools/l10n-cambios.json").decode("utf-8"))
+        for clave in ("sustituciones", "anadidos"):
+            for e in c.get(clave, []):
+                cambios.append((clave, e))
+                if e.get("idioma") not in IDIOMAS or not re.fullmatch(r"[a-z]+/[\w/.-]+\.ftl", e.get("archivo", "")):
+                    mal(f"idiomas: tools/l10n-cambios.json › {clave}: idioma o archivo no válido ({e.get('id')})")
+                if clave == "sustituciones" and (not MARCAS.search(e.get("antes", ""))
+                                                 or MARCAS.search(e.get("despues", "x"))):
+                    mal(f"idiomas: tools/l10n-cambios.json › {e.get('id')}: una sustitución quita «Firefox» o "
+                        "«Mozilla» («antes» lo lleva y «después» no)")
+                if clave == "anadidos" and not e.get("texto", "").startswith(f"{e.get('id')} ="):
+                    mal(f"idiomas: tools/l10n-cambios.json › añadido {e.get('id')}: el texto empieza por su id")
+    except (OSError, ValueError) as e:
+        mal(f"idiomas: tools/l10n-cambios.json: {e}")
+    pkg = None if rapido else paquetes_windows(v)
+    if pkg:
+        import io
+        import zipfile
+        try:
+            with zipfile.ZipFile(pkg) as z:
+                raiz = z.namelist()[0].split("/", 1)[0]
+                gre = zipfile.ZipFile(io.BytesIO(z.read(f"{raiz}/omni.ja")))
+                nav = zipfile.ZipFile(io.BytesIO(z.read(f"{raiz}/browser/omni.ja")))
+            multi = gre.read("res/multilocale.txt").decode("utf-8").replace(",", " ").split()
+            if set(multi) != todos:
+                mal(f"idiomas: el paquete {os.path.basename(pkg)} trae {', '.join(sorted(multi))} "
+                    "(res/multilocale.txt): `aegis.py package` después de `build`")
+            for clave, e in cambios:
+                nombre = f"localization/{e['idioma']}/{e['archivo'].split('/', 1)[1]}"
+                z = nav if nombre in nav.namelist() else gre
+                texto = z.read(nombre).decode("utf-8") if nombre in z.namelist() else ""
+                m = re.search(rf"^{re.escape(e['id'])}\s*=.*?(?=^\S|\Z)", texto, re.M | re.S)
+                bloque = m.group(0) if m else ""
+                if not bloque or (clave == "sustituciones" and (e["antes"] in bloque or e["despues"] not in bloque)):
+                    mal(f"idiomas: el paquete no lleva el cambio de Aegis de {e['idioma']} {e['id']} "
+                        "(tools/l10n-cambios.json): `aegis.py fetch` y `package`")
+        except (OSError, KeyError, zipfile.BadZipFile) as e:
+            mal(f"idiomas: no se puede leer {pkg}: {e}")
+    if len(fallos) == antes:
+        ok(f"idiomas: {len(todos)} en Aegis, en upstream.json (firefox-l10n {commit[:12]}) y en las prefs; "
+           f"{len(cambios)} cambios de Aegis a las traducciones"
+           + ("" if not src else f"; el commit es el de Firefox {v}")
+           + ("" if not pkg else "; el paquete los trae"))
+
+
 def tokens():
     n = 0
     for rel in archivos():
@@ -616,8 +738,22 @@ def contrasenas(v, rapido):
 def nueva_pestana(v, rapido):
     """La nueva pestaña de Aegis se apoya en piezas de Firefox sin parchearlas: nueva-pestana.css coloca el buscador y
     los accesos en la rejilla de Nova (con 3 o 4 filas el buscador sale de .content) y da al «+» el tamaño de las
-    losetas, y accesos.sys.mjs envuelve NewTabUtils.blockedLinks para que «Descartar» quite el sitio entero. Si
-    cambian, la rejilla se descolocaría o «Descartar» volvería a quitar solo una página, sin más aviso que la consola."""
+    losetas, y accesos.sys.mjs envuelve NewTabUtils.blockedLinks para que «Descartar» quite el sitio entero,
+    ActivityStreamProvider.getTopFrecentSites para que los accesos automáticos solo salgan de lo visitado en Aegis (una
+    condición más en su WHERE, a través de _commonPlacesWhere y _getCommonParams de su `this`) y, desde la primera
+    importación de la sesión, MigrationUtils.insertVisitsWrapper para apuntar las visitas importadas. Si cambian, la
+    rejilla se descolocaría, «Descartar» volvería a quitar solo una página o el historial importado volvería a llenar
+    los accesos, sin más aviso que la consola.
+
+    Además, aegis.accesos.importaciones (los tramos de visitas importadas) no puede tener valor de serie: así Gecko no
+    copia su valor a los procesos de las webs (ver enfasis_propio)."""
+    pref_importaciones = "aegis.accesos.importaciones"
+    for rel in archivos():
+        if rel.startswith("settings/") and rel.endswith(".js"):
+            texto = leer_bytes(rel).decode("utf-8")
+            if re.search(r'^\s*(?:pref|sticky_pref|lockPref)\(\s*"' + re.escape(pref_importaciones) + '"', texto, re.M):
+                mal(f"nueva pestaña: {rel} da valor de serie a {pref_importaciones}; tiene que quedarse sin él (si no, "
+                    "Gecko copia su valor a los procesos de las webs; ver accesos.sys.mjs)")
     src = None if rapido else arbol(v)
     if not src:
         aviso(f"nueva pestaña: sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
@@ -630,10 +766,31 @@ def nueva_pestana(v, rapido):
              "save: function BlockedLinks_save() {", "blockedLinks: BlockedLinks,",
              # Se quitan las bloqueadas y luego se agrupa por sitio así (accesos.sys.mjs, sitio()).
              "links = links.filter(link => !BlockedLinks.isBlocked(link));",
-             r"url => url.match(/:\/\/(?:www\.)?([^\/]+)/),"],
+             r"url => url.match(/:\/\/(?:www\.)?([^\/]+)/),",
+             # Solo lo visitado en Aegis (accesos.sys.mjs, soloDeAegis): se envuelve el método del proveedor, que
+             # getTopSites llama por la propiedad, y la consulta lee estas dos piezas de su `this` (ver más abajo).
+             "activityStreamProvider: ActivityStreamProvider,", "async getTopFrecentSites(aOptions) {",
+             "return ActivityStreamProvider.getTopFrecentSites(aOptions);", "_commonPlacesWhere: `",
+             "_getCommonParams(aOptions, aParams = {}) {"],
         nt + "lib/PlacesFeed.sys.mjs": ["lazy.NewTabUtils.activityStreamLinks.blockURL({ url, pocket_id });"],
         # «Añadir acceso directo» desbloquea así el sitio (accesos.sys.mjs envuelve unblock para quitarlo entero).
-        nt + "lib/TopSitesFeed.sys.mjs": ["lazy.NewTabUtils.blockedLinks.unblock({ url: site.url });"],
+        nt + "lib/TopSitesFeed.sys.mjs": ["lazy.NewTabUtils.blockedLinks.unblock({ url: site.url });",
+                                          # Los accesos automáticos salen de activityStreamLinks.getTopSites.
+                                          "lazy.NewTabUtils.activityStreamLinks,", '"getTopSites",'],
+        # Las importaciones de historial pasan todas por insertVisitsWrapper, que se envuelve al empezar una
+        # («Migration:Started», ya con MigrationUtils cargado) para apuntar el tramo de visitas que crea.
+        "browser/components/migration/MigrationUtils.sys.mjs":
+            ["insertVisitsWrapper(pageInfos) {", "return lazy.PlacesUtils.history.insertMany(pageInfos);",
+             "export { MigrationUtilsSingleton as MigrationUtils };"],
+        "browser/components/migration/MigratorBase.sys.mjs": ['notify("Migration:Started");'],
+        "browser/components/migration/ChromeProfileMigrator.sys.mjs":
+            ["await MigrationUtils.insertVisitsWrapper(pageInfos);"],
+        # La creación del perfil (times.json › created): desde cuándo cuenta una visita como de Aegis.
+        "toolkit/modules/ProfileAge.sys.mjs": ["export function ProfileAge(profile) {", "get created() {"],
+        # El EXISTS de la condición usa este índice (place_id, visit_date) de moz_historyvisits.
+        "toolkit/components/places/nsPlacesIndexes.h":
+            ['CREATE_PLACES_IDX("placedateindex", "moz_historyvisits", \\\n'
+             '                    "place_id, visit_date", "")'],
         # accesos.sys.mjs lee los accesos de la página en activityStream.store.getState().TopSites.rows.
         nt + "common/Reducers.sys.mjs":
             ["function TopSites(prevState = INITIAL_STATE.TopSites, action) {",
@@ -663,8 +820,22 @@ def nueva_pestana(v, rapido):
             if t not in texto:
                 mal(f"nueva pestaña: {rel} ya no contiene «{t}» (Firefox {v}); revisar paginas/nueva-pestana.css y "
                     "accesos.sys.mjs")
+    # La consulta de getTopFrecentSites tiene que leer las dos piezas de `this` y ser sobre «moz_places h» (la condición
+    # de accesos.sys.mjs usa h.id y h.last_visit_date): si no, el filtro no se aplicaría o la consulta fallaría.
+    try:
+        ruta = os.path.join(src, "toolkit", "modules", "NewTabUtils.sys.mjs")
+        with open(ruta, encoding="utf-8", errors="replace") as h:
+            ntu = h.read()
+    except OSError:
+        ntu = ""
+    m = re.search(r"\n  async getTopFrecentSites\(aOptions\) \{\n(.*?)\n  \},\n", ntu, re.S)
+    for t in ("FROM moz_places h", "${this._commonPlacesWhere}", "params: this._getCommonParams(options, {"):
+        if not m or t not in m.group(1):
+            mal(f"nueva pestaña: getTopFrecentSites (NewTabUtils.sys.mjs, Firefox {v}) ya no contiene «{t}»; revisar "
+                "accesos.sys.mjs (los accesos automáticos solo de Aegis)")
     if len(fallos) == antes:
-        ok(f"nueva pestaña: los puntos de Firefox que usan la rejilla y «Descartar» siguen en Firefox {v}")
+        ok(f"nueva pestaña: los puntos de Firefox que usan la rejilla, «Descartar» y los accesos solo de Aegis siguen "
+           f"en Firefox {v}")
 
 
 def enfasis_propio(v, rapido):
@@ -1344,6 +1515,425 @@ def identidad(v, rapido):
            "(User-Agent), firefox.exe e ID de Firefox sin tocar")
 
 
+def acciones(v, rapido):
+    """Las acciones de la barra de direcciones (modo «Acciones», acciones.sys.mjs) se cambian sin parches, con la API
+    pública de ActionsProviderQuickActions y envolviendo QuickActionsLoaderDefault.load y getViewUpdate de los dos
+    proveedores que pintan acciones. En el repo: cada glifo y cada texto que usa existe (y el glifo está en moz.build).
+    Contra Firefox: esas piezas siguen igual y la lista de acciones de Firefox es la que Aegis conoce (una acción nueva
+    saldría al final con el icono y el texto de Firefox; una quitada de Firefox se borra aquí)."""
+    base = "overlay/browser/components/aegis/"
+    modulo = leer_bytes(base + "acciones.sys.mjs").decode("utf-8")
+    antes = len(fallos)
+
+    def lista(nombre):
+        m = re.search(r"export const " + nombre + r" = \[\n(.*?)\n\];", modulo, re.S)
+        return re.findall(r'^\s*(?:\[)?"([\w-]+)"', m.group(1), re.M) if m else []
+
+    quitadas = lista("QUITADAS")
+    de_firefox = lista("DE_FIREFOX")
+    privada = re.search(r'^const PRIVADA = \["([\w-]+)", "([\w-]+)"\];', modulo, re.M)
+    if not quitadas or not de_firefox or not privada:
+        mal("acciones: acciones.sys.mjs ya no tiene QUITADAS, DE_FIREFOX o PRIVADA con la forma que lee verificar.py")
+        return
+    conocidas = set(quitadas) | set(de_firefox) | {privada.group(1)}
+
+    # Glifos: la segunda columna de DE_FIREFOX y PRIVADA, los `glifo: "…"` de las de Aegis y los que elige una función
+    # según el estado (`? "accion-…" : "accion-…"`).
+    glifos = set(re.findall(r'^\s*\["[\w-]+", "([\w-]+)"\],?$', modulo, re.M)) | {privada.group(2)}
+    glifos |= set(re.findall(r'glifo: "([\w-]+)"', modulo))
+    glifos |= {g for par in re.findall(r'\? "(accion-[\w-]+)" : "(accion-[\w-]+)"', modulo) for g in par}
+    mozbuild = leer_bytes(base + "moz.build").decode("utf-8")
+    for g in sorted(glifos):
+        rel = f"{base}estilos/iconos/{g}.svg"
+        if not os.path.isfile(os.path.join(REPO, rel)):
+            mal(f"acciones: falta {rel}")
+        elif f'"estilos/iconos/{g}.svg"' not in mozbuild:
+            mal(f"acciones: {rel} no está en moz.build (la build no lo llevaría)")
+        elif 'stroke="context-fill"' not in leer_bytes(rel).decode("utf-8"):
+            mal(f"acciones: {rel} no es un glifo de línea con context-fill (DISENO §8)")
+    # Textos: cada id aegis-accion-* del módulo, en los seis aegis.ftl (que estén en todos lo comprueba textos()).
+    ids_mod = set(re.findall(r'"(aegis-accion-[\w-]+)"', modulo))
+    ids_en, _ = ids_ftl(base + "locales/en-US/aegis.ftl")
+    for falta in sorted(ids_mod - ids_en):
+        mal(f"acciones: acciones.sys.mjs usa {falta}, que no está en aegis.ftl")
+    if f'"acciones.sys.mjs"' not in mozbuild:
+        mal("acciones: acciones.sys.mjs no está en moz.build")
+
+    src = None if rapido else arbol(v)
+    if not src:
+        aviso(f"acciones: sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
+    else:
+        ub = "browser/components/urlbar/"
+        esperado = {
+            # La carga perezosa que se envuelve: ensureLoaded llama a this.load() y load registra con addAction.
+            ub + "QuickActionsLoaderDefault.sys.mjs":
+                ["static async load() {", "lazy.ActionsProviderQuickActions.addAction(key, actionData);",
+                 "this.#loadedPromise = this.load();", "export class QuickActionsLoaderDefault {"],
+            # La API pública que usa Aegis y cómo pinta el proveedor una acción (label como id, icon tal cual).
+            ub + "ActionsProviderQuickActions.sys.mjs":
+                ['return "ActionsProviderQuickActions";', "addAction(key, definition) {", "removeAction(key) {",
+                 "getAction(key) {", "l10nId: action.label,", "icon: action.icon,",
+                 "if (action.isUnsupported?.() || action.isInactive?.()) {",
+                 "let options = this.#actions.get(key).onPick(queryContext, controller);",
+                 "export var ActionsProviderQuickActions = new ProviderQuickActions();"],
+            # La fila de botones: el texto de cada uno sale de getViewUpdate (label-<n>).
+            ub + "UrlbarProviderGlobalActions.sys.mjs":
+                ["export class UrlbarProviderGlobalActions extends UrlbarProvider {", "getViewUpdate(result) {",
+                 "viewUpdate[`label-${i}`] = {", "l10n: { id: action.l10nId, args: action.l10nArgs },",
+                 "src: action.icon || DEFAULT_ICON,"],
+            # La lista del modo Acciones: el texto de cada fila sale de getViewUpdate (label).
+            ub + "UrlbarProviderActionsSearchMode.sys.mjs":
+                ["export class UrlbarProviderActionsSearchMode extends UrlbarProvider {", "getViewUpdate(result) {",
+                 "l10n: { id: action.label },", "src: action.icon || DEFAULT_ICON,"],
+            # getViewUpdate se llama en el proceso principal, sobre la instancia del proveedor (el prototipo envuelto).
+            ub + "UrlbarProvidersManager.sys.mjs": ["result.payload.viewUpdate = provider.getViewUpdate("],
+            # La vista admite textContent en lugar de l10n (el texto ya traducido de las acciones de Aegis).
+            ub + "content/UrlbarView.mjs": ['} else if (update.hasOwnProperty("textContent")) {'],
+            # «Importar datos de otro navegador» es esta orden de la ventana.
+            "browser/base/content/browser-sets.js": ['case "cmd_file_importFromAnotherBrowser":'],
+            # «Abrir las contraseñas»: el panel de la barra lateral (si no, about:logins).
+            "browser/components/sidebar/browser-sidebar.js":
+                ['"browser.contextual-password-manager.enabled",', '"viewCPMSidebar",'],
+        }
+        for rel, trozos in esperado.items():
+            try:
+                with open(os.path.join(src, *rel.split("/")), encoding="utf-8", errors="replace") as h:
+                    texto = h.read()
+            except OSError:
+                mal(f"acciones: no existe {rel} en Firefox {v}; revisar acciones.sys.mjs")
+                continue
+            for t in trozos:
+                if t not in texto:
+                    mal(f"acciones: {rel} ya no contiene «{t}» (Firefox {v}); revisar acciones.sys.mjs")
+        try:
+            with open(os.path.join(src, *(ub + "QuickActionsLoaderDefault.sys.mjs").split("/")), encoding="utf-8") as h:
+                cargador = h.read()
+        except OSError:
+            cargador = ""
+        m = re.search(r"\nconst DEFAULT_ACTIONS = \{\n(.*?)\n\};\n", cargador, re.S)
+        de_mozilla = set(re.findall(r"^  (\w+): \{$", m.group(1), re.M)) if m else set()
+        if not de_mozilla:
+            mal(f"acciones: no se encuentra DEFAULT_ACTIONS en QuickActionsLoaderDefault.sys.mjs (Firefox {v})")
+        else:
+            nuevas = de_mozilla - conocidas
+            idas = conocidas - de_mozilla
+            if nuevas:
+                mal(f"acciones: Firefox {v} trae acciones que Aegis no conoce ({', '.join(sorted(nuevas))}); decidir en "
+                    "acciones.sys.mjs si se quitan (QUITADAS) o se quedan con un glifo de Aegis (DE_FIREFOX)")
+            if idas:
+                mal(f"acciones: Firefox {v} ya no tiene {', '.join(sorted(idas))}; quitarlas de acciones.sys.mjs")
+    if len(fallos) == antes:
+        ok(f"acciones de la barra: {len(quitadas)} de Firefox fuera, {len(de_firefox) + 1} con glifo de Aegis, "
+           f"{len(glifos)} glifos" + ("" if not src else f"; los puntos de Firefox {v} siguen igual"))
+
+
+def buscadores(v, rapido):
+    """La búsqueda limpia (overlay/…/busqueda-limpia.sys.mjs) quita de las búsquedas de DuckDuckGo, Bing, Startpage,
+    Qwant, Ecosia y Wikipedia los parámetros fijos de la configuración de búsqueda de Firefox (form=MOZLBR,
+    sourceid=Mozilla-search…) y sus códigos de socio, y reconoce las sugerencias del navegador por cómo las pide
+    SearchSuggestionController (XMLHttpRequest del proceso padre). Si Firefox añade un parámetro a esas direcciones, un
+    código de socio nuevo o cambia cómo pide las sugerencias, la limpieza se quedaría corta sin que nada fallara."""
+    rel = "overlay/browser/components/aegis/busqueda-limpia.sys.mjs"
+    modulo = leer_bytes(rel).decode("utf-8")
+    arranque = leer_bytes("overlay/browser/components/aegis/AegisArranque.sys.mjs").decode("utf-8")
+    if "AegisBusquedaLimpia.inicio()" not in arranque:
+        mal("AegisArranque.sys.mjs ya no arranca la búsqueda limpia (AegisBusquedaLimpia.inicio())")
+    if '"busqueda-limpia.sys.mjs"' not in leer_bytes("overlay/browser/components/aegis/moz.build").decode("utf-8"):
+        mal("overlay/browser/components/aegis/moz.build no instala busqueda-limpia.sys.mjs")
+    # El botón de Escudos en las páginas de resultados (la barra con los términos de búsqueda): interfaz.css.
+    interfaz = re.sub(r"\s+", " ", leer_bytes("overlay/browser/components/aegis/estilos/interfaz.css").decode("utf-8"))
+    selectores_barra = [
+        '#urlbar[persistsearchterms]:not([focused]) > .urlbar-input-container > '
+        '#page-action-buttons:has(> #aegis-escudos-button:not([hidden]))',
+        '#urlbar[persistsearchterms]:not([focused]) > .urlbar-input-container[pageproxystate="invalid"] > '
+        '#page-action-buttons > #aegis-escudos-button:not([hidden])',
+    ]
+    for sel in selectores_barra:
+        if sel not in interfaz:
+            mal(f"interfaz.css ya no tiene «{sel}»: el botón de Escudos no se vería en los resultados de los buscadores")
+    src = None if rapido else arbol(v)
+    if not src:
+        aviso(f"búsqueda limpia: sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
+        return
+    antes = len(fallos)
+    # Parámetros que puede llevar cada dirección: los que el módulo quita y los de formato de la respuesta (q, type,
+    # action, client=opensearch…). Uno nuevo hay que mirarlo antes de dejarlo pasar.
+    conocidos = {
+        "ddg": {"search": {"t"}, "suggestions": {"type"}},
+        "bing": {"search": {"pc", "form"}, "suggestions": {"form"}, "trending": set()},
+        "startpage": {"search": {"segment"}, "suggestions": {"segment"}},
+        "qwant": {"search": {"client"}, "suggestions": {"client"}},
+        "ecosia": {"search": {"tt"}, "suggestions": {"type"}},
+        # variant: la escritura del chino (zh-tw, zh-cn…) en wikipedia-zh-*; cambia el resultado, no rastrea.
+        "wikipedia": {"search": {"sourceid", "variant"}, "suggestions": {"action", "variant"}},
+    }
+    # Códigos de socio que el módulo reconoce (SOCIO), por si llegan de una build sin el parche 0400-privacidad/0002.
+    socio = re.search(r"const SOCIO = \{(.*?)\n\};", modulo, re.S)
+    listas = {m.group(1): set(re.findall(r'"([^"]+)"', m.group(2)))
+              for m in re.finditer(r"^\s*(\w+): \[\"\w+\", v => \[(.*?)\]\.includes", socio.group(1) if socio else "", re.M)}
+    if not socio or set(listas) != {"qwant", "ecosia"}:
+        mal(f"{rel}: no se entiende SOCIO (verificar.py busca las listas de Qwant y Ecosia)")
+        return
+    pruebas = {
+        "bing": lambda c: re.match(r"(?i)(MOZ|MZ)", c), "startpage": lambda c: c.startswith("startpage.apex"),
+        "qwant": lambda c: c in listas["qwant"], "ecosia": lambda c: c in listas["ecosia"],
+    }
+    with open(os.path.join(src, "services", "settings", "dumps", "main", "search-config-v2.json"), encoding="utf-8") as h:
+        config = json.load(h)["data"]
+
+    def recorrer(nodo, cb):
+        """Llama a cb(urls, codigo) con la base, cada variante y cada subvariante."""
+        cb(nodo.get("urls", {}), nodo.get("partnerCode"))
+        for var in nodo.get("variants", []) + nodo.get("subVariants", []):
+            recorrer(var, cb)
+
+    vistos = set()
+    for r in config:
+        ident = r.get("identifier", "")
+        fam = "wikipedia" if ident.startswith("wikipedia") else ident
+        if r.get("recordType") != "engine" or fam not in conocidos:
+            continue
+        vistos.add(fam)
+
+        def mirar(urls, codigo, fam=fam, ident=ident):
+            for tipo, u in urls.items():
+                if tipo not in conocidos[fam]:
+                    if tipo in ("search", "suggestions", "trending"):
+                        mal(f"búsqueda limpia: {ident} tiene una dirección «{tipo}» que el módulo no conoce")
+                    continue
+                nombres = {p["name"] for p in u.get("params", [])}
+                if "base" in u:
+                    nombres |= set(re.findall(r"[?&]([^=&]+)=", u["base"]))
+                if fam == "startpage" and tipo == "suggestions" and "base" in u and \
+                        not u["base"].startswith("https://www.startpage.com/suggestions?"):
+                    mal(f"búsqueda limpia: las sugerencias de Startpage ya no van a /suggestions ({u['base']}); "
+                        "revisar sugerencias() en busqueda-limpia.sys.mjs")
+                # Startpage: partner=apex&format=opensearch van en la base de sus sugerencias (las cambia el módulo).
+                nuevos = nombres - conocidos[fam][tipo] - ({"partner", "format"} if fam == "startpage" else set())
+                if nuevos:
+                    mal(f"búsqueda limpia: {ident} ({tipo}) lleva parámetros nuevos en Firefox {v}: {sorted(nuevos)}; "
+                        "mirar si rastrean y añadirlos a busqueda-limpia.sys.mjs o a «conocidos» aquí")
+            if codigo and fam in pruebas and not pruebas[fam](codigo):
+                mal(f"búsqueda limpia: código de socio nuevo de {ident} en Firefox {v} («{codigo}»); añadirlo a SOCIO")
+
+        recorrer(r.get("base", {}) | {"variants": r.get("variants", [])}, mirar)
+    for fam in sorted(set(conocidos) - vistos):
+        mal(f"búsqueda limpia: «{fam}» ya no está en search-config-v2.json de Firefox {v}")
+    with open(os.path.join(src, "toolkit", "components", "search", "SearchSuggestionController.sys.mjs"),
+              encoding="utf-8") as h:
+        controlador = h.read()
+    for t in ("new XMLHttpRequest()", "request.open(method, submission.uri.spec, true)"):
+        if t not in controlador:
+            mal(f"búsqueda limpia: SearchSuggestionController.sys.mjs ya no contiene «{t}»; el módulo reconoce las "
+                "sugerencias como XMLHttpRequest del proceso padre")
+    # Lo que interfaz.css deshace para el botón de Escudos (arriba): las dos reglas de urlbar.css que ocultan los botones
+    # de página, y los atributos de la barra que usa su selector. Si cambian, el botón volvería a ocultarse (o se vería
+    # donde no toca) sin que fallara nada.
+    with open(os.path.join(src, "browser", "themes", "shared", "urlbar.css"), encoding="utf-8") as h:
+        urlbar_css = re.sub(r"\s+", " ", h.read())
+    for t in ('.urlbar-input-container[pageproxystate="invalid"] > #page-action-buttons > '
+              '.urlbar-page-action:not(#share-button)',
+              "#urlbar[usertyping] > .urlbar-input-container > #page-action-buttons"):
+        if t not in urlbar_css:
+            mal(f"búsqueda limpia: urlbar.css de Firefox {v} ya no tiene «{t}»; revisar la regla del botón de Escudos "
+                "en interfaz.css")
+    contenido_barra = ""
+    carpeta = os.path.join(src, "browser", "components", "urlbar", "content")
+    for nombre in os.listdir(carpeta):
+        if nombre.endswith(".mjs"):
+            with open(os.path.join(carpeta, nombre), encoding="utf-8") as h:
+                contenido_barra += h.read()
+    for t in ('toggleAttribute("persistsearchterms"', 'toggleAttribute("usertyping"'):
+        if t not in contenido_barra:
+            mal(f"búsqueda limpia: la barra de Firefox {v} ya no hace {t}…); revisar la regla del botón de Escudos en "
+                "interfaz.css")
+    with open(os.path.join(src, "browser", "base", "content", "navigator-toolbox.inc.xhtml"), encoding="utf-8") as h:
+        if '<hbox id="page-action-buttons"' not in h.read():
+            mal(f"búsqueda limpia: #page-action-buttons ya no está en navigator-toolbox.inc.xhtml de Firefox {v}")
+    if len(fallos) == antes:
+        ok(f"búsqueda limpia: direcciones y códigos de socio de {len(vistos)} buscadores y el botón de Escudos con los "
+           f"términos de búsqueda en la barra, al día con Firefox {v}")
+
+
+PARCHE_EXE = "0200-branding/0002-propiedades-del-exe.patch"
+# Los module.ver que cambia (firefox.exe, private_browsing.exe y plugin-container.exe; las DLL, no).
+MODULE_VER_EXE = ("browser/app/module.ver", "browser/app/pbproxy/module.ver", "ipc/app/module.ver")
+# Restos de Firefox (decisión del usuario, 2026-10-19): las prefs que los quitan, con su valor.
+PREFS_RESTOS = {
+    "browser.netError.illustration.enabled": "false",
+    "browser.urlbar.groupLabels.enabled": "false",
+    "browser.aboutpdf.promo.dismissed": "true",
+    "pdfjs.featuresNotificationImpressionLimit": "0",
+    # Ajustes › Idioma no pide nada a addons.mozilla.org ni ofrece descargar idiomas: los seis vienen en la build.
+    "intl.multilingual.downloadEnabled": "false",
+}
+# Lo que ocultan las hojas, y en qué archivo de Firefox tiene que seguir existiendo cada cosa para que la regla sirva.
+RESTOS_CSS = {
+    "overlay/browser/components/aegis/estilos/interfaz.css": {
+        "menu_openFirefoxView": "browser/base/content/browser-menubar.inc.xhtml",
+        "menu_openHelp": "browser/base/content/browser-menubar.inc.xhtml",
+        "help_reportBrokenSite": "browser/base/content/browser-menubar.inc.xhtml",
+        "menu_HelpPopup_reportPhishingtoolmenu": "browser/base/content/browser-menubar.inc.xhtml",
+        "menu_HelpPopup_reportPhishingErrortoolmenu": "browser/base/content/browser-menubar.inc.xhtml",
+        "menu_FileRestartItem": "browser/base/content/browser-development-helpers.js",
+        "extensionsForDevelopers": "devtools/client/menus.js",
+        "appmenu-developer-tools-extensions": "devtools/client/menus.js",
+        "appMenu-translate-button": "browser/base/content/appmenu-viewcache.inc.xhtml",
+        "appmenu-abouttranslations-button": "browser/base/content/appmenu-viewcache.inc.xhtml",
+        "PanelUI-helpItems": "browser/base/content/appmenu-viewcache.inc.xhtml",
+        "widget-overflow-fixed-list": "browser/themes/shared/customizableui/customizeMode.css",
+        "firefox-view-button": "browser/components/customizableui/CustomizableUI.sys.mjs",
+    },
+    "overlay/browser/branding/aegis/content/aboutDialog.css": {
+        n: "browser/base/content/aboutDialog.xhtml"
+        for n in ("communityDesc", "communityExperimentalDesc", "contributeDesc", "contributeDescReferrals",
+                  "aboutDialogHelpLink", "submit-feedback")
+    },
+    "overlay/browser/components/aegis/estilos/ajustes.css": {
+        "supportGetHelp": "browser/components/preferences/config/about-firefox.mjs",
+        "supportShareIdeas": "browser/components/preferences/config/about-firefox.mjs",
+    },
+    "overlay/browser/components/aegis/paginas/errores.css": {
+        "cert-error-mitm-mozilla": "toolkit/content/aboutNetError.mjs",
+        "learnMoreLink": "toolkit/content/aboutNetError.html",
+    },
+}
+
+
+def restos_firefox(v, rapido):
+    """Lo que Aegis quita de Firefox por ser prescindible (docs/CONEXIONES.md, «Lo que Aegis corta»): cuatro prefs, las
+    reglas de interfaz.css, aboutDialog.css, ajustes.css y errores.css, los enlaces legales de Acerca de
+    (acerca.sys.mjs) y el parche de las propiedades de firefox.exe. Contra Firefox: que las prefs se sigan leyendo, que
+    los ids que ocultan las hojas sigan existiendo y que module.ver se siga leyendo como supone el parche. Si algo
+    cambia, el resto de Firefox volvería a verse sin más aviso."""
+    antes = len(fallos)
+    # Las prefs, con su valor.
+    valores = {}
+    for rel in archivos():
+        if rel.startswith("settings/prefs/") and rel.endswith(".js"):
+            for m in re.finditer(r'^\s*pref\(\s*"([^"]+)"\s*,\s*([^)]+?)\s*\)\s*;', leer_bytes(rel).decode("utf-8"), re.M):
+                valores[m.group(1)] = m.group(2)
+    for n, w in PREFS_RESTOS.items():
+        if valores.get(n) != w:
+            mal(f"restos de Firefox: settings/prefs tiene que llevar {n} = {w} (ahora: {valores.get(n, 'nada')})")
+    # Las hojas: cada id sigue en su regla.
+    for hoja, ids in RESTOS_CSS.items():
+        texto = leer_bytes(hoja).decode("utf-8")
+        for i in ids:
+            if i not in texto:
+                mal(f"restos de Firefox: {hoja} ya no oculta «{i}»")
+    # Sin «Buscar más idiomas…» (decisión del usuario, 2026-10-20): ningún código de Aegis enciende la descarga de
+    # idiomas ni queda el botón (los paquetes de addons.mozilla.org traen la marca de Firefox).
+    for rel in archivos():
+        if rel.startswith("overlay/") and ext(rel) in (".mjs", ".js", ".ftl", ".css", ".html", ".xhtml"):
+            texto = leer_bytes(rel).decode("utf-8", "replace")
+            if "intl.multilingual.downloadEnabled" in texto or "PREF_DESCARGA_IDIOMAS" in texto:
+                mal(f"restos de Firefox: {rel} toca intl.multilingual.downloadEnabled: Aegis no descarga idiomas")
+            if re.search(r"aegis-idiomas-mas|aegis-mas-idiomas|masIdiomas", texto):
+                mal(f"restos de Firefox: {rel} aún tiene «Buscar más idiomas…», que se quitó")
+    # Acerca de: los enlaces de las condiciones y la privacidad llevan a páginas que existen en web/.
+    acerca = leer_bytes("overlay/browser/components/aegis/acerca.sys.mjs").decode("utf-8")
+    rutas = re.findall(r'\b(?:es|en): "([^"]+)"', acerca)
+    if len(rutas) != 4:
+        mal("restos de Firefox: acerca.sys.mjs tiene que llevar las cuatro páginas legales (es y en)")
+    for r in rutas:
+        if not os.path.isfile(os.path.join(REPO, "web", *r.strip("/").split("/"), "index.html")):
+            mal(f"restos de Firefox: acerca.sys.mjs lleva a «{r}», que no existe en web/")
+    # El parche de firefox.exe: fabricante de la marca, sin marca registrada y sin tocar el copyright.
+    try:
+        nombre = json.loads(leer_bytes("branding/marca.json").decode("utf-8"))["nombre"]
+    except (OSError, ValueError, KeyError):
+        nombre = "Aegis"
+    with open(os.path.join(REPO, "patches", "series"), encoding="utf-8") as f:
+        serie = [l.strip() for l in f if l.strip() and not l.lstrip().startswith("#")]
+    if PARCHE_EXE not in serie or not os.path.isfile(os.path.join(REPO, "patches", PARCHE_EXE)):
+        mal(f"restos de Firefox: falta patches/{PARCHE_EXE} en patches/series (propiedades de firefox.exe)")
+    else:
+        texto = leer_bytes(f"patches/{PARCHE_EXE}").decode("utf-8")
+        # Solo el diff (el mensaje del commit también tiene líneas que empiezan por «-», una lista), archivo a archivo.
+        trozos = re.split(r"^diff --git a/(\S+) b/\S+\n", texto, flags=re.M)[1:]
+        por_archivo = dict(zip(trozos[::2], trozos[1::2]))
+        if set(por_archivo) != set(MODULE_VER_EXE):
+            mal(f"restos de Firefox: patches/{PARCHE_EXE} tiene que tocar justo {', '.join(MODULE_VER_EXE)} "
+                f"(ahora: {', '.join(sorted(por_archivo)) or 'nada'})")
+        for rel, diff in por_archivo.items():
+            cambios = [l for l in diff.splitlines() if l[:1] in "+-" and not l.startswith(("+++", "---"))]
+            if not {f"+WIN32_MODULE_COMPANYNAME={nombre}", "+WIN32_MODULE_TRADEMARKS="} <= set(cambios):
+                mal(f"restos de Firefox: patches/{PARCHE_EXE} tiene que poner WIN32_MODULE_COMPANYNAME={nombre} y "
+                    f"WIN32_MODULE_TRADEMARKS vacío en {rel}")
+            if any(l.startswith("-") or "COPYRIGHT" in l for l in cambios):
+                mal(f"restos de Firefox: patches/{PARCHE_EXE} solo añade líneas a {rel}: el copyright de Firefox "
+                    "(MPL) se queda")
+        # aegis.py build rehace el .rc de cada uno (rules.mk no lo hace al cambiar module.ver).
+        construir = leer_bytes("tools/aegis.py").decode("utf-8")
+        for rel in MODULE_VER_EXE:
+            if f'("{rel.rsplit("/", 1)[0]}", ' not in construir:
+                mal(f"restos de Firefox: tools/aegis.py (RECURSOS_DE_VERSION) no rehace el .rc de {rel}")
+    src = None if rapido else arbol(v)
+    if not src:
+        aviso(f"restos de Firefox: sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
+    else:
+        def leer(rel):
+            with open(os.path.join(src, *rel.split("/")), encoding="utf-8", errors="replace") as h:
+                return h.read()
+        try:
+            # Cada pref sigue leyéndose donde se cuenta en su comentario.
+            lecturas = {
+                "browser.netError.illustration.enabled": ("toolkit/content/net-error-card.mjs",
+                                                          "browser/app/profile/firefox.js"),
+                "groupLabels.enabled": ("browser/components/urlbar/UrlbarPrefs.sys.mjs",
+                                        "browser/components/urlbar/content/UrlbarView.mjs"),
+                "browser.aboutpdf.promo.dismissed": ("toolkit/components/aboutpdf/content/aboutPDF.mjs",),
+                "pdfjs.featuresNotificationImpressionLimit": (
+                    "toolkit/components/pdfjs/content/PdfJsFeaturesNotification.sys.mjs",),
+            }
+            for n, rels in lecturas.items():
+                for rel in rels:
+                    if n not in leer(rel):
+                        mal(f"restos de Firefox: en Firefox {v}, {rel} ya no usa «{n}»: revisar la pref")
+            for hoja, ids in RESTOS_CSS.items():
+                for i, rel in ids.items():
+                    if i not in leer(rel):
+                        mal(f"restos de Firefox: «{i}» ya no está en {rel} de Firefox {v}: revisar {hoja}")
+            # Ajustes › Idioma: la lista remota (y la opción de buscar más) solo con la pref encendida, que va apagada.
+            idiomas = leer("browser/components/preferences/config/languages.mjs")
+            if "if (!this.#multilingualDownloadEnabled.value || !this.#languagesLoaded)" not in idiomas:
+                mal(f"restos de Firefox: en Firefox {v}, languages.mjs ya no pide la lista de idiomas solo con "
+                    "intl.multilingual.downloadEnabled encendida: revisar 50-interfaz.js y docs/CONEXIONES.md "
+                    "(«Idiomas de la interfaz»)")
+            panel = leer("browser/components/customizableui/content/panelUI.js")
+            if '"appMenu_" + node.id' not in panel or not re.search(
+                    r'HELP_VIEW_GROUPS = \[\s*\[\s*"menu_openHelp",\s*"help_reportBrokenSite"', panel):
+                mal(f"restos de Firefox: en Firefox {v}, el submenú Ayuda (panelUI.js) ya no copia las filas como "
+                    "appMenu_<id> o no empieza por «Get help» y «Report Broken Site»: revisar las líneas y las "
+                    "cápsulas de interfaz.css")
+            dialogo = leer("browser/base/content/aboutDialog.xhtml")
+            for l10n in ("bottom-links-terms", "bottom-links-privacy"):
+                if not re.search(rf'class="bottom-link"[^>]*data-l10n-id="{l10n}"', dialogo):
+                    mal(f"restos de Firefox: en Firefox {v}, aboutDialog.xhtml ya no tiene el enlace «{l10n}»: revisar "
+                        "acerca.sys.mjs")
+            if 'key.setAttribute("id", "key_quickRestart")' not in leer("browser/base/content/browser-development-helpers.js"):
+                mal(f"restos de Firefox: en Firefox {v} el atajo de «Restart (Developer)» ya no es key_quickRestart: "
+                    "revisar AegisArranque.sinReinicioDeDesarrollo")
+            for rel in MODULE_VER_EXE:
+                if not os.path.isfile(os.path.join(src, *rel.split("/"))):
+                    mal(f"restos de Firefox: Firefox {v} ya no tiene {rel}: revisar {PARCHE_EXE}")
+            rc = leer("config/create_rc.py")
+            if "result[entry.strip()] = value.strip()" not in rc or 'overrides.get("WIN32_MODULE_TRADEMARKS"' not in rc:
+                mal(f"restos de Firefox: en Firefox {v}, create_rc.py ya no lee module.ver como supone {PARCHE_EXE} "
+                    "(la última entrada gana)")
+            config = leer("services/settings/dumps/main/search-config-v2.json")
+            for socio in ("perplexity", "ebay", "mercadolivre", "leo_ende_de"):
+                if f'"identifier": "{socio}"' not in config and f'"identifier":"{socio}"' not in config:
+                    aviso(f"restos de Firefox: el buscador de socio «{socio}» ya no está en la configuración de "
+                          f"Firefox {v}: revisar SOCIOS en AegisArranque.sys.mjs")
+        except OSError as e:
+            mal(f"restos de Firefox: no se puede leer el árbol de Firefox {v}: {e}")
+    if len(fallos) == antes:
+        ok(f"restos de Firefox: {len(PREFS_RESTOS)} prefs, las hojas, Acerca de y {PARCHE_EXE}"
+           + ("" if not src else f"; los puntos de Firefox {v} siguen igual"))
+
+
 def sin_dev():
     """El cargador de desarrollo (autoconfig) solo vive en tools/dev: nunca en lo que entra en una build."""
     for rel in archivos():
@@ -1389,6 +1979,7 @@ def main():
     identidad(v, rapido)
     tienda()
     textos()
+    idiomas(v, rapido)
     tokens()
     prefs(v, rapido)
     enfasis_propio(v, rapido)
@@ -1398,6 +1989,9 @@ def main():
     migracion(v, rapido)
     transferencia()
     extensiones(v, rapido)
+    acciones(v, rapido)
+    buscadores(v, rapido)
+    restos_firefox(v, rapido)
     motor(v, rapido)
     sin_dev()
     listas_moz_build()

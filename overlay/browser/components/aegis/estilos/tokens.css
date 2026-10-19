@@ -77,6 +77,21 @@
   /* Tipografía (§3) */
   --aegis-font: "Inter", system-ui, sans-serif;
   --aegis-font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Miniaturas de la bienvenida (paginas/bienvenida.css, DISENO §9): el navegador y los Escudos dibujados en pequeño,
+     como en el instalador (packaging/instalador/ui/miniaturas.slint). La tinta es el blanco (o el negro, en claro) con
+     el que se dibujan sus líneas; los de cada tema, fijos, porque las miniaturas de Oscuro y Claro no cambian con el
+     tema de la página. Sus radios son la escala de §5 reducida al tamaño del dibujo, no radios de la interfaz. */
+  --aegis-tinta: #ffffff;
+  --aegis-tema-oscuro-bg: #0a0a0b;
+  --aegis-tema-oscuro-superficie: #151517;
+  --aegis-tema-oscuro-tinta: #ffffff;
+  --aegis-tema-claro-bg: #f5f5f7;
+  --aegis-tema-claro-superficie: #ffffff;
+  --aegis-tema-claro-tinta: #000000;
+  --aegis-mini-r-1: 1px;
+  --aegis-mini-r-3: 3px;
+  --aegis-mini-r-pildora: 999px;
 }
 
 @media (prefers-color-scheme: light) {
@@ -113,6 +128,7 @@
     --aegis-grad-hasta: #ececef;
     --aegis-filo-desde: rgb(0 0 0 / 0.28);
     --aegis-filo-hasta: rgb(0 0 0 / 0.05);
+    --aegis-tinta: #000000;
   }
 }
 

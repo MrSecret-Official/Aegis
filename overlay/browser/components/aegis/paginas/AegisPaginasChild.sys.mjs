@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Aegis · estilo de las páginas propias del navegador (nueva pestaña, bienvenida, navegación privada, contraseñas).
+ * Aegis · estilo de las páginas propias del navegador (nueva pestaña, bienvenida, navegación privada, contraseñas) y de
+ * las páginas de error.
  * Lo registra AegisArranque.registrarPaginas() solo para esas direcciones about:, así que una web nunca recibe estas
  * hojas. Se cargan al crearse el documento, antes de que se pinte: como hojas de autor y, para lo que vive dentro de
  * los componentes de la página (shadow DOM), como hojas de usuario, las únicas que llegan ahí.
@@ -12,6 +13,8 @@
 import { aspecto } from "./personalizar.sys.mjs";
 import { logos } from "./logos.sys.mjs";
 
+/** Páginas de error de Firefox que llevan las hojas de Aegis (el actor las registra en AegisArranque.registrarPaginas). */
+const ERRORES = ["about:neterror", "about:certerror", "about:httpsonlyerror", "about:tabcrashed", "about:restartrequired"];
 /** Hojas de todas las páginas propias: los tokens y el mapeo de los colores de Firefox. */
 const COMUNES = ["../estilos/tokens.css", "comun.css"];
 /** Hojas de cada página, por el principio de su dirección. */
@@ -21,6 +24,8 @@ const POR_PAGINA = [
   ["about:home", ["nueva-pestana.css", "../estilos/selector-enfasis.css"]],
   ["about:logins", ["contrasenas.css"]],
   ["about:privatebrowsing", ["privada.css"]],
+  // Páginas de error (red, certificado, Solo HTTPS, pestaña caída, reinicio necesario).
+  ...ERRORES.map(direccion => [direccion, ["errores.css"]]),
 ];
 /** Hojas de usuario de cada página (con !important): lo de dentro de sus componentes. */
 const SOMBRA_POR_PAGINA = [
@@ -29,6 +34,8 @@ const SOMBRA_POR_PAGINA = [
   ["about:newtab", ["busqueda-sombra.css"]],
   ["about:home", ["busqueda-sombra.css"]],
   ["about:privatebrowsing", ["busqueda-sombra.css"]],
+  // La tarjeta de error nueva (net-error-card) y sus botones van en shadow DOM.
+  ...ERRORES.map(direccion => [direccion, ["errores-sombra.css"]]),
 ];
 /** Módulos que completan una página cuando está montada (export completar(win)), por el principio de su dirección. */
 const MODULO_POR_PAGINA = [
@@ -72,7 +79,11 @@ export class AegisPaginasChild extends JSWindowActorChild {
         try {
           utils.loadSheetUsingURIString(new URL(hoja, import.meta.url).href, tipo);
         } catch (e) {
-          console.error(`Aegis: no se pudo cargar ${hoja}`, e);
+          // NS_ERROR_ILLEGAL_VALUE: el documento ya tiene esa hoja. Pasa en about:restartrequired, que se carga en el
+          // proceso principal con permisos de sistema y recibe también las de la interfaz (tokens.css).
+          if (e.result != Cr.NS_ERROR_ILLEGAL_VALUE) {
+            console.error(`Aegis: no se pudo cargar ${hoja}`, e);
+          }
         }
       }
     }
@@ -133,3 +144,9 @@ export class AegisPaginasChild extends JSWindowActorChild {
       .catch(e => console.error("Aegis: no se pudo poner Inter", e));
   }
 }
+
+/**
+ * Las páginas de error (actor AegisErrores, AegisArranque.registrarPaginas): las mismas hojas por su dirección (ERRORES),
+ * en el proceso de la web que ha fallado. No pide nada al proceso principal (solo la nueva pestaña lo hace).
+ */
+export class AegisErroresChild extends AegisPaginasChild {}

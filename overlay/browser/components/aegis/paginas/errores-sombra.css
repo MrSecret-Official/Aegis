@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · páginas de error: lo que vive en shadow DOM (la tarjeta nueva net-error-card de Firefox 158 y sus
+   moz-button). Hoja de usuario (AegisPaginasChild.sys.mjs), la única que llega dentro de los componentes: por eso todo
+   lleva !important. Los colores ya llegan heredados de comun.css (las variables cruzan el shadow DOM). */
+
+/* «Learn more» de la tarjeta (moz-support-link, a support.mozilla.org) y su párrafo bajo la búsqueda sugerida. */
+a[is="moz-support-link"],
+#error-learn-more-link,
+.search-cta-learn-more {
+  display: none !important;
+}
+
+/* Inter también dentro de los componentes (la tarjeta pone la letra del sistema). */
+:host,
+.felt-privacy-container,
+button {
+  font-family: var(--aegis-font) !important;
+}
+
+/* Nunca negrita (DISENO §3): strong y b de la tarjeta salen a 700 por defecto. */
+strong,
+b {
+  font-weight: 600 !important;
+}
+
+/* Botón principal a 600 (DISENO §9): la regla de comun.css es de autor y no entra en la tarjeta. */
+moz-button[type~="primary"] {
+  --button-font-weight: 600 !important;
+}

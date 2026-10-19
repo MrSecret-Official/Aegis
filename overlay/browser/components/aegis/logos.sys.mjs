@@ -13,11 +13,13 @@
  *
  * - iconoLocal(): el favicon guardado en Places para la dirección del acceso o una equivalente: el otro esquema, con o
  *   sin «www», la raíz del sitio, las redirecciones de la última visita y las páginas del sitio más visitadas. Solo lee
- *   la base de datos del perfil: nunca la red. Con el más grande va el pequeño de la misma página (alternativa).
- * - Sin fondo antes que con fondo: el icono más grande de un sitio suele ser el «apple-touch-icon» de iOS, el logo
- *   sobre un cuadrado opaco (casi siempre blanco), que en la loseta oscura se ve como un cuadrado blanco. Se prefiere
- *   siempre uno con las esquinas transparentes de 32 px o más (tieneFondo() y sinFondo(), paginas/logos.sys.mjs); uno
- *   con fondo, solo si no hay otro (así, un icono que llena su cuadrado con el color de la marca sale igual).
+ *   la base de datos del perfil: nunca la red. Con el más grande va otro favicon de la misma página (alternativa): el
+ *   menor de 48 px o más que no sea el grande y, si no hay, el de 32.
+ * - Sin fondo claro: el icono más grande de un sitio suele ser el «apple-touch-icon» de iOS, el logo sobre un cuadrado
+ *   opaco. Si el cuadrado es blanco o gris muy claro (YouTube), en la loseta se ve como un cuadrado blanco: solo
+ *   entonces se prefiere otro sin ese fondo de 32 px o más (fondoClaro() y sinFondo(), paginas/logos.sys.mjs). Un
+ *   cuadrado oscuro (DeepL) o del color de la marca (Roblox) se queda: se ve bien sobre la loseta y es el icono
+ *   grande, nítido; uno de 32 ampliado a la caja se vería pixelado.
  * - logo(): el botón «Usar el logo de la web» del diálogo de editar un acceso. Primero el favicon local; si no hay, y
  *   solo porque el usuario lo ha pedido, lo descarga del propio sitio (docs/CONEXIONES.md): la página del acceso y el
  *   icono que declara (o /favicon.ico), sin cookies, sin Referer y sin guardar nada en la caché. La imagen se deja en
@@ -28,7 +30,7 @@
  * Sin temporizadores ni trabajo en reposo: todo empieza con una petición de la página.
  */
 
-import { LADO_MEDIDA, pixeles, sinFondo, tieneFondo } from "./paginas/logos.sys.mjs";
+import { LADO_MEDIDA, fondoClaro, pixeles, sinFondo } from "./paginas/logos.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -40,8 +42,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 /** Tamaño que se pide a Places: el mayor razonable para una loseta (el mismo que la nueva pestaña). */
 const TAMANO_PLACES = 96;
-/** Y el de la alternativa: el favicon normal de la página, por si el grande es un icono táctil con fondo. */
-const TAMANO_ALTERNATIVA = 32;
+/**
+ * Y los de la alternativa, por orden: otro favicon de la página por si el grande es un icono táctil con fondo claro.
+ * Mejor de 48 o más (se ve nítido en la caja de 40); si no hay, el normal de 32.
+ */
+const TAMANOS_ALTERNATIVA = [48, 32];
 /**
  * Imagen que se guarda: 160 px (4 × los 40 px del icono de la loseta, para pantallas de alta densidad). El icono la
  * llena, como Firefox pinta un favicon en la loseta (pequeño o grande, a los 40 px de la caja).
@@ -162,8 +167,9 @@ async function faviconGuardado(spec, tamano) {
 
 /**
  * El favicon guardado que mejor sirve para la dirección (el más grande; a igualdad, el de la página más parecida) y,
- * como alternativa, el favicon normal de esa misma página si es otro y mide TAMANO_ALTERNATIVA o más: si el grande
- * resulta tener fondo opaco (un icono táctil), se usa la alternativa cuando no lo tiene. Solo lee Places.
+ * como alternativa, otro favicon de esa misma página (TAMANOS_ALTERNATIVA: el menor de 48 o más que no sea el grande,
+ * o el de 32): si el grande resulta tener fondo claro opaco (un icono táctil blanco), se usa la alternativa cuando no
+ * lo tiene. Solo lee Places.
  *
  * @param {URL} url
  * @returns {Promise<{uri: string, dato: string, ancho: number, tipo: string, bytes: number[], alternativa: object|null}|null>}
@@ -179,8 +185,15 @@ export async function iconoLocal(url) {
     }
   }
   if (mejor) {
-    const pequeno = await faviconGuardado(pagina, TAMANO_ALTERNATIVA);
-    mejor.alternativa = pequeno && pequeno.uri != mejor.uri && pequeno.ancho >= TAMANO_ALTERNATIVA ? pequeno : null;
+    mejor.alternativa = null;
+    for (const tamano of TAMANOS_ALTERNATIVA) {
+      // Places da el menor de `tamano` o más (o, si no hay, el mayor): vale si es otro y llega a `tamano`.
+      const otro = await faviconGuardado(pagina, tamano);
+      if (otro && otro.uri != mejor.uri && otro.ancho >= tamano) {
+        mejor.alternativa = otro;
+        break;
+      }
+    }
   }
   return mejor;
 }
@@ -189,8 +202,8 @@ export async function iconoLocal(url) {
  * Favicons locales de varios accesos, para los que la nueva pestaña enseña con la inicial.
  *
  * @param {string[]} urls
- * @returns {Promise<object>} {url: {dato, alternativa?}} solo de los que tienen; la alternativa (el favicon pequeño de la
- *   misma página) la elige el proceso de contenido si `dato` tiene fondo opaco y ella no (paginas/logos.sys.mjs)
+ * @returns {Promise<object>} {url: {dato, alternativa?}} solo de los que tienen; la alternativa (otro favicon de la
+ *   misma página) la elige el proceso de contenido si `dato` tiene fondo claro y ella no (paginas/logos.sys.mjs)
  */
 export async function iconosLocales(urls) {
   const resultado = {};
@@ -285,8 +298,9 @@ function iconosDeLaPagina(html, base) {
 
 /**
  * Descarga el icono del sitio: la página del acceso (por https) y los iconos que declara, del más grande al más
- * pequeño, y al final /favicon.ico (como mucho cuatro iconos). Se queda con el primero sin fondo opaco (sinFondo) y,
- * si ninguno lo es, con el primero que `pintar` acepte: los siguientes solo se piden mientras el que hay tiene fondo.
+ * pequeño, y al final /favicon.ico (como mucho cuatro iconos). Se queda con el primero sin fondo claro (sinFondo) y,
+ * si ninguno lo es, con el primero que `pintar` acepte: los siguientes solo se piden mientras el que hay tiene fondo
+ * claro. Un icono sobre un cuadrado oscuro o de color vale a la primera.
  * Solo https.
  *
  * Todo lleva un tope de ESPERA_RED: un solo temporizador mientras dura la descarga pedida, que se quita al acabar
@@ -354,7 +368,7 @@ async function descargarIcono(url, senal, pintar) {
       if (sinFondo(imagen)) {
         return resultado;
       }
-      // Con fondo opaco (o diminuto): vale si no hay otro mejor.
+      // Con fondo claro (o diminuto): vale si no hay otro mejor.
       respaldo ??= resultado;
     } catch (e) {
       console.warn("Aegis: logo de la web, icono", e);
@@ -367,8 +381,8 @@ async function descargarIcono(url, senal, pintar) {
 
 /**
  * Pinta el icono como PNG cuadrado de LADO px, entero y centrado (si no es cuadrado, con transparente a los lados), y
- * dice si tiene fondo opaco (tieneFondo) y su lado mayor. Decodifica con la ventana del navegador; null si no es una
- * imagen.
+ * dice si tiene fondo claro opaco (fondoClaro) y su lado mayor. Decodifica con la ventana del navegador; null si no es
+ * una imagen.
  *
  * @param {Window} win ventana del navegador
  * @param {Blob} blob
@@ -397,7 +411,7 @@ async function pintar(win, blob) {
     }
     let fondo = false;
     try {
-      fondo = tieneFondo(pixeles(win.document, img), LADO_MEDIDA);
+      fondo = fondoClaro(pixeles(win.document, img), LADO_MEDIDA);
     } catch {}
     // Un SVG sin tamaño propio (naturalWidth 0) se escala sin perder nitidez: cuenta como grande.
     const lado = Math.max(img.naturalWidth, img.naturalHeight) || LADO;
@@ -430,7 +444,7 @@ export async function logo(texto, win) {
   if (local) {
     let imagen = await aImagen(aBlob(local));
     let uri = local.uri;
-    // El grande con fondo opaco (un icono táctil): el favicon pequeño de la misma página, si no lo tiene.
+    // El grande con fondo claro (un icono táctil blanco): el otro favicon de la misma página, si no lo tiene.
     if (local.alternativa && (!imagen || imagen.fondo)) {
       const otra = await aImagen(aBlob(local.alternativa));
       if (otra && (!imagen || sinFondo(otra))) {

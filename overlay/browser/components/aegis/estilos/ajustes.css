@@ -17,8 +17,13 @@
 #helpButton,
 /* Cuenta de Mozilla: con identity.fxaccounts.enabled apagada, Firefox deja la tarjeta «La cuenta no está disponible». */
 setting-group:is([groupid="accountDisabled"], [groupid="account"], [groupid="sync"], [groupid="referrals"]),
-/* «Ayuda de Nightly» en Acerca de: la ayuda y las ideas van a sitios de Mozilla. */
+/* «Ayuda de Nightly» en Acerca de: la ayuda y las ideas van a sitios de Mozilla. Además, sus dos filas por su id
+   (setting-control.mjs: «setting-control-<id>»), por si el grupo cambia de sitio: «Get help» (support.mozilla.org) y
+   «Share ideas» (connect.mozilla.org, about-firefox.mjs). */
 setting-pane[data-category="paneAbout"] setting-group[groupid="support"],
+setting-group[groupid="support"],
+#setting-control-supportGetHelp,
+#setting-control-supportShareIdeas,
 /* Recogida de datos para Mozilla: Aegis no envía telemetría (10-telemetria.js) y la build la trae desactivada. */
 setting-group[groupid="dataCollection"] {
   display: none !important;

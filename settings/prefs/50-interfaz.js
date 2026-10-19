@@ -65,3 +65,23 @@ pref("aegis.marcadores.aviso_oculto", false);
 // widget.windows.windowsappsdk.enabled = false (10-telemetria.js): Firefox necesita el Windows App SDK para ocultar los
 // botones de la ventana que Windows dibuja con Mica; si algún día se ofrece Mica, hay que volver a encender el SDK.
 pref("widget.windows.mica", false);
+
+// Restos de Firefox (decisión del usuario, 2026-10-19: de Firefox, solo lo imprescindible).
+// Páginas de error (red, certificado, Solo HTTPS, reinicio necesario): sin la ilustración del zorro «Kit» de Firefox.
+// La lee net-error-card.mjs y la hoja de about:restartrequired (firefox.js la pone en true).
+pref("browser.netError.illustration.enabled", false);
+// Barra de direcciones: sin las etiquetas de grupo encima de los resultados («Firefox Suggest» sobre el historial y los
+// marcadores). Firefox no permite quitar solo esa: la pref apaga todas (también «Sugerencias de <buscador>» y
+// «Búsquedas recientes»), y los resultados siguen igual (UrlbarView.mjs, #rowLabel).
+pref("browser.urlbar.groupLabels.enabled", false);
+// Ajustes › Idioma: los Ajustes nuevos piden a addons.mozilla.org la lista de paquetes de idioma solo con abrir el
+// panel (languages.mjs, BrowserLanguageRemoteLocalesSetting), y abrir un panel no es pedir una conexión (principio 1).
+// Apagada, no se pide nada y el selector solo ofrece los seis idiomas que trae la build (multi-idioma). Aegis no
+// descarga idiomas: los paquetes de addons.mozilla.org traen la marca de Firefox (decisión del usuario, 2026-10-20).
+pref("intl.multilingual.downloadEnabled", false);
+
+// Idioma de la interfaz: vacío = el de Windows (LocaleService::GetRequestedLocales, «Case 3»), negociado con los seis
+// que trae la build (en-US, es-ES, pt-BR, fr, de, it; un Windows en es-MX usa es-ES). Sin esta pref, el zip y lo que
+// instala Aegis Setup usarían en-US (la de serie de una build sin identidad de paquete); el paquete de la Tienda ya la
+// pone igual en su distribution.ini. Ajustes › Idioma la cambia como siempre (requestedLocales).
+pref("intl.locale.requested", "");

@@ -13,6 +13,20 @@
   "aegis": {
     "revision": 2
   },
+  "l10n": {
+    "comentario": "Traducciones de la interfaz de Firefox (build multi-idioma, docs/GUIA.md): el monorepo mozilla-l10n/firefox-l10n en el commit que fija browser/locales/l10n-changesets.json de esta versión de Firefox para estos idiomas (aegis.py fetch lo comprueba). Se descargan solo al construir y se comprueban con su sha256; el navegador nunca descarga idiomas. en-US es el de base y no va en la lista. Al cambiar de versión de Firefox: el commit nuevo, sha256 vacío y `fetch` lo calcula.",
+    "commit": "0da379c064af4968c17feca6128a1290adfb3009",
+    "url": "https://codeload.github.com/mozilla-l10n/firefox-l10n/tar.gz/0da379c064af4968c17feca6128a1290adfb3009",
+    "sha256": "88026c8372c5475d18c592898feea29031e10e4842e34795d77f03e39102249b",
+    "idiomas": [
+      "es-ES",
+      "pt-BR",
+      "fr",
+      "de",
+      "it"
+    ],
+    "licencia": "MPL-2.0"
+  },
   "escudos": {
     "motor": "etp_engine",
     "comentario_motor": "Motor de Escudos: \"etp_engine\" (de serie: el fork de adblock-rust que trae Firefox) o \"propio\" (plan B: la copia de adblock-rust 0.12.1 de overlay/…/escudos/motor-nativo/adblock). Se cambia aquí y con `aegis.py prepare` (docs/GUIA.md, «Versión de Firefox»).",

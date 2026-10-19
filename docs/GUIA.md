@@ -38,7 +38,7 @@ interfaz se escriben en Fluent (`.ftl`) en seis idiomas (es-ES, en-US, pt-BR, fr
 
 ```
 Aegis/
-├── upstream.json        versión de Firefox fijada (URL, sha256, huella GPG de Mozilla) y revisión de Aegis
+├── upstream.json        versión de Firefox fijada (URL, sha256, huella GPG de Mozilla), revisión de Aegis y traducciones (l10n)
 ├── patches/series       parches en orden; patches/<grupo>/*.patch (0100-build … 0900-migracion)
 ├── overlay/             archivos nuevos que se copian tal cual al árbol (browser/components/aegis/, temas…)
 ├── mozconfigs/          common + linux-x86_64 + windows-x86_64-cross (aegis.py los concatena)
@@ -66,9 +66,43 @@ Aegis/
     también a ejecutarse como root.
   - Una orden a la vez: `build-wsl.sh` toma un cerrojo (`~/aegis/.cerrojo`).
   - El repo se lee desde `/mnt/c` (solo parches, overlay y mozconfigs, que son pequeños).
-- **Pasos:** `fetch` (tarball verificado con sha256 y la firma GPG de Mozilla) → `prepare` (árbol como repo git:
-  un commit con la fuente intacta, etiqueta `aegis-upstream`, y un commit por parche) → `bootstrap` → `build` →
-  `run`.
+- **Pasos:** `fetch` (tarball verificado con sha256 y la firma GPG de Mozilla, y las traducciones) → `prepare`
+  (árbol como repo git: un commit con la fuente intacta, etiqueta `aegis-upstream`, y un commit por parche) →
+  `bootstrap` → `build` → `package` (multi-idioma) → `run` o `instalar-prueba`.
+- **Idiomas (build multi-idioma):** la interfaz entera, de Firefox y de Aegis, va en en-US, es-ES, pt-BR, fr, de e
+  it, y se usa el de Windows (`intl.locale.requested` vacía, `50-interfaz.js`).
+  - Las traducciones de Firefox son las del monorepo `mozilla-l10n/firefox-l10n` en el commit que fija
+    `browser/locales/l10n-changesets.json` de la versión de Firefox (`upstream.json` › `l10n`: commit, URL de
+    codeload, sha256 e idiomas). `fetch` comprueba que el commit es el de Firefox (del árbol intacto o del tarball),
+    descarga el `.tar.gz` (unos 88 MB), lo comprueba con su sha256 y extrae **solo** esos cinco idiomas a
+    `~/.mozbuild/l10n-central` (la ruta de serie de configure: no hace falta `--with-l10n-base`), con un sello
+    (`.aegis-l10n.json`). Si GitHub cambiara la compresión y el sha256 dejara de cuadrar, `fetch` falla; plan B en
+    `aegis.py` (`git fetch --depth 1 <commit>` y un sha256 nuevo).
+  - `package` es `mach package-multi-locale --locales de es-ES fr it pt-BR`, siempre **después** de `build` (una build
+    incremental deja `dist/bin` otra vez solo en en-US). Se niega con `NIGHTLY_BUILD` (mach clonaría y pondría al día
+    firefox-l10n sin fijar nada) y comprueba el paquete: `res/multilocale.txt` con los seis y, en cada idioma, el
+    `brand.ftl` y el `brand.properties` de Aegis (la entrada de branding de `l10n-manifest.json`, `is_locale: false`,
+    copia los de en-US de la marca a todos); ningún archivo de marca del paquete dice «Firefox» ni «Mozilla». `mar` y
+    `msix` lo vuelven a comprobar; `msix` declara los seis en el `AppxManifest.xml`.
+  - Nada de paquetes de idioma (langpacks) de addons.mozilla.org: traen la marca de Firefox. Ajustes › Idioma solo
+    ofrece los seis (sin «Buscar más idiomas…»; `intl.multilingual.downloadEnabled` en false).
+  - **Cambios de Aegis a las traducciones** (`tools/l10n-cambios.json`, MPL-2.0, apuntado en `NOTICE.md`): una lista
+    cerrada que `fetch` aplica al extraer, como las sustituciones de LibreWolf. «sustituciones»: textos visibles que
+    nombran a «Firefox» con todas las letras donde en-US usa la marca (pt-BR: aviso de actualización del menú y
+    `about:profiles`; de: la «Firefox-Startseite» y otros 15); el nombre pasa a `{ -brand-short-name }`. «anadidos»: los
+    textos del menú principal que faltan en es-ES (p. ej. «Help and Report»). `fetch` falla si un texto ya no está tal
+    cual, si un añadido ya existe o si Firefox ya no tiene el mensaje: entonces se revisa la entrada. `package` y
+    `verificar.py` comprueban que están en el paquete. Fuera de la lista, a propósito: lo que atribuye el origen o es
+    legal (créditos de it, «respaldado por Mozilla» en `certError.ftl`, «Absturzbericht an Mozilla»: informes de fallos
+    que Aegis no compila) y lo que Aegis no enseña (marcadores de serie de fr, `about:welcome`, el error de SSLv3). Los
+    «Firefox» que ya trae en-US (errores de red antiguos de `appstrings.properties`, nombres de otros productos en
+    `brandings.ftl`) siguen igual en todos los idiomas.
+  - **es-ES incompleto:** al commit fijado le faltan 1089 textos de 158.0 (compare-locales; a fr, de, it y pt-BR,
+    ninguno) y al último de firefox-l10n (2026-10-19), 1083: ningún commit lo completa, así que no se fija otro para
+    es-ES (serían 88 MB más por 6 textos). Lo que falta sale en inglés salvo los añadidos de `l10n-cambios.json`. Medir
+    con compare-locales de `third_party/python` sobre `~/.mozbuild/l10n-central` (`docs/PLANNING.md`).
+  - Al cambiar de versión de Firefox: el commit nuevo de `l10n-changesets.json` en `upstream.json` › `l10n` (y la URL),
+    `sha256` vacío, `fetch` (lo calcula y lo dice), fijarlo y `fetch` otra vez.
 - **Editar un parche:** se cambia en el árbol, se hace commit con el remolque `Aegis-Parche: NNNN-grupo/nombre.patch`
   y `aegis.py export` regenera `patches/` (sin hash ni fecha, para diffs estables). `export` se niega si se perdería
   algo (parches de `series` sin aplicar en el árbol, rutas repetidas o raras).
@@ -76,6 +110,9 @@ Aegis/
   con la fuente intacta (no toca el árbol). Si cambia el orden o un parche ya aplicado: `prepare --limpio`.
 - **La base del árbol es la fuente exacta:** `git add --force` (también lo que ignora el `.gitignore` de Firefox) y
   `* -text` en `.git/info/attributes` (sin normalizar finales de línea).
+- **Propiedades de los `.exe`** (parche `0200-branding/0002`): en `config/rules.mk` el `.rc` de cada ejecutable no
+  depende de su `module.ver`, así que `aegis.py build` borra el `.rc` y el `.res` de `firefox.exe`,
+  `private_browsing.exe` y `plugin-container.exe` si su `module.ver` es más reciente (`RECURSOS_DE_VERSION`).
 - **Recursos:** unos 45–60 GB de disco por objetivo. Con los 16 GB que WSL usa de serie, la build se quedaba sin
   memoria: con `memory=24GB` y `swap=16GB` en `%USERPROFILE%\.wslconfig` basta.
 - **Objetivos:** `windows-x86_64-cross` (el de serie) y `linux-x86_64`, cada uno con su mozconfig en el árbol
@@ -103,7 +140,7 @@ Todo en `docs/ACTUALIZACIONES.md`. Lo esencial:
 - `REEMPLAZOS` en `aegis.py`: los certificados del updater (`release_primary.der`, `release_secondary.der`) son lo
   **único** de Firefox que se sustituye sin parche. Cualquier otro archivo de `overlay/` que pise uno de Firefox hace
   fallar `prepare`.
-- Publicar: `build` → `package` → `mar` → `publicar` (borrador, subir, comprobar y luego «latest»). Versión
+- Publicar: `build` → `package` (multi-idioma) → `mar` → `publicar` (borrador, subir, comprobar y luego «latest»). Versión
   `v<firefox>-<revisión>` desde `upstream.json`.
 
 ## Versión de Firefox
@@ -111,8 +148,8 @@ Todo en `docs/ACTUALIZACIONES.md`. Lo esencial:
 - `upstream.json` fija la versión. Para cambiarla: versión, URL, `sha256` y tamaño de `SHA256SUMS` de esa versión
   (la huella de la clave no cambia salvo que Mozilla rote la principal) y `aegis.revision` a 1.
 - Calendario de Mozilla: `https://product-details.mozilla.org/1.0/firefox_versions.json` (`NEXT_RELEASE_DATE`).
-- Al cambiar de versión: `prepare --limpio`, arreglar los parches que no se apliquen, `export`, compilar, probar y
-  pasar las revisiones. Además, `git grep "campaignId("` fuera de las pruebas: `AttributionCode.msixCampaignId()`
+- Al cambiar de versión: `prepare --limpio`, arreglar los parches que no se apliquen, `export`, el commit de las
+  traducciones (`upstream.json` › `l10n`, «Construir» › «Idiomas»), compilar, probar y pasar las revisiones. Además, `git grep "campaignId("` fuera de las pruebas: `AttributionCode.msixCampaignId()`
   (parche `0400-privacidad/0005`) tiene que seguir siendo la única llamada; otra devolvería la consulta a la Tienda
   en cada arranque del paquete MSIX.
 - **Motor de Escudos (plan B).** De serie usa `etp_engine`, el fork de adblock-rust que Firefox trae desde la 158

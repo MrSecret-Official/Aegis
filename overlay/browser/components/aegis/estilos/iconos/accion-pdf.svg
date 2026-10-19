@@ -1,0 +1,8 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Aegis · acción de la barra de direcciones (acciones.sys.mjs), guardar la página como PDF: el documento del Centro de SecretOS con la flecha de guardar. Rejilla de 24, trazo de 1,5, extremos
+     redondos, context-fill (DISENO §8). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="context-fill" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M7 3.5h6.5l4.5 4.5v11a1.5 1.5 0 0 1 -1.5 1.5h-9.5a1.5 1.5 0 0 1 -1.5 -1.5v-14a1.5 1.5 0 0 1 1.5 -1.5zM13 3.5v4.5h5M12 11v5.5M9.5 14l2.5 2.5l2.5 -2.5"/>
+</svg>

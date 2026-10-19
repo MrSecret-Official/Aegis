@@ -37,6 +37,25 @@ menubar {
   --urlbar-background-box-shadow-open: var(--aegis-shadow) !important;
 }
 
+/* El botón de Escudos (escudos.sys.mjs) también en la página de resultados de un buscador que Firefox conoce (Bing,
+   Google, Wikipedia…). Ahí la barra enseña los términos de búsqueda en vez de la dirección (atributo
+   persistsearchterms, con usertyping y el contenedor en pageproxystate="invalid") y Firefox 158 oculta todos los
+   botones de página (urlbar.css: «#urlbar[usertyping] … > #page-action-buttons» y «[pageproxystate="invalid"] > …
+   > .urlbar-page-action»). Aquí vuelven el contenedor, solo si lleva el botón de Escudos visible, y ese botón: los
+   demás siguen ocultos como en Firefox. Mientras se escribe de verdad en la barra (focused), nada cambia. Lo
+   comprueba tools/verificar.py (búsqueda limpia). */
+#urlbar[persistsearchterms]:not([focused])
+  > .urlbar-input-container
+  > #page-action-buttons:has(> #aegis-escudos-button:not([hidden])) {
+  display: flex;
+}
+#urlbar[persistsearchterms]:not([focused])
+  > .urlbar-input-container[pageproxystate="invalid"]
+  > #page-action-buttons
+  > #aegis-escudos-button:not([hidden]) {
+  display: flex;
+}
+
 /* Selector de buscadores (la lupa a la izquierda de la barra). Firefox lo pinta como una píldora gris; en Aegis es
    un botón de icono como los de la barra (DISENO §9): sin fondo y con el icono en gris que se aclara al pasar.
    Radio 5: el concéntrico exacto (6) no está en la escala, así que se usa el escalón inmediatamente menor (§5). */
@@ -123,22 +142,93 @@ menupopup menu,
   margin-block: 0 !important;
   border-radius: 0 !important;
 }
-/* Todas las filas de 32: Firefox deja en 31 las que solo llevan texto y en 32 las que llevan icono o flecha. */
-.panel-subview-body > .subviewbutton {
+/* Firefox fija --panel-menuitem-margin («0 8px») en la raíz con su propio margin-inline ya resuelto: cambiar solo
+   -inline no lo movía, y las filas quedaban a 8 px del borde. Fuera queda el panel de extensiones, que tiene su propia
+   medida (estilos/extensiones.css, a 8). */
+panelview:not(#unified-extensions-view) > .panel-subview-body {
+  --panel-menuitem-margin: 0 var(--aegis-s-4) !important;
+}
+panelview:not(#unified-extensions-view) > .panel-subview-body > :is(.subviewbutton, toolbaritem) {
+  margin-inline: var(--aegis-s-4) !important;
+}
+/* Todas las filas de 32: Firefox deja en 31 las que solo llevan texto y en 32 las que llevan icono o flecha. La del
+   zoom, con sus botones de 24, llevaba 5 px arriba y abajo (34). */
+.panel-subview-body > .subviewbutton,
+:is(#PanelUI-history, #PanelUI-bookmarks, #appmenu-moreTools)
+  .panel-subview-body > :is(vbox, toolbaritem) > .subviewbutton {
   min-height: 32px;
 }
+.panel-subview-body > .toolbaritem-combined-buttons {
+  padding-block: var(--aegis-s-4) !important;
+}
+/* Listas dentro de los submenús Historial, Marcadores y Más herramientas (historial y marcadores recientes,
+   herramientas del navegador): la lista entera es una cápsula, como un grupo, y sus filas van pegadas dentro, sin
+   fondo propio (antes la lista ocupaba todo el ancho del panel y cada fila llevaba su propio fondo y su radio 7, con
+   huecos entre ellas). overflow: clip recorta el resalte de las filas de los extremos al radio de la cápsula. Solo
+   en esas vistas: otros paneles (protección, información del sitio…) tienen cajas con filas que no son listas. */
+:is(#PanelUI-history, #PanelUI-bookmarks, #appmenu-moreTools)
+  .panel-subview-body > :is(toolbaritem, vbox:has(> .subviewbutton)) {
+  margin-inline: var(--aegis-s-4) !important;
+  overflow: clip;
+}
+:is(#PanelUI-history, #PanelUI-bookmarks, #appmenu-moreTools) .panel-subview-body > vbox:has(> .subviewbutton) {
+  border-radius: var(--aegis-r-8) !important;
+}
+:is(#PanelUI-history, #PanelUI-bookmarks, #appmenu-moreTools)
+  .panel-subview-body > :is(toolbaritem, vbox) > .subviewbutton {
+  margin-inline: 0 !important;
+  border-radius: 0 !important;
+}
+/* Extremos de cada cápsula. Una fila abre su grupo si el hermano visible anterior no es una fila (una línea, un
+   título, un recuadro… o ninguno) y lo cierra si el siguiente visible tampoco lo es: una fila sola lleva las cuatro
+   esquinas. Los hermanos con [hidden] se saltan (hasta tres seguidos; en los extremos del cuerpo, los que haya). Un
+   elemento que Firefox oculta solo con CSS no se distingue en un selector: si no es una fila, cuenta como un límite
+   más, que es lo que hace falta (p. ej. la promo de la cuenta, oculta sin cuenta, encima de «Crear un perfil
+   nuevo»); las filas ocultas así (la de la cuenta, el mensaje del menú) nunca quedan junto a una fila visible. */
 .panel-subview-body
-  > :is(.subviewbutton, toolbaritem):is(:first-child, toolbarseparator + *, toolbarseparator + [hidden] + *) {
+  > :is(.subviewbutton, toolbaritem):is(
+    :nth-child(1 of :not([hidden])),
+    :not(.subviewbutton, toolbaritem, [hidden]) + *,
+    :not(.subviewbutton, toolbaritem, [hidden]) + [hidden] + *,
+    :not(.subviewbutton, toolbaritem, [hidden]) + [hidden] + [hidden] + *,
+    :not(.subviewbutton, toolbaritem, [hidden]) + [hidden] + [hidden] + [hidden] + *
+  ) {
   border-start-start-radius: var(--aegis-r-8) !important;
   border-start-end-radius: var(--aegis-r-8) !important;
 }
 .panel-subview-body
-  > :is(.subviewbutton, toolbaritem):is(:last-child, :has(+ toolbarseparator), :has(+ [hidden] + toolbarseparator)) {
+  > :is(.subviewbutton, toolbaritem):is(
+    :nth-last-child(1 of :not([hidden])),
+    :has(+ :not(.subviewbutton, toolbaritem, [hidden])),
+    :has(+ [hidden] + :not(.subviewbutton, toolbaritem, [hidden])),
+    :has(+ [hidden] + [hidden] + :not(.subviewbutton, toolbaritem, [hidden])),
+    :has(+ [hidden] + [hidden] + [hidden] + :not(.subviewbutton, toolbaritem, [hidden]))
+  ) {
   border-end-start-radius: var(--aegis-r-8) !important;
   border-end-end-radius: var(--aegis-r-8) !important;
 }
+/* La línea, de 1 px con 8 de hueco a cada lado y del ancho de las cápsulas (Firefox le da además 4 px de relleno
+   arriba y abajo, que dejaban 12, y 8 a los lados). */
 .panel-subview-body > toolbarseparator {
   margin-block: var(--aegis-s-8) !important;
+  padding: 0 var(--aegis-s-4) !important;
+}
+/* Fuera del cuerpo: la línea bajo el título del submenú y la del pie, del mismo ancho que las cápsulas; el botón del
+   pie («Gestionar el historial»…) es una cápsula de una fila, a 4 px del borde como las demás y con 8 de hueco bajo
+   la línea (el cuerpo ya deja 4 encima). El panel de extensiones tiene su propio pie (estilos/extensiones.css). */
+panelview:not(#unified-extensions-view) > .panel-header + toolbarseparator {
+  padding-inline: var(--aegis-s-4) !important;
+}
+panelview:not(#unified-extensions-view)
+  > .panel-subview-body
+  + toolbarseparator:has(+ .panel-subview-footer-button) {
+  padding: 0 var(--aegis-s-4) !important;
+  margin-block: var(--aegis-s-4) var(--aegis-s-8) !important;
+}
+panelview:not(#unified-extensions-view) > .panel-subview-footer-button {
+  min-height: 32px;
+  margin: 0 var(--aegis-s-4) var(--aegis-s-4) !important;
+  border-radius: var(--aegis-r-8) !important;
 }
 /* Sin cuenta de Mozilla (identity.fxaccounts.enabled = false), Firefox esconde la línea que cierra el bloque de la
    cuenta, pero las filas de perfiles («Crear un perfil nuevo», el perfil actual) siguen encima de ella: sin la línea,
@@ -148,15 +238,41 @@ menupopup menu,
   #appMenu-fxa-separator {
   display: flex !important;
 }
+/* Ayuda: fuera «Compartir ideas y opiniones» (Mozilla Connect, ideas.mozilla.org) y «Cambiar a un dispositivo nuevo»
+   (soporte de Mozilla, con parámetros de campaña), que con el diseño Nova es un recuadro promocional de color. No
+   hay pref que los quite (solo la política feedbackCommands, y policies.json se queda mínimo). Están en el menú Ayuda
+   de la barra de menús y en el submenú del menú principal (copias de aquel, panelUI.js), con la línea que cerraba
+   su grupo para que no queden dos seguidas (docs/CONEXIONES.md, «Lo que Aegis corta»). */
+#feedbackPage,
+#helpSwitchDevice,
+#appMenu_feedbackPage,
+#appMenu_helpSwitchDevice,
+#appMenu-nova-switch-device-promo,
+#PanelUI-helpView
+  :is(#appMenu_feedbackPage, #appMenu_helpSwitchDevice, #appMenu-nova-switch-device-promo)
+  + toolbarseparator {
+  display: none !important;
+}
 @media not ((forced-colors: active) or (prefers-contrast: more)) {
   /* La cápsula es un control sobre el menú (§6): se ve igual en claro y en oscuro. */
   .panel-subview-body > :is(.subviewbutton, toolbaritem):not([hidden]) {
     background-color: var(--aegis-control) !important;
   }
-  .panel-subview-body > .subviewbutton:not([disabled]):hover {
+  :is(#PanelUI-history, #PanelUI-bookmarks, #appmenu-moreTools) .panel-subview-body > vbox:has(> .subviewbutton) {
+    background-color: var(--aegis-control) !important;
+  }
+  :is(#PanelUI-history, #PanelUI-bookmarks, #appmenu-moreTools)
+    .panel-subview-body > :is(toolbaritem, vbox) > .subviewbutton {
+    background-color: transparent !important;
+  }
+  .panel-subview-body > .subviewbutton:not([disabled]):hover,
+  :is(#PanelUI-history, #PanelUI-bookmarks, #appmenu-moreTools)
+    .panel-subview-body > :is(toolbaritem, vbox) > .subviewbutton:not([disabled]):hover {
     background-color: var(--aegis-control-hover) !important;
   }
-  .panel-subview-body > .subviewbutton:not([disabled]):hover:active {
+  .panel-subview-body > .subviewbutton:not([disabled]):hover:active,
+  :is(#PanelUI-history, #PanelUI-bookmarks, #appmenu-moreTools)
+    .panel-subview-body > :is(toolbaritem, vbox) > .subviewbutton:not([disabled]):hover:active {
     background-color: var(--aegis-control-down) !important;
   }
   /* La línea «zap» (tras la cuenta y los perfiles) lleva un degradado: el de la marca de Firefox o, con Nova, el filo
@@ -321,4 +437,102 @@ menupopup menu,
   border-radius: 0 !important;
   clip-path: none;
   outline: none;
+}
+
+/* ───────────────────────── Restos de Firefox ─────────────────────────
+   Decisión del usuario (2026-10-19): de Firefox, solo lo imprescindible (licencias y lo crucial). Fuera lo que solo
+   sirve a Firefox o lleva a webs de Mozilla. Ninguna de estas filas tiene una pref que la quite sin apagar más cosas,
+   y policies.json se queda mínimo. Ocultas con display: none, no con [hidden]: Firefox cambia [hidden] en algunas
+   (Report Broken Site, Report deceptive site) y lo volvería a mostrar. Detalle en docs/CONEXIONES.md, «Lo que Aegis
+   corta». */
+
+/* Firefox View (Herramientas, el botón y su sitio en la paleta de Personalizar): la vista de pestañas de Firefox, con
+   su zorro. Las pestañas abiertas ya están en la barra lateral y en la lista de pestañas. */
+#menu_openFirefoxView,
+#firefox-view-button,
+#wrapper-firefox-view-button,
+/* «Restart (Developer)» (Archivo): lo añade browser-development-helpers.js en las builds sin MOZILLA_OFFICIAL, como la
+   de Aegis. Su atajo, Ctrl+Alt+R, lo desactiva AegisArranque.ventana(). */
+#menu_FileRestartItem,
+/* «Extensions for Developers» (Herramientas del navegador): una colección de Mozilla en addons.mozilla.org. Su copia
+   del menú ☰ no tiene id; se reconoce por su id de Fluent. Es la última fila de su lista: la cápsula (la lista entera,
+   con overflow: clip) sigue cerrada. */
+#extensionsForDevelopers,
+#appmenu-developer-tools-view > [data-l10n-id="appmenu-developer-tools-extensions"],
+/* Ayuda: «Get help» (support.mozilla.org) y «Report Broken Site» (webcompat.com, con la dirección de la web y datos
+   del equipo). En el menú Ayuda de la barra de menús y en su copia del menú ☰ (appMenu_<id>, panelUI.js). */
+#menu_openHelp,
+#help_reportBrokenSite,
+#appMenu_menu_openHelp,
+#appMenu_help_reportBrokenSite {
+  display: none !important;
+}
+/* «Report deceptive site…» (phish-report.mozilla.com) y «This isn’t a deceptive site…»: solo tienen sentido con Safe
+   Browsing, apagado de serie (40-privacidad.js). Vuelven si el usuario lo enciende. */
+@media not -moz-pref("browser.safebrowsing.phishing.enabled") {
+  #menu_HelpPopup_reportPhishingtoolmenu,
+  #menu_HelpPopup_reportPhishingErrortoolmenu,
+  #appMenu_menu_HelpPopup_reportPhishingtoolmenu,
+  #appMenu_menu_HelpPopup_reportPhishingErrortoolmenu {
+    display: none !important;
+  }
+}
+/* «Translate page…» (menú ☰) y «Translations» (Más herramientas), mientras la traducción no esté aceptada en
+   about:conexiones (conexiones.sys.mjs apaga browser.translations.enable): Firefox ya los esconde así, esto lo
+   asegura. */
+@media not -moz-pref("browser.translations.enable") {
+  #appMenu-translate-button,
+  #appmenu-abouttranslations-button {
+    display: none !important;
+  }
+}
+/* Submenú Ayuda del menú ☰: panelUI.js lo arma en grupos, con una línea entre ellos. Con «Get help» y «Report Broken
+   Site» fuera (y «Report deceptive site…» sin Safe Browsing), el primer grupo se queda vacío y su línea abriría el
+   panel. Se quita la línea que no tiene ninguna fila visible encima. Y si queda «Report deceptive site…» sola, abre su
+   cápsula: las reglas de «Menús de los paneles» no ven que las filas de encima están ocultas con CSS. */
+#PanelUI-helpItems
+  > toolbarseparator:not(
+    .subviewbutton:not(
+        #appMenu_menu_openHelp,
+        #appMenu_help_reportBrokenSite,
+        #appMenu_feedbackPage,
+        #appMenu_helpSwitchDevice
+      )
+      ~ *
+  ) {
+  display: none !important;
+}
+@media not -moz-pref("browser.safebrowsing.phishing.enabled") {
+  #PanelUI-helpItems
+    > toolbarseparator:not(
+      .subviewbutton:not(
+          #appMenu_menu_openHelp,
+          #appMenu_help_reportBrokenSite,
+          #appMenu_feedbackPage,
+          #appMenu_helpSwitchDevice,
+          #appMenu_menu_HelpPopup_reportPhishingtoolmenu,
+          #appMenu_menu_HelpPopup_reportPhishingErrortoolmenu
+        )
+        ~ *
+    ) {
+    display: none !important;
+  }
+}
+#PanelUI-helpItems
+  > .subviewbutton:not(
+    #appMenu_menu_openHelp,
+    #appMenu_help_reportBrokenSite,
+    .subviewbutton:not(#appMenu_menu_openHelp, #appMenu_help_reportBrokenSite) ~ *
+  ) {
+  border-start-start-radius: var(--aegis-r-8) !important;
+  border-start-end-radius: var(--aegis-r-8) !important;
+}
+/* Personalizar: sin el dragón de colores del menú adicional vacío (su hueco para soltar se queda). */
+#widget-overflow-fixed-list::before {
+  background-image: none !important;
+}
+/* «Learn more» de los paneles de la ventana (información del sitio, permisos, avisos emergentes…): llevan a
+   support.mozilla.org. Los de Ajustes y Complementos ya los quitan sus hojas. */
+:root[windowtype="navigator:browser"] :is(a[is="moz-support-link"], .popup-notification-learnmore-link) {
+  display: none !important;
 }

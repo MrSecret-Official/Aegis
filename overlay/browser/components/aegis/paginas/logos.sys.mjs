@@ -18,11 +18,12 @@
  *   loseta del tema oscuro. Se mide cada imagen una vez, en local (un lienzo de 32 × 32): si lo opaco es casi negro y
  *   sin color y alrededor hay transparencia, el elemento que pinta esa imagen lleva aegis-logo-oscuro y la hoja lo pinta
  *   en blanco en el tema oscuro. Los logos de color y los de fondo opaco no se tocan.
- * - Logos sin fondo antes que con fondo: el icono más grande de un sitio suele ser el «apple-touch-icon» de iOS, el logo
- *   sobre un cuadrado opaco (casi siempre blanco), que en la loseta se ve como un cuadrado blanco. Si el proceso
- *   principal manda además el favicon pequeño de la misma página (alternativa), se mide el grande y, si tiene fondo y
- *   el pequeño no, se pinta el pequeño. Un icono que llena su cuadrado con el color de la marca (sin alternativa
- *   transparente) sale igual que antes. tieneFondo() y sinFondo() también los usa logos.sys.mjs (proceso principal).
+ * - Sin fondo claro: el icono más grande de un sitio suele ser el «apple-touch-icon» de iOS, el logo sobre un cuadrado
+ *   opaco. Si ese cuadrado es blanco o gris muy claro (YouTube), en la loseta se ve como un cuadrado blanco: si el
+ *   proceso principal manda además otro favicon de la misma página (alternativa, de 48 px o más si lo hay), se mide el
+ *   grande y, si tiene fondo claro y el otro no, se pinta el otro. Un fondo oscuro (DeepL) o del color de la marca
+ *   (Roblox) se ve bien sobre la loseta: se queda el grande, que se ve nítido (un favicon de 32 ampliado a la caja se
+ *   vería pixelado). fondoClaro() y sinFondo() también los usa logos.sys.mjs (proceso principal).
  *
  * Sin temporizadores: un MutationObserver (la página la monta React) y una revisión por tanda de cambios. Cada imagen
  * se mide una vez (la misma medida vale para el fondo y para el tono).
@@ -34,23 +35,28 @@ const HTML = "http://www.w3.org/1999/xhtml";
 
 /** Lado del lienzo en el que se mide una imagen (estirada a un cuadrado). */
 export const LADO_MEDIDA = 32;
-/** Tamaño mínimo de un icono sin fondo para preferirlo a uno con fondo (un favicon de 16 px se vería borroso). */
+/** Tamaño mínimo de un icono sin fondo claro para preferirlo a uno con él (un favicon de 16 px se vería borroso). */
 export const LADO_MINIMO = 32;
 /** Las esquinas se miran un 12,5 % hacia dentro (4 px de 32): un borde redondeado suave no cuenta como transparente. */
 const MARGEN_ESQUINA = 0.125;
 /** Alfa a partir del cual un píxel es opaco. */
 const ALFA_OPACO = 200;
+/** Un píxel opaco es claro si ninguno de sus canales baja de aquí (blanco o gris muy claro)… */
+const CANAL_CLARO = 215;
+/** …y casi no tiene color (diferencia entre el canal mayor y el menor). */
+const COLOR_CLARO = 24;
 
 /**
- * ¿La imagen tiene fondo opaco? Lo tiene si las cuatro esquinas (un bloque de 2 × 2 píxeles un poco hacia dentro) son
- * opacas: el «apple-touch-icon» (logo sobre un cuadrado, redondeado o no) o un icono que llena el cuadrado con el
- * color de su marca. Un logo con las esquinas transparentes, también uno redondo, no lo tiene.
+ * ¿La imagen tiene fondo claro opaco? Lo tiene si las cuatro esquinas (un bloque de 2 × 2 píxeles un poco hacia dentro)
+ * son opacas y casi blancas o de un gris muy claro: el «apple-touch-icon» de logo sobre un cuadrado blanco, redondeado
+ * o no (YouTube). Un logo con las esquinas transparentes, también uno redondo, no lo tiene; un icono sobre un cuadrado
+ * oscuro (DeepL) o del color de su marca (Roblox), tampoco: se ve bien sobre la loseta.
  *
  * @param {ArrayLike<number>} d RGBA de lado × lado
  * @param {number} lado
  * @returns {boolean}
  */
-export function tieneFondo(d, lado) {
+export function fondoClaro(d, lado) {
   if (!d || lado < 8 || d.length < lado * lado * 4) {
     return false;
   }
@@ -59,7 +65,9 @@ export function tieneFondo(d, lado) {
   for (const [x0, y0] of [[m, m], [lejos, m], [m, lejos], [lejos, lejos]]) {
     for (let y = y0; y < y0 + 2; y++) {
       for (let x = x0; x < x0 + 2; x++) {
-        if (d[(y * lado + x) * 4 + 3] < ALFA_OPACO) {
+        const i = (y * lado + x) * 4;
+        const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+        if (a < ALFA_OPACO || Math.min(r, g, b) < CANAL_CLARO || Math.max(r, g, b) - Math.min(r, g, b) > COLOR_CLARO) {
           return false;
         }
       }
@@ -100,9 +108,9 @@ export function esOscuro(d, lado) {
 }
 
 /**
- * ¿Vale como icono sin fondo? Sin fondo opaco y de LADO_MINIMO o más.
+ * ¿Vale como icono sin fondo claro? Sin fondo claro opaco y de LADO_MINIMO o más.
  *
- * @param {{fondo: boolean, lado: number}|null} medida
+ * @param {{fondo: boolean, lado: number}|null} medida fondo: si tiene fondo claro (fondoClaro)
  */
 export function sinFondo(medida) {
   return !!medida && !medida.fondo && medida.lado >= LADO_MINIMO;
@@ -231,7 +239,7 @@ export function logos(win, pedir) {
       });
   };
   /**
-   * La imagen que se pinta para un icono conocido: el principal, o la alternativa si el principal tiene fondo opaco y
+   * La imagen que se pinta para un icono conocido: el principal, o la alternativa si el principal tiene fondo claro y
    * ella no. null mientras se mide (la loseta sigue con la inicial hasta la siguiente revisión).
    */
   const elegido = icono => {
@@ -256,7 +264,7 @@ export function logos(win, pedir) {
   };
 
   // ── Medidas (fondo y tono) y logos oscuros (ver la cabecera) ──
-  /** imagen → {oscuro, fondo, lado}, o null mientras se mide. */
+  /** imagen → {oscuro, fondo (claro), lado}, o null mientras se mide. */
   const medidas = new Map();
   const URL_IMAGEN = /url\("?(.+?)"?\)/;
   const CANDIDATOS = ".tile .icon-wrapper, .tile .top-site-icon, .tile .screenshot";
@@ -272,7 +280,7 @@ export function logos(win, pedir) {
   };
   /** Solo imágenes que ya están en el equipo: una de la red se volvería a pedir (aunque fuera de la caché). */
   const LOCAL = /^(?:data|blob|page-icon|moz-page-thumb|resource|chrome|moz-icon):/;
-  /** Medida de una imagen que no se puede leer: ni oscura ni con fondo (se deja como está). */
+  /** Medida de una imagen que no se puede leer: ni oscura ni con fondo claro (se deja como está). */
   const SIN_MEDIDA = { oscuro: false, fondo: false, lado: 0 };
   const medir = src =>
     new Promise(listo => {
@@ -286,7 +294,7 @@ export function logos(win, pedir) {
           const d = pixeles(doc, img);
           listo({
             oscuro: esOscuro(d, LADO_MEDIDA),
-            fondo: tieneFondo(d, LADO_MEDIDA),
+            fondo: fondoClaro(d, LADO_MEDIDA),
             // Un SVG sin tamaño propio se escala sin perder nitidez: cuenta como grande.
             lado: Math.max(img.naturalWidth, img.naturalHeight) || Infinity,
           });

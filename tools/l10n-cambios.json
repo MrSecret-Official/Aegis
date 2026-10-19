@@ -1,0 +1,186 @@
+{
+  "comentario": "Cambios de Aegis a las traducciones de Firefox (mozilla-l10n/firefox-l10n, MPL-2.0), que `aegis.py fetch` aplica al extraerlas (como las sustituciones de LibreWolf). Lista cerrada: cada entrada dice el idioma, el archivo del monorepo, el id del mensaje y el texto exacto. «sustituciones»: textos que se ven en Aegis y nombran a Firefox con todas las letras donde en-US usa la marca (o no la nombra): el nombre pasa a { -brand-short-name } (todos esos archivos ya cargan branding/brand.ftl). No se tocan los que atribuyen el origen o son legales (créditos, «respaldado por Mozilla»), ni los de lo que Aegis no enseña. «anadidos»: mensajes que faltan en la traducción del commit fijado y se ven en el menú principal; los demás siguen en inglés (la reserva de Fluent). `fetch` falla si un texto ya no está tal cual o si un añadido ya existe (la traducción ha cambiado: se revisa la entrada). docs/GUIA.md, «Construir» › «Idiomas»; NOTICE.md.",
+  "sustituciones": [
+    {
+      "idioma": "pt-BR",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenuitem-banner-update-restart",
+      "antes": "reiniciar o Firefox",
+      "despues": "reiniciar o { -brand-short-name }"
+    },
+    {
+      "idioma": "pt-BR",
+      "archivo": "toolkit/toolkit/about/aboutProfiles.ftl",
+      "id": "profiles-launch-profile",
+      "antes": "Abrir outro Firefox com este perfil",
+      "despues": "Abrir outro { -brand-short-name } com este perfil"
+    },
+    {
+      "idioma": "de",
+      "archivo": "browser/browser/aboutRestartRequired.ftl",
+      "id": "restart-required-why-now-answer",
+      "antes": "ein anderes Firefox-Profil",
+      "despues": "ein anderes { -brand-short-name }-Profil"
+    },
+    {
+      "idioma": "de",
+      "archivo": "browser/browser/newtab/newtab.ftl",
+      "id": "newtab-wallpaper-feature-highlight-content",
+      "antes": "Ihrer Firefox-Startseite",
+      "despues": "Ihrer { -brand-short-name }-Startseite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "browser/browser/newtab/newtab.ftl",
+      "id": "newtab-new-user-custom-wallpaper-subtitle",
+      "antes": "Ihrer Firefox-Startseite",
+      "despues": "Ihrer { -brand-short-name }-Startseite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "browser/browser/preferences/preferences.ftl",
+      "id": "preferences-data-migration-group",
+      "antes": "in Firefox importieren",
+      "despues": "in { -brand-short-name } importieren"
+    },
+    {
+      "idioma": "de",
+      "archivo": "browser/browser/preferences/preferences.ftl",
+      "id": "performance-limit-content-process-blocked-desc",
+      "antes": "ob Firefox mit mehreren Prozessen",
+      "despues": "ob { -brand-short-name } mit mehreren Prozessen"
+    },
+    {
+      "idioma": "de",
+      "archivo": "browser/browser/policies/policies-descriptions.ftl",
+      "id": "policy-DisableTelemetry",
+      "antes": "Verbesserung von Firefox",
+      "despues": "Verbesserung von { -brand-short-name }"
+    },
+    {
+      "idioma": "de",
+      "archivo": "browser/browser/policies/policies-descriptions.ftl",
+      "id": "policy-NewTabPage",
+      "antes": "Firefox-Startseite",
+      "despues": "{ -brand-short-name }-Startseite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "browser/browser/policies/policies-descriptions.ftl",
+      "id": "policy-OverridePostUpdatePage",
+      "antes": "Firefox-Neuigkeiten-Seite",
+      "despues": "{ -brand-short-name }-Neuigkeiten-Seite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "toolkit/toolkit/firefoxlabs/features.ftl",
+      "id": "experimental-features-custom-wallpaper",
+      "antes": "für die Firefox-Startseite",
+      "despues": "für die { -brand-short-name }-Startseite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "toolkit/toolkit/firefoxlabs/features.ftl",
+      "id": "experimental-features-custom-wallpaper-description",
+      "antes": "Ihrer Firefox-Startseite",
+      "despues": "Ihrer { -brand-short-name }-Startseite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "toolkit/toolkit/firefoxlabs/features.ftl",
+      "id": "experimental-features-newtab-sections-follow-block",
+      "antes": "auf der Firefox-Startseite",
+      "despues": "auf der { -brand-short-name }-Startseite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "toolkit/toolkit/firefoxlabs/features.ftl",
+      "id": "experimental-features-newtab-sections-follow-block-description",
+      "antes": "Ihrer Firefox-Startseite",
+      "despues": "Ihrer { -brand-short-name }-Startseite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "toolkit/toolkit/firefoxlabs/features.ftl",
+      "id": "experimental-features-newtab-widget-lists-description",
+      "antes": "die Firefox-Startseite",
+      "despues": "die { -brand-short-name }-Startseite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "toolkit/toolkit/firefoxlabs/features.ftl",
+      "id": "experimental-features-newtab-widget-lists-and-timer-description",
+      "antes": "die Firefox-Startseite",
+      "despues": "die { -brand-short-name }-Startseite"
+    },
+    {
+      "idioma": "de",
+      "archivo": "toolkit/toolkit/about/aboutAddons.ftl",
+      "id": "legacy-extensions-description",
+      "antes": "Add-ons für Firefox",
+      "despues": "Add-ons für { -brand-short-name }"
+    }
+  ],
+  "anadidos": [
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenuitem-help-and-report",
+      "texto": "appmenuitem-help-and-report =\n    .label = Ayuda e informes"
+    },
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenu-help-and-report-header",
+      "texto": "appmenu-help-and-report-header =\n    .title = Ayuda e informes"
+    },
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenu-nova-update-title",
+      "texto": "appmenu-nova-update-title = Reiniciar para actualizar { -brand-short-name }"
+    },
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenu-nova-update-description",
+      "texto": "appmenu-nova-update-description = Sus pestañas se volverán a abrir."
+    },
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenu-edit-pdf",
+      "texto": "appmenu-edit-pdf =\n    .label = Editar PDF…"
+    },
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenu-profiles-header",
+      "texto": "appmenu-profiles-header = Perfiles"
+    },
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenu-all-profiles",
+      "texto": "appmenu-all-profiles =\n    .label = Todos los perfiles"
+    },
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenu-create-profile2",
+      "texto": "appmenu-create-profile2 =\n    .label = Crear un perfil nuevo"
+    },
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenu-edit-this-profile",
+      "texto": "appmenu-edit-this-profile =\n    .label = Editar este perfil"
+    },
+    {
+      "idioma": "es-ES",
+      "archivo": "browser/browser/appmenu.ftl",
+      "id": "appmenu-profile-current-in-use",
+      "texto": "appmenu-profile-current-in-use = Perfil actual en uso"
+    }
+  ]
+}

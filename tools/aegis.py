@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Herramienta única de Aegis: de la fuente de Firefox a un navegador compilado y actualizable.
 
-    aegis.py fetch                 descarga el tarball de upstream.json y lo verifica (sha256 + GPG)
+    aegis.py fetch                 descarga el tarball de upstream.json y lo verifica (sha256 + GPG), y las
+                                   traducciones fijadas (upstream.json › l10n) a ~/.mozbuild/l10n-central
     aegis.py prepare [--limpio]    descomprime, crea un repo git, aplica patches/series y overlay/
     aegis.py patch [--check]       aplica los parches que falten (o comprueba la serie entera, con cada motor)
     aegis.py overlay               vuelve a copiar overlay/ (y las claves MAR) al árbol
@@ -10,7 +11,8 @@
     aegis.py bootstrap [--objetivo …]  instala dependencias y compiladores (mach bootstrap)
     aegis.py build [--objetivo …] [--rapido]   compila (mach build; --rapido: solo interfaz, mach build faster)
     aegis.py run [args…]           arranca el navegador compilado (solo Linux)
-    aegis.py package [--objetivo …]  empaqueta (mach package: zip en Windows, tar.xz en Linux)
+    aegis.py package [--objetivo …]  empaqueta en seis idiomas (mach package-multi-locale: zip en Windows, tar.xz
+                                   en Linux); siempre después de `build`
     aegis.py instalar-prueba --destino /mnt/c/…   deja la build de Windows en una carpeta de Windows
     aegis.py claves-mar            crea las claves de firma de las actualizaciones (una vez)
     aegis.py mar [--objetivo …]    MAR completo firmado + update-<objetivo>-release.xml del paquete
@@ -162,13 +164,17 @@ def run(cmd, cwd=None, env=None, check=True):
     return r.returncode
 
 
-def git(*args, cwd, check=True, salida=False, env=None):
+def git(*args, cwd, check=True, salida=False, env=None, crudo=False):
+    """Con salida=True devuelve lo que escribe git. crudo=True lo deja tal cual (UTF-8, sin convertir los finales de
+    línea): hace falta para los parches de archivos de Firefox con CRLF (ipc/app/module.ver), que con text=True
+    perderían el retorno de carro y ya no se aplicarían."""
     cmd = ["git", *AUTOR, *args]
     if salida:
-        r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env)
+        r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=not crudo, env=env)
         if check and r.returncode != 0:
-            raise Error(f"git {' '.join(args)}: {r.stderr.strip()}")
-        return r.stdout
+            err = r.stderr if not crudo else r.stderr.decode("utf-8", "replace")
+            raise Error(f"git {' '.join(args)}: {err.strip()}")
+        return r.stdout if not crudo else r.stdout.decode("utf-8")
     return run(cmd, cwd=cwd, env=env, check=check)
 
 
@@ -216,12 +222,19 @@ def tarball():
 
 
 def cmd_fetch(a):
+    """La fuente de Firefox (tarball firmado) y las traducciones de la interfaz (upstream.json › l10n)."""
+    fetch_firefox()
+    fetch_l10n()
+    return 0
+
+
+def fetch_firefox():
     up = upstream()
     os.makedirs(CACHE, exist_ok=True)
     tb = tarball()
     if os.path.exists(tb) and sha(tb) == up["sha256"]:
         hecho(f"{os.path.basename(tb)} ya está descargado y verificado")
-        return 0
+        return
     v = up["version"]
     sumas = os.path.join(CACHE, f"SHA256SUMS-{v}")
     firma = sumas + ".asc"
@@ -238,7 +251,261 @@ def cmd_fetch(a):
         os.remove(tb)
         raise Error("el tarball descargado no coincide con su suma", 3)
     hecho(f"{os.path.basename(tb)} descargado y verificado")
-    return 0
+
+
+# --- Idiomas de la interfaz (build multi-idioma) ---------------------------------------------------
+#
+# La build lleva la interfaz entera (Firefox y Aegis) en en-US y en los idiomas de upstream.json › l10n › idiomas; se
+# usa el de Windows. Las traducciones de Firefox son las del monorepo mozilla-l10n/firefox-l10n en el commit que fija
+# browser/locales/l10n-changesets.json de la versión de Firefox (el mismo para todos los idiomas): `fetch` descarga ese
+# commit de GitHub (codeload), lo comprueba con el sha256 de upstream.json y extrae solo esos idiomas a L10NBASEDIR
+# (~/.mozbuild/l10n-central, la ruta de serie de configure: no hace falta --with-l10n-base). `package` empaqueta con
+# `mach package-multi-locale`. La marca de cada idioma es la de Aegis: la entrada de branding de l10n-manifest.json
+# (is_locale: false) copia el brand.ftl y el brand.properties en-US de browser/branding/aegis a todos. Nada de
+# paquetes de idioma (langpacks) de addons.mozilla.org: traen la marca de Firefox.
+#
+# Plan B, si GitHub cambia la compresión de sus tarballs y el sha256 ya no cuadra (el commit sigue siendo el mismo):
+#   git init l10n && cd l10n && git fetch --depth 1 https://github.com/mozilla-l10n/firefox-l10n <commit>
+#   git checkout FETCH_HEAD -- <idiomas>       (y comprobar que `git rev-parse FETCH_HEAD` es el commit)
+# y, con eso, un tarball nuevo y su sha256 en upstream.json (docs/GUIA.md, «Construir»).
+
+IDIOMA_BASE = "en-US"
+L10N_SELLO = ".aegis-l10n.json"           # en L10NBASEDIR: de qué commit e idiomas es lo extraído
+L10N_URL = "https://codeload.github.com/mozilla-l10n/firefox-l10n/tar.gz/{commit}"
+L10N_CHANGESETS = "browser/locales/l10n-changesets.json"
+
+
+def l10n(sin_suma=False):
+    """upstream.json › l10n, comprobado: commit, url (la de codeload de ese commit), sha256 e idiomas. Con sin_suma
+    (solo `fetch`), el sha256 puede estar vacío: es un commit nuevo y `fetch` lo calcula para fijarlo a mano."""
+    d = leer_json("upstream.json").get("l10n")
+    if not isinstance(d, dict):
+        raise Error("upstream.json no tiene la sección «l10n» (build multi-idioma, docs/GUIA.md)", 2)
+    commit = d.get("commit", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise Error(f"upstream.json › l10n › commit «{commit}» no es un commit de git completo", 2)
+    if d.get("url") != L10N_URL.format(commit=commit):
+        raise Error(f"upstream.json › l10n › url tiene que ser {L10N_URL.format(commit=commit)}", 2)
+    if not re.fullmatch(r"[0-9a-f]{64}", d.get("sha256", "")) and not (sin_suma and d.get("sha256") == ""):
+        raise Error("upstream.json › l10n › sha256 no es un sha256 (con un commit nuevo se deja vacío: `fetch` lo "
+                    "calcula y lo dice, y se fija a mano)", 2)
+    idiomas = d.get("idiomas")
+    if (not isinstance(idiomas, list) or not idiomas or IDIOMA_BASE in idiomas or len(set(idiomas)) != len(idiomas)
+            or not all(isinstance(i, str) and re.fullmatch(r"[a-z]{2,3}(-[A-Z]{2})?", i) for i in idiomas)):
+        raise Error(f"upstream.json › l10n › idiomas no vale: {idiomas!r} (sin {IDIOMA_BASE}, que es el de base)", 2)
+    return d
+
+
+def l10n_base():
+    """L10NBASEDIR de serie de configure (toolkit/moz.configure, l10n_base): $MOZBUILD_STATE_PATH/l10n-central."""
+    estado = os.path.abspath(os.path.expanduser(os.environ.get("MOZBUILD_STATE_PATH", "~/.mozbuild")))
+    return os.path.join(estado, "l10n-central")
+
+
+def changesets_de_firefox():
+    """browser/locales/l10n-changesets.json de la fuente verificada: del commit intacto del árbol (etiqueta
+    aegis-upstream) si está preparado; si no, del propio tarball (leerlo entero tarda un minuto)."""
+    src = arbol()
+    if os.path.isdir(os.path.join(src, ".git")):
+        texto = git("show", f"{ETIQUETA_BASE}:{L10N_CHANGESETS}", cwd=src, salida=True)
+        return json.loads(texto)
+    tb = tarball()
+    if not os.path.exists(tb) or sha(tb) != upstream()["sha256"]:
+        raise Error("no hay fuente verificada de Firefox para comprobar el commit de las traducciones", 2)
+    info(f"leyendo {L10N_CHANGESETS} del tarball de Firefox")
+    with tarfile.open(tb, "r:xz") as t:
+        for m in t:
+            if m.isfile() and m.name.split("/", 1)[-1] == L10N_CHANGESETS:
+                return json.load(t.extractfile(m))
+    raise Error(f"el tarball de Firefox no trae {L10N_CHANGESETS}", 3)
+
+
+def comprobar_commit_l10n(d):
+    """El commit de upstream.json › l10n tiene que ser la revisión que fija Firefox para cada idioma."""
+    cs = changesets_de_firefox()
+    for idioma in d["idiomas"]:
+        rev = (cs.get(idioma) or {}).get("revision")
+        if rev != d["commit"]:
+            raise Error(f"{L10N_CHANGESETS} de Firefox {upstream()['version']} fija {idioma} en {rev}, no en "
+                        f"{d['commit']} (upstream.json › l10n › commit)", 3)
+        if "win64" not in (cs[idioma].get("platforms") or []):
+            raise Error(f"{L10N_CHANGESETS}: Firefox no publica {idioma} para win64", 3)
+
+
+L10N_CAMBIOS = os.path.join("tools", "l10n-cambios.json")
+
+
+def sello_esperado(d):
+    """Lo que dice el sello de una extracción al día: commit, sha256, idiomas y la versión de los cambios de Aegis."""
+    return {"commit": d["commit"], "sha256": d["sha256"], "idiomas": sorted(d["idiomas"]),
+            "cambios": sha(os.path.join(REPO, L10N_CAMBIOS))}
+
+
+def cambios_l10n():
+    """tools/l10n-cambios.json, comprobado: sustituciones (idioma, archivo, id, antes, después) y añadidos (idioma,
+    archivo, id, texto). Solo .ftl, rutas del monorepo sin «..», y nada repetido."""
+    with open(os.path.join(REPO, L10N_CAMBIOS), encoding="utf-8") as f:
+        c = json.load(f)
+    vistos = set()
+    for clave, campos in (("sustituciones", ("idioma", "archivo", "id", "antes", "despues")),
+                          ("anadidos", ("idioma", "archivo", "id", "texto"))):
+        for e in c.get(clave, []):
+            if not all(isinstance(e.get(k), str) and e[k] for k in campos):
+                raise Error(f"{L10N_CAMBIOS} › {clave}: entrada incompleta {e}", 2)
+            if (not re.fullmatch(r"[a-z]+/[\w/.-]+\.ftl", e["archivo"]) or ".." in e["archivo"].split("/")
+                    or not re.fullmatch(r"-?[a-zA-Z][\w-]*", e["id"])):
+                raise Error(f"{L10N_CAMBIOS} › {clave}: archivo o id no válido: {e['archivo']} {e['id']}", 2)
+            if clave == "anadidos" and not e["texto"].startswith(e["id"] + " ="):
+                raise Error(f"{L10N_CAMBIOS} › añadido {e['id']}: el texto tiene que empezar por «{e['id']} =»", 2)
+            if (e["idioma"], e["archivo"], e["id"], e.get("antes")) in vistos:
+                raise Error(f"{L10N_CAMBIOS}: entrada repetida ({e['idioma']} {e['id']})", 2)
+            vistos.add((e["idioma"], e["archivo"], e["id"], e.get("antes")))
+    return c
+
+
+def bloque_ftl(lineas, ident):
+    """(inicio, fin) de las líneas del mensaje `ident` de un .ftl (la suya y sus líneas sangradas), o None."""
+    for i, l in enumerate(lineas):
+        if re.match(rf"^{re.escape(ident)}\s*=", l):
+            j = i + 1
+            while j < len(lineas) and lineas[j][:1] in (" ", "\t"):
+                j += 1
+            return i, j
+    return None
+
+
+def aplicar_cambios_l10n(raiz, idiomas):
+    """Aplica tools/l10n-cambios.json a las traducciones extraídas en `raiz` (<raíz>/<idioma>/<archivo>). Falla (código
+    3) si un texto ya no está tal cual, si un añadido ya existe o si Firefox ya no tiene ese mensaje en en-US: la
+    traducción o Firefox han cambiado y hay que revisar la entrada. Devuelve cuántos cambios ha aplicado."""
+    c = cambios_l10n()
+    src = arbol()
+    n = 0
+    for clave in ("sustituciones", "anadidos"):
+        for e in c.get(clave, []):
+            if e["idioma"] not in idiomas:
+                continue
+            ruta = os.path.join(raiz, e["idioma"], *e["archivo"].split("/"))
+            if not os.path.isfile(ruta):
+                raise Error(f"{L10N_CAMBIOS}: {e['idioma']}/{e['archivo']} ya no existe en las traducciones", 3)
+            modulo, resto = e["archivo"].split("/", 1)
+            if os.path.isfile(os.path.join(src, "mach")):
+                en_us = os.path.join(src, modulo, "locales", "en-US", *resto.split("/"))
+                with open(en_us, encoding="utf-8") as f:
+                    if not bloque_ftl(f.read().split("\n"), e["id"]):
+                        raise Error(f"{L10N_CAMBIOS}: Firefox ya no tiene {e['id']} en {modulo}/locales/en-US/{resto}",
+                                    3)
+            with open(ruta, encoding="utf-8") as f:
+                lineas = f.read().split("\n")
+            sitio = bloque_ftl(lineas, e["id"])
+            if clave == "sustituciones":
+                bloque = "\n".join(lineas[sitio[0]:sitio[1]]) if sitio else ""
+                if bloque.count(e["antes"]) != 1:
+                    raise Error(f"{L10N_CAMBIOS}: en {e['idioma']}/{e['archivo']}, {e['id']} ya no dice «{e['antes']}» "
+                                "(una vez): la traducción ha cambiado, revisa la entrada", 3)
+                lineas[sitio[0]:sitio[1]] = bloque.replace(e["antes"], e["despues"]).split("\n")
+            else:
+                if sitio:
+                    raise Error(f"{L10N_CAMBIOS}: {e['idioma']}/{e['archivo']} ya traduce {e['id']}: quita el añadido",
+                                3)
+                while lineas and lineas[-1] == "":
+                    lineas.pop()
+                lineas += ["", "# Aegis: añadido (tools/l10n-cambios.json)", *e["texto"].split("\n"), ""]
+            escribir(ruta, "\n".join(lineas))
+            n += 1
+    return n
+
+
+def sello_l10n():
+    try:
+        with open(os.path.join(l10n_base(), L10N_SELLO), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
+
+
+def l10n_al_dia(d):
+    """Lo extraído en L10NBASEDIR es exactamente ese commit (y sha256) con esos idiomas."""
+    s = sello_l10n()
+    return (s == sello_esperado(d) and
+            all(os.path.isdir(os.path.join(l10n_base(), i, "browser")) for i in d["idiomas"]) and
+            sorted(n for n in os.listdir(l10n_base()) if not n.startswith(".")) == sorted(d["idiomas"]))
+
+
+def fetch_l10n():
+    d = l10n(sin_suma=True)
+    comprobar_commit_l10n(d)
+    hecho(f"traducciones: el commit {d['commit'][:12]} es el que fija Firefox {upstream()['version']} para "
+          f"{', '.join(d['idiomas'])}")
+    base = l10n_base()
+    if d["sha256"] and os.path.isdir(base) and l10n_al_dia(d):
+        hecho(f"traducciones ya extraídas en {base}")
+        return
+    os.makedirs(os.path.join(CACHE, "l10n"), exist_ok=True)
+    ruta = os.path.join(CACHE, "l10n", f"firefox-l10n-{d['commit'][:12]}.tar.gz")
+    if not os.path.exists(ruta) or sha(ruta) != d["sha256"]:
+        descargar(d["url"], ruta)
+    suma = sha(ruta)
+    if not d["sha256"]:
+        raise Error(f"firefox-l10n {d['commit'][:12]}: sha256 {suma} ({os.path.getsize(ruta)} bytes). Fíjalo en "
+                    "upstream.json › l10n › sha256 y repite `fetch`", 3)
+    if suma != d["sha256"]:
+        os.remove(ruta)
+        raise Error(f"firefox-l10n {d['commit'][:12]}: el sha256 descargado ({suma}) no es el de upstream.json "
+                    f"({d['sha256']}). Si GitHub ha cambiado la compresión, ver el plan B en tools/aegis.py "
+                    "(«Idiomas de la interfaz»)", 3)
+    hecho(f"firefox-l10n {d['commit'][:12]} descargado y verificado ({os.path.getsize(ruta) // (1 << 20)} MB)")
+    extraer_l10n(ruta, d)
+
+
+def extraer_l10n(ruta, d):
+    """Extrae solo <raíz>/<idioma>/… de los idiomas pedidos a L10NBASEDIR, de golpe: en una carpeta aparte que se
+    renombra al terminar (nunca queda a medias). Sin rutas absolutas, «..», enlaces ni dispositivos."""
+    base = l10n_base()
+    tmp = base + ".parcial"
+    if os.path.exists(tmp):
+        shutil.rmtree(tmp)
+    os.makedirs(tmp)
+    raiz_esperada = f"firefox-l10n-{d['commit']}"
+    quiero = set(d["idiomas"])
+    n = 0
+    with tarfile.open(ruta, "r:gz") as t:
+        for m in t:
+            partes = m.name.split("/")
+            if m.name.startswith("/") or ".." in partes:
+                raise Error(f"firefox-l10n: ruta no admitida en el archivo: {m.name}", 3)
+            if partes[0] != raiz_esperada:
+                raise Error(f"firefox-l10n: se esperaba la carpeta raíz {raiz_esperada} y hay {partes[0]}", 3)
+            if len(partes) < 3 or partes[1] not in quiero or not partes[2]:
+                continue
+            if m.issym() or m.islnk():
+                continue
+            if not (m.isfile() or m.isdir()):
+                raise Error(f"firefox-l10n: entrada no admitida: {m.name}", 3)
+            m.name = "/".join(partes[1:])
+            t.extract(m, tmp, set_attrs=False, filter="data")
+            n += m.isfile()
+    faltan = [i for i in d["idiomas"] if not os.path.isdir(os.path.join(tmp, i, "browser"))]
+    if faltan:
+        shutil.rmtree(tmp)
+        raise Error(f"firefox-l10n {d['commit'][:12]} no trae {', '.join(faltan)}", 3)
+    try:
+        cambios = aplicar_cambios_l10n(tmp, d["idiomas"])
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    hecho(f"traducciones: {cambios} cambios de Aegis aplicados ({L10N_CAMBIOS})")
+    escribir(os.path.join(tmp, L10N_SELLO), json.dumps(sello_esperado(d), indent=1) + "\n")
+    if os.path.exists(base):
+        viejo = base + ".anterior"
+        if os.path.exists(viejo):
+            shutil.rmtree(viejo)
+        os.replace(base, viejo)
+        os.replace(tmp, base)
+        shutil.rmtree(viejo)
+    else:
+        os.replace(tmp, base)
+    hecho(f"traducciones de {', '.join(d['idiomas'])} en {base} ({n} archivos)")
 
 
 # --- Tor (descarga aparte, opcional) -----------------------------------------------------------------
@@ -968,7 +1235,7 @@ def cmd_prepare(a):
     src = arbol()
     tb = tarball()
     if not os.path.exists(tb) or sha(tb) != up["sha256"]:   # nunca se usa un tarball sin verificar
-        cmd_fetch(a)
+        fetch_firefox()
     if os.path.exists(src) and a.limpio:
         info(f"borrando {src} (el objdir se conserva)")
         shutil.rmtree(src)
@@ -1050,7 +1317,7 @@ def cmd_export(a):
                         "`prepare` antes de `export`", 2)
     for (h, r) in commits:
         texto = git("format-patch", "-1", "--stdout", "--no-signature", "--zero-commit", "--no-stat",
-                    "--keep-subject", "--binary", h, cwd=src, salida=True)
+                    "--keep-subject", "--binary", h, cwd=src, salida=True, crudo=True)
         texto = re.sub(r"^Date: .*\n", "", texto, count=1, flags=re.M)
         escribir(os.path.join(REPO, "patches", ruta_parche(r)), texto)   # la variante del motor del árbol
     with open(os.path.join(REPO, "patches", "series"), encoding="utf-8") as f:
@@ -1120,11 +1387,32 @@ def recursos_de_icono_al_dia(objetivo):
                 print(f"  icono cambiado: se regenera {os.path.relpath(ruta, objdir(objetivo))}")
 
 
+# Ejecutables cuyo module.ver cambia el parche 0200-branding/0002 (fabricante y marca registrada): carpeta y nombre.
+RECURSOS_DE_VERSION = (("browser/app", "firefox.exe"), ("browser/app/pbproxy", "private_browsing.exe"),
+                       ("ipc/app", "plugin-container.exe"))
+
+
+def recursos_de_version_al_dia(objetivo):
+    """En config/rules.mk el .rc de cada ejecutable no depende de su module.ver: una build incremental se quedaría con
+    las propiedades de antes del parche 0200-branding/0002 (CompanyName «Mozilla Corporation»). Si module.ver es más
+    reciente que el .rc del objdir, se borran el .rc y el .res y mach los vuelve a generar."""
+    src, obj = arbol(), objdir(objetivo)
+    for carpeta, exe in RECURSOS_DE_VERSION:
+        ver = os.path.join(src, *carpeta.split("/"), "module.ver")
+        rc = os.path.join(obj, *carpeta.split("/"), f"{exe}.rc")
+        if os.path.isfile(ver) and os.path.isfile(rc) and os.path.getmtime(ver) > os.path.getmtime(rc):
+            for f in (rc, rc[:-3] + ".res"):
+                if os.path.exists(f):
+                    os.remove(f)
+            info(f"{carpeta}/module.ver ha cambiado: se rehacen {exe}.rc y {exe}.res")
+
+
 def cmd_build(a):
     # El parche 0500-ui/0001 añade «aegis» a browser/components/moz.build: sin el overlay copiado, configure falla.
     if not os.path.isfile(os.path.join(arbol(), "browser", "components", "aegis", "moz.build")):
         raise Error("falta el código de Aegis en el árbol: ejecuta antes `aegis.py overlay`", 2)
     recursos_de_icono_al_dia(a.objetivo)
+    recursos_de_version_al_dia(a.objetivo)
     asegurar_rust(a.objetivo)
     # Un solo buildID por compilación. Sin MOZ_BUILD_DATE, mach genera buildid.h con la hora en cada pasada (dos en
     # una build incremental): firefox.exe se enlazaba con el de la primera y application.ini (el que `mar` pone en
@@ -1145,8 +1433,109 @@ def cmd_run(a):
     return mach(["run", *a.resto], a.objetivo, check=False)
 
 
+def config_status_opcional(nombre, objetivo):
+    try:
+        return config_status(nombre, objetivo)
+    except Error:
+        return None
+
+
 def cmd_package(a):
-    return mach(["package"], a.objetivo)
+    """Paquete multi-idioma: `mach package-multi-locale` con los idiomas de upstream.json › l10n (más en-US). No
+    compila: va siempre después de `build` (una build incremental vuelve a dejar dist/bin solo en en-US)."""
+    d = l10n()
+    if not os.path.isdir(l10n_base()) or not l10n_al_dia(d):
+        raise Error(f"las traducciones de {l10n_base()} no son las de upstream.json › l10n: ejecuta `aegis.py fetch`",
+                    2)
+    application_ini(a.objetivo)                     # hay build (si no, dice «compila antes»)
+    # Con NIGHTLY_BUILD, mach clonaría y pondría al día firefox-l10n desde GitHub en cada `package` (sin fijar el
+    # commit ni comprobar nada): solo builds de Release.
+    if config_status_opcional("NIGHTLY_BUILD", a.objetivo):
+        raise Error("la build tiene NIGHTLY_BUILD: package-multi-locale descargaría las traducciones sin fijar. Aegis "
+                    "solo empaqueta builds de Release", 2)
+    base_build = config_status("L10NBASEDIR", a.objetivo)
+    if os.path.realpath(base_build) != os.path.realpath(l10n_base()):
+        raise Error(f"la build lee las traducciones de {base_build} y `fetch` las deja en {l10n_base()}", 2)
+    idiomas = sorted(d["idiomas"])
+    info(f"paquete multi-idioma: {IDIOMA_BASE} + {', '.join(idiomas)} (firefox-l10n {d['commit'][:12]})")
+    mach(["package-multi-locale", "--locales", *idiomas], a.objetivo)
+    pkg = paquete(a.objetivo)
+    if pkg.endswith(".zip"):
+        comprobar_idiomas_paquete(pkg, [IDIOMA_BASE] + idiomas)
+    else:
+        info("paquete de Linux: los idiomas y la marca no se comprueban todavía (solo el zip de Windows)")
+    hecho(f"{os.path.basename(pkg)} ({os.path.getsize(pkg) // (1 << 20)} MB): {IDIOMA_BASE} + {', '.join(idiomas)}, "
+          "con la marca de Aegis en todos")
+    return 0
+
+
+# Archivos de marca de cada idioma en el omni.ja del navegador (browser/omni.ja). Con la marca de Aegis, la entrada de
+# branding de l10n-manifest.json (is_locale: false) los copia de browser/branding/aegis/locales/en-US a todos.
+MARCA_IDIOMA = ("localization/{i}/branding/brand.ftl", "chrome/{i}/locale/branding/brand.properties")
+MARCAS_REGISTRADAS = re.compile(rb"\b(Firefox|Mozilla)\b")
+
+
+def omni(z, nombre):
+    """Un omni.ja (zip dentro del zip del paquete) abierto en memoria."""
+    import io
+    return zipfile.ZipFile(io.BytesIO(z.read(nombre)))
+
+
+def comprobar_idiomas_paquete(pkg, idiomas):
+    """El paquete lleva exactamente esos idiomas (res/multilocale.txt del omni.ja de Gecko) y, en cada uno, los archivos
+    de marca de Aegis: los mismos que en en-US y sin «Firefox» ni «Mozilla» fuera de los comentarios (ningún
+    brand.ftl, brand.properties ni brand.dtd del paquete, de ningún idioma)."""
+    if not pkg.endswith(".zip"):
+        raise Error(f"{os.path.basename(pkg)}: la comprobación de idiomas es para el zip de Windows", 2)
+    with zipfile.ZipFile(pkg) as z:
+        raiz = {n.split("/", 1)[0] for n in z.namelist()}
+        if len(raiz) != 1:
+            raise Error(f"{os.path.basename(pkg)} no tiene una sola carpeta raíz", 3)
+        raiz = raiz.pop()
+        gre = omni(z, f"{raiz}/omni.ja")
+        nav = omni(z, f"{raiz}/browser/omni.ja")
+    multi = sorted(gre.read("res/multilocale.txt").decode("utf-8").replace(",", "\n").split())
+    if multi != sorted(idiomas):
+        raise Error(f"res/multilocale.txt del paquete: {', '.join(multi)}; se esperaba {', '.join(sorted(idiomas))}", 3)
+    for patron in MARCA_IDIOMA:
+        base = nav.read(patron.format(i=IDIOMA_BASE))
+        for i in idiomas:
+            try:
+                datos = nav.read(patron.format(i=i))
+            except KeyError:
+                raise Error(f"el paquete no lleva {patron.format(i=i)}", 3)
+            if datos != base:
+                raise Error(f"{patron.format(i=i)} no es la marca de Aegis (distinto del de {IDIOMA_BASE})", 3)
+    vistos = 0
+    for z in (gre, nav):
+        for n in z.namelist():
+            if os.path.basename(n) in ("brand.ftl", "brand.properties", "brand.dtd"):
+                vistos += 1
+                for linea in z.read(n).splitlines():
+                    if linea.lstrip().startswith((b"#", b"<!--")):
+                        continue
+                    if MARCAS_REGISTRADAS.search(linea):
+                        raise Error(f"{n} del paquete dice «{MARCAS_REGISTRADAS.search(linea).group(1).decode()}»", 3)
+    # Los cambios de Aegis a las traducciones (tools/l10n-cambios.json) están en el paquete.
+    c = cambios_l10n()
+    aplicados = 0
+    for clave in ("sustituciones", "anadidos"):
+        for e in c.get(clave, []):
+            if e["idioma"] not in idiomas:
+                continue
+            nombre = f"localization/{e['idioma']}/{e['archivo'].split('/', 1)[1]}"
+            z = nav if nombre in nav.namelist() else gre
+            try:
+                lineas = z.read(nombre).decode("utf-8").split("\n")
+            except KeyError:
+                raise Error(f"el paquete no lleva {nombre} ({L10N_CAMBIOS})", 3)
+            sitio = bloque_ftl(lineas, e["id"])
+            bloque = "\n".join(lineas[sitio[0]:sitio[1]]) if sitio else ""
+            if not sitio or (clave == "sustituciones" and (e["antes"] in bloque or e["despues"] not in bloque)):
+                raise Error(f"{nombre}: {e['id']} no lleva el cambio de Aegis ({L10N_CAMBIOS}): `fetch` y `package`", 3)
+            aplicados += 1
+    hecho(f"idiomas del paquete: {', '.join(multi)}; {vistos} archivos de marca, todos de Aegis; {aplicados} cambios "
+          "de Aegis en las traducciones")
 
 
 def cmd_instalar_prueba(a):
@@ -1296,6 +1685,17 @@ def sin_cargador_dev(pkg):
         raise Error(f"{os.path.basename(pkg)} lleva el cargador de desarrollo (aegis-dev): no se publica", 3)
 
 
+def buildid_del_paquete(pkg):
+    """BuildID del application.ini que va dentro del zip (firefox/application.ini), o None si no lo lleva."""
+    with zipfile.ZipFile(pkg) as z:
+        rutas = sorted((n for n in z.namelist() if n.endswith("application.ini") and n.count("/") <= 2), key=len)
+        for n in rutas[:1]:
+            for l in z.read(n).decode("utf-8", "replace").splitlines():
+                if l.startswith("BuildID="):
+                    return l.partition("=")[2].strip()
+    return None
+
+
 def pub_der(ruta):
     with open(ruta, "rb") as f:
         pub = pub_de_der(f.read())
@@ -1327,6 +1727,8 @@ def cmd_mar(a):
     va = version_aegis()
     pkg = paquete(objetivo_build)
     sin_cargador_dev(pkg)
+    if pkg.endswith(".zip"):              # el MAR lleva los mismos idiomas que el paquete multi-idioma
+        comprobar_idiomas_paquete(pkg, [IDIOMA_BASE] + sorted(l10n()["idiomas"]))
     os.makedirs(SALIDA, exist_ok=True)
     nombre_mar = f"aegis-{va}-{objetivo}.complete.mar"
     destino = os.path.join(SALIDA, nombre_mar)
@@ -1675,14 +2077,30 @@ def certificado_prueba_msix():
     return pfx, cer
 
 
-def ajustar_manifiesto(ruta, nombre_identidad, editor, t, nombre):
+def idiomas_msix(idiomas):
+    """Los idiomas que declara el paquete, comprobados contra la lista de idiomas que admite Windows en un MSIX
+    (browser/installer/windows/msix/msix-all-locales del árbol, la misma que usa mach)."""
+    with open(os.path.join(arbol(), "browser", "installer", "windows", "msix", "msix-all-locales"),
+              encoding="utf-8") as f:
+        admitidos = {l.partition("#")[0].strip().lower() for l in f if l.partition("#")[0].strip()}
+    fuera = [i for i in idiomas if i.lower() not in admitidos]
+    if fuera:
+        raise Error(f"Windows no admite {', '.join(fuera)} como idioma de un paquete MSIX (msix-all-locales)", 3)
+    return idiomas
+
+
+def ajustar_manifiesto(ruta, nombre_identidad, editor, t, nombre, idiomas):
     """AppxManifest.xml de la plantilla de Firefox → el de Aegis. Cada cambio tiene que encontrarse exactamente una
     vez: si la plantilla cambia en una versión nueva de Firefox, `msix` se niega en lugar de hacer un paquete raro."""
     with open(ruta, encoding="utf-8") as f:
         texto = f.read()
     attr = xml.sax.saxutils.quoteattr
     esc = xml.sax.saxutils.escape
+    recursos = "".join(f"\n    <Resource Language={attr(i)} />" for i in idiomas)
     cambios = [
+        # Los idiomas de la interfaz. mach solo declara en-US y los de los langpacks de distribution/, que Aegis no
+        # usa (los de addons.mozilla.org traen la marca de Firefox): los idiomas van dentro del omni.ja (package).
+        ("Resources", r"<Resources>.*?</Resources>", lambda m: f"<Resources>{recursos}\n  </Resources>"),
         # Identidad exacta de Partner Center (mach la compone como «<vendor>.<nombre>»).
         ("Identity Name", r'(<Identity\b[^>]*?\bName=)"[^"]*"', lambda m: m[1] + attr(nombre_identidad)),
         ("Identity Publisher", r'(<Identity\b[^>]*?\bPublisher=)"[^"]*"', lambda m: m[1] + attr(editor)),
@@ -1715,7 +2133,7 @@ def ajustar_manifiesto(ruta, nombre_identidad, editor, t, nombre):
     escribir(ruta, texto)
 
 
-def comprobar_msix(ruta, makemsix, firmado, esperado, assets, exe_rel):
+def comprobar_msix(ruta, makemsix, firmado, esperado, assets, exe_rel, idiomas):
     """Lo que hay dentro del .msix: archivos del formato, identidad, ejecutable, assets de Aegis, distribución propia
     y nada del modo desarrollo. Después, `makemsix unpack` lo desempaqueta entero comprobando el mapa de bloques (el
     hash de cada archivo) y, si va firmado, la firma."""
@@ -1740,6 +2158,9 @@ def comprobar_msix(ruta, makemsix, firmado, esperado, assets, exe_rel):
     for k, v in {**esperado["Identity"], **esperado["Properties"]}.items():
         if vistos[k] != v:
             raise Error(f"AppxManifest.xml: {k} es «{vistos[k]}» y tendría que ser «{v}»", 3)
+    declarados = [r.get("Language") for r in raiz.findall(f"{NS_APPX}Resources/{NS_APPX}Resource")]
+    if declarados != idiomas:
+        raise Error(f"AppxManifest.xml declara los idiomas {declarados} y tendría que declarar {idiomas}", 3)
     app = raiz.find(f"{NS_APPX}Applications/{NS_APPX}Application")
     if app is None or app.get("Executable", "").replace("\\", "/") != exe_rel or exe_rel not in nombres:
         raise Error(f"AppxManifest.xml: el ejecutable no es {exe_rel} o no está en el paquete", 3)
@@ -1784,7 +2205,16 @@ def cmd_msix(a):
     pkg = paquete(a.objetivo)
     if not pkg.endswith(".zip"):
         raise Error(f"{os.path.basename(pkg)} no es un paquete de Windows", 2)
+    # El zip tiene que ser de la build actual: tras un `build` sin `package` quedaría el de la anterior y se subiría a la
+    # Tienda una build distinta de la probada (mar lo comprueba con firefox.exe; aquí, con el application.ini).
+    build_actual = application_ini(a.objetivo)["BuildID"]
+    build_zip = buildid_del_paquete(pkg)
+    if build_zip != build_actual:
+        raise Error(f"el paquete es de otra build ({build_zip or 'sin application.ini'}; objdir {build_actual}): "
+                    "`aegis.py package` después de `build`", 2)
     sin_cargador_dev(pkg)
+    idiomas = [IDIOMA_BASE] + sorted(l10n()["idiomas"])
+    comprobar_idiomas_paquete(pkg, idiomas)      # el AppxManifest declara estos idiomas: el zip tiene que traerlos
     # mach toma los assets de la marca del árbol: tienen que ser los de overlay/ (tools/iconos.py los genera).
     propios_dir = os.path.join(REPO, "overlay", "browser", "branding", "aegis", "msix", "Assets")
     arbol_dir = os.path.join(arbol(), "browser", "branding", "aegis", "msix", "Assets")
@@ -1834,7 +2264,8 @@ def cmd_msix(a):
         if not preparada.startswith(os.path.realpath(cache_msix) + os.sep):
             raise Error(f"mach preparó el paquete en un sitio inesperado: {preparada}", 3)
         try:
-            ajustar_manifiesto(os.path.join(preparada, "AppxManifest.xml"), nombre_identidad, editor, t, nombre)
+            ajustar_manifiesto(os.path.join(preparada, "AppxManifest.xml"), nombre_identidad, editor, t, nombre,
+                               idiomas_msix(idiomas))
             dist = os.path.join(preparada, *exe_rel.split("/")[:-1], "distribution", "distribution.ini")
             if not os.path.isfile(dist):
                 raise Error("mach ya no pone distribution/distribution.ini en el paquete: revisa cmd_msix", 3)
@@ -1851,7 +2282,7 @@ def cmd_msix(a):
                                  "ProcessorArchitecture": arch_msix},
                     "Properties": {"DisplayName": t["Package/Properties/DisplayName"],
                                    "PublisherDisplayName": t["Package/Properties/PublisherDisplayName"]}}
-        comprobar_msix(parcial, makemsix, a.firma_local, esperado, assets, exe_rel)
+        comprobar_msix(parcial, makemsix, a.firma_local, esperado, assets, exe_rel, idiomas)
     except BaseException:
         if os.path.exists(parcial):
             os.remove(parcial)

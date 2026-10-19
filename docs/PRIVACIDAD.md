@@ -42,6 +42,50 @@ sus anuncios, limpia las búsquedas y hace directos sus enlaces (detalle en `doc
 Pendiente (fase 5b): las búsquedas en un contenedor propio que se borra al cerrar, para que Google no vea tu cuenta
 al buscar aunque tengas la sesión iniciada en el perfil.
 
+## Los demás buscadores (DuckDuckGo, Bing, Startpage, Qwant, Ecosia, Wikipedia)
+
+Aegis hace con ellos lo mismo que con Google: corta su telemetría, quita los parámetros de socio y de seguimiento de
+las búsquedas y hace directos los enlaces de resultados que pasan por su redirección. En DuckDuckGo, las búsquedas que
+salen del navegador van a su versión sin IA, `noai.duckduckgo.com` (detalle en `docs/CONEXIONES.md`, «Otros
+buscadores»). Aun así:
+
+- **El buscador ve tu IP y lo que buscas**, sea cual sea. Cada búsqueda le llega con tu dirección IP, el texto, el
+  idioma y el User-Agent (el de Firefox). Lo que haga después con esos datos depende de su política, no del navegador:
+  DuckDuckGo, Startpage, Qwant y Ecosia dicen no crear perfiles; Bing es de Microsoft, que usa las búsquedas para
+  personalizar y para sus anuncios. Startpage, Qwant y Ecosia sacan sus resultados y sus anuncios de Google o de Bing,
+  así que la búsqueda también les llega a ellos (cada buscador explica en su política qué datos les pasa).
+- **Con la sesión iniciada, el buscador sabe quién eres.** Con tu cuenta de Microsoft en Bing (Rewards, historial)
+  todo lo que buscas queda en tu cuenta. Aegis no toca el inicio de sesión.
+- **Microsoft Rewards lo decides tú.** De serie, Aegis corta la actividad que Bing envía para sumar puntos
+  (`/rewardsapp/reportActivity`), así que **tus búsquedas no suman puntos de Rewards**. Si quieres los puntos, enciende
+  «Sumar puntos de Microsoft Rewards» en el panel de Escudos (sale solo en Bing): entonces Bing recibe esa actividad.
+  El contador de puntos de la página se sigue viendo en los dos casos.
+- **Quitar parámetros no te hace anónimo.** Los que se quitan (form, cvid, t, perf_id, sourceid…) dicen de dónde
+  viene la búsqueda o la agrupan con otras; la cookie del buscador, tu IP y la propia búsqueda siguen ahí.
+- **El buscador puede distinguir el tráfico de Aegis del de Firefox.** Firefox manda sus búsquedas con un código de
+  socio (`t=` en DuckDuckGo, `form=`/`pc=` en Bing, `sourceid=` en Wikipedia…) y Aegis sin él; además no recibe su
+  telemetría, igual que con uBlock Origin. En DuckDuckGo, Aegis busca en `noai.duckduckgo.com` como quien la escribe a
+  mano: la extensión oficial «DuckDuckGo No-AI Search» añade `t=noaiext` y `bext=noai` y Aegis no, así que Aegis no se
+  confunde con quien usa esa extensión, sino con quien entra en noai directamente. Con la sesión iniciada, eso queda
+  asociado a tu cuenta.
+- **Sin IA solo en DuckDuckGo, y con la versión sin IA que ofrece el propio DuckDuckGo.** En noai no salen Search
+  Assist ni los botones de Duck.ai, y las imágenes hechas con IA se ocultan. «Explore More» (preguntas de seguimiento
+  generadas) no está entre lo que noai apaga y no se ha podido comprobar si sale. Los ajustes que guardaste antes en
+  `duckduckgo.com` (región, tema, búsqueda segura) no pasan a noai, porque DuckDuckGo los guarda por dirección: hay que
+  elegirlos de nuevo en noai una vez. Con `aegis.buscadores.sin_ia` en `false` (about:config) se vuelve a buscar en
+  `duckduckgo.com`.
+- **Los anuncios de DuckDuckGo los decides tú.** DuckDuckGo vive de sus anuncios y pide que no se quiten salvo por
+  decisión de cada persona. De serie, Aegis no le pide nada: los oculta Escudos con sus listas, como en cualquier web.
+  Si prefieres que DuckDuckGo no los muestre, enciende «Quitar los anuncios de DuckDuckGo» en el panel de Escudos (sale
+  solo en DuckDuckGo): tus búsquedas llevarán su ajuste «Advertisements: Off» (`k1=-1`).
+- **Bing, Qwant y Ecosia no tienen una forma documentada de quitar su IA** (Copilot y «AI Mode» en Bing; las
+  respuestas de IA de Qwant y de Ecosia, que solo se apagan en sus ajustes): se ve lo que el buscador muestre, salvo lo
+  que oculten las listas de molestias. Sus anuncios los ocultan las listas de Escudos; algunas reglas solo los sacan de
+  la vista (la página los sigue recibiendo) para que el buscador no detecte el bloqueador.
+- **Bing deduce dónde estás por tu IP.** Su página, además, envía a `/geolocation/write` la latitud, la longitud y
+  el nombre de la localidad que ha deducido (comprobado el 2026-10-19). Aegis corta ese envío, pero Bing sigue
+  deduciendo la ubicación de tu IP en cada búsqueda.
+
 ## Escudos: el bloqueador de anuncios y rastreadores
 
 Escudos bloquea con dos piezas, una detrás de otra:

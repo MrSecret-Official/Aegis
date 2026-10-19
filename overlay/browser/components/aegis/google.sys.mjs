@@ -239,8 +239,11 @@ function destinoDirecto(uri) {
   return url.protocol == "https:" || url.protocol == "http:" ? url.href : null;
 }
 
-/** Quita del destino los parámetros de la lista nativa de query stripping (gclid, srsltid…; ver 59-google.js). */
-function sinParametrosNativos(uri, privado) {
+/**
+ * Quita del destino los parámetros de la lista nativa de query stripping (gclid, srsltid…; ver 59-google.js). También
+ * lo usa la búsqueda limpia de los demás buscadores (busqueda-limpia.sys.mjs).
+ */
+export function sinParametrosNativos(uri, privado) {
   try {
     const salida = {};
     const n = Cc["@mozilla.org/url-query-string-stripper;1"]
@@ -310,8 +313,9 @@ function documento(canal, uri, fam) {
  *   cada canal (cookieJarSettings.isOnContentBlockingAllowList).
  * - Navegación de la pestaña: aún no hay página, así que se mira el permiso de la de destino (por origen, como lo
  *   guarda ContentBlockingAllowList; en privado, el tipo «-pb»).
+ * También lo usa busqueda-limpia.sys.mjs.
  */
-function escudosBajados(canal, uri, tipo) {
+export function escudosBajados(canal, uri, tipo) {
   const loadInfo = canal.loadInfo;
   try {
     if (tipo != TYPE_DOCUMENT) {

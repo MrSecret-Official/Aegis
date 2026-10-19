@@ -191,8 +191,10 @@ Medido en cada paso con el registro `Microsoft-Windows-CodeIntegrity/Operational
 - El usuario `aegis` de WSL que firma es el mismo que compila (mach, bootstrap, node): un compromiso del build podría
   leer `~/.config/aegis-firma`. Mejora prevista: firmar con otro usuario o guardar la clave cifrada fuera de WSL salvo
   al firmar.
-- La URL no lleva `%LOCALE%`: todos los idiomas reciben el mismo MAR, así que las builds publicadas tienen que ser
-  multilingües (fase 1).
+- La URL no lleva `%LOCALE%`: todos los idiomas reciben el mismo MAR. Desde el 2026-10-20 la build es multi-idioma
+  (`aegis.py package` con los seis idiomas; `docs/GUIA.md`, «Construir» › «Idiomas»), así que el MAR también lo es: `mar`
+  comprueba antes que el paquete trae los seis y la marca de Aegis en todos. Un MAR hecho de un paquete solo en en-US
+  dejaría en inglés a quien lo use en otro idioma.
 - Las builds incrementales no vuelven a enlazar `xul.dll` si no cambia: su buildID de plataforma
   (`-parentBuildID` de los procesos hijos) se queda en el de la última vez que se enlazó. N y N+1 llevan entonces el
   mismo `xul.dll`, lo que es correcto; solo cuenta que `firefox.exe` y `application.ini` coincidan (lo comprueba

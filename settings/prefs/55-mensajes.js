@@ -25,3 +25,9 @@ pref("browser.promo.cookiebanners.enabled", false);
 // about:protections: sin la tarjeta de la app móvil de Firefox ni el anuncio de Mozilla VPN.
 pref("browser.contentblocking.report.show_mobile_app", false);
 pref("browser.contentblocking.report.hide_vpn_banner", true);
+
+// about:pdf (Más herramientas › Editar PDF…): sin la tarjeta «Haz de <navegador> tu editor de PDF» (aboutPDF.mjs: la
+// oculta si la pref es true; Firefox no la define, la escribe al cerrarla) ni el aviso «Los PDF ahora son más fáciles»
+// del visor y de about:pdf (PdfJsFeaturesNotification.sys.mjs: con un límite de 0 impresiones no sale nunca).
+pref("browser.aboutpdf.promo.dismissed", true);
+pref("pdfjs.featuresNotificationImpressionLimit", 0);

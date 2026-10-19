@@ -6,7 +6,7 @@
 # Aquí solo valen las variables «confvar» (nombre visible, id de macOS). La identidad en el sistema no
 # va aquí: MOZ_APP_VENDOR y MOZ_APP_PROFILE solo se fijan con imply_option (parche
 # 0200-branding/0001) y MOZ_APP_REMOTINGNAME en mozconfigs/common. Ver docs/PLAN.md.
-# shellcheck disable=SC2034
+# shellcheck shell=sh disable=SC2034
 
 MOZ_APP_DISPLAYNAME=Aegis
 MOZ_MACBUNDLE_ID=aegis

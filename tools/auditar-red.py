@@ -4,7 +4,10 @@
     python tools/auditar-red.py --exe C:\\…\\Aegis\\firefox\\firefox.exe
         perfil nuevo, 10 minutos sin tocar nada: tiene que dar 0 intentos de salida
     python tools/auditar-red.py --exe … --minutos 10 --aceptar --despues 10
-        lo mismo y, después, «Aceptar» en about:conexiones con los interruptores de serie: solo las de CONEXIONES.md
+        lo mismo y, después, «Aceptar» en about:conexiones con los interruptores de serie: solo las de CONEXIONES.md.
+        Sin distribution/aegis-instalador.json (zip, Microsoft Store), la primera ventana abre about:bienvenida: los
+        minutos de «antes» se miden con ella abierta y, para aceptar, primero se pulsa «Usar lo recomendado», que lleva
+        a about:conexiones. Con el archivo del instalador, about:conexiones sale directamente, como antes.
     python tools/auditar-red.py --exe … --aceptar --grupos actualizaciones,seguridad
         aceptar solo esos grupos (el resto, apagados)
     python tools/auditar-red.py --exe … --directo
@@ -192,9 +195,44 @@ class Auditoria:
                 raise RuntimeError("el navegador se ha cerrado durante la prueba")
             time.sleep(5)
 
-    def aceptar(self, grupos):
-        """Pulsa «Aceptar» en about:conexiones, que tiene que haberse abierto sola en la primera ventana."""
+    def terminar_bienvenida(self):
+        """Sin distribution/aegis-instalador.json (zip, Microsoft Store), la primera ventana abre about:bienvenida y no
+        about:conexiones (docs/INSTALADOR.md, «Sin el instalador: la bienvenida del navegador»): se pulsa «Usar lo
+        recomendado» y se espera a que la misma pestaña pase a about:conexiones. Con el archivo del instalador no hay
+        bienvenida y no se hace nada. Devuelve qué ha pasado (para el JSON)."""
         self.m._contexto("chrome")
+        r = self.m.chrome("""
+            const tab = gBrowser.tabs.find(t => t.linkedBrowser.currentURI?.spec == "about:bienvenida");
+            if (!tab) { return "sin-bienvenida"; }
+            const boton = tab.linkedBrowser.contentDocument?.getElementById("bienvenida-principal");
+            if (!boton) { return "sin-boton"; }
+            gBrowser.selectedTab = tab;
+            boton.click();
+            return "pulsado";
+        """)
+        if r == "sin-bienvenida":
+            return {"abierta": False}
+        if r != "pulsado":
+            raise RuntimeError("about:bienvenida está abierta, pero sin su botón «Usar lo recomendado»")
+        fin = time.monotonic() + 30
+        while time.monotonic() < fin:
+            lista = self.m.chrome("""
+                const tab = gBrowser.tabs.find(t => t.linkedBrowser.currentURI?.spec == "about:conexiones");
+                return !!tab?.linkedBrowser.contentDocument?.getElementById("conexiones-aceptar")
+                  && tab.linkedBrowser.contentDocument.readyState == "complete";
+            """)
+            if lista:
+                return {"abierta": True, "terminada": True,
+                        "pendiente": self.m.chrome(
+                            'return Services.prefs.getBoolPref("aegis.bienvenida.pendiente", false);')}
+            time.sleep(0.5)
+        raise RuntimeError("tras «Usar lo recomendado» en about:bienvenida no ha llegado about:conexiones")
+
+    def aceptar(self, grupos):
+        """Pulsa «Aceptar» en about:conexiones, que tiene que haberse abierto sola en la primera ventana (o, sin el
+        archivo del instalador, al terminar la bienvenida: terminar_bienvenida)."""
+        self.m._contexto("chrome")
+        bienvenida = self.terminar_bienvenida()
         abierta = self.m.chrome("""
             return gBrowser.tabs.some(t => t.linkedBrowser.currentURI?.spec == "about:conexiones");
         """)
@@ -223,7 +261,7 @@ class Auditoria:
               gmp: Services.prefs.getBoolPref("media.gmp-manager.updateEnabled", true),
             };
         """)
-        return {"pagina_abierta_sola": abierta, "grupos": r, "prefs": estado}
+        return {"bienvenida": bienvenida, "pagina_abierta_sola": abierta, "grupos": r, "prefs": estado}
 
     # Con --rastrear: cada canal de red que se abre en el proceso principal, con quién lo abre (principales, tipo y la
     # pila de JS si lo abre código del navegador). Para encontrar el origen de una conexión que no debería salir.
@@ -367,6 +405,8 @@ def main():
         resultado["antes"], resultado["antes_proxy"] = resumir(fase), fase["proxy"]
         if a.aceptar:
             resultado["aceptar"] = au.aceptar(grupos)
+            if resultado["aceptar"]["bienvenida"].get("terminada"):
+                print("  bienvenida: «Usar lo recomendado» → about:conexiones", flush=True)
             print(f"  aceptado: {', '.join(resultado['aceptar']['grupos']) or 'ninguno'}", flush=True)
             au.esperar(a.despues, "después de aceptar")
             fase = au.cortar("después")
