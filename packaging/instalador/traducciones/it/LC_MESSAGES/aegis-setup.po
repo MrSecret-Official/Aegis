@@ -186,8 +186,8 @@ msgstr "Rigoroso+"
 msgid "Strict+ (recommended)"
 msgstr "Rigoroso+ (consigliato)"
 
-msgid "Tabs on the side and spaces to keep work and leisure apart."
-msgstr "Schede di lato e spazi per separare lavoro e tempo libero."
+msgid "Tabs in a sidebar, leaving more width for the page."
+msgstr "Schede in una barra laterale, con più larghezza per la pagina."
 
 msgid "Tabs on top, as always"
 msgstr "Schede in alto, come sempre"
@@ -225,8 +225,8 @@ msgstr "Disinstalla Aegis"
 msgid "Uninstalling Aegis"
 msgstr "Disinstallazione di Aegis"
 
-msgid "Vertical tabs and spaces"
-msgstr "Schede verticali e spazi"
+msgid "Vertical tabs on the side"
+msgstr "Schede verticali di lato"
 
 msgid "WHAT WILL BE INSTALLED"
 msgstr "COSA VERRÀ INSTALLATO"

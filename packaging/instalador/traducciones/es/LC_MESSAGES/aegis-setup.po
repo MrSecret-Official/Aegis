@@ -186,8 +186,8 @@ msgstr "Estricto+"
 msgid "Strict+ (recommended)"
 msgstr "Estricto+ (recomendado)"
 
-msgid "Tabs on the side and spaces to keep work and leisure apart."
-msgstr "Pestañas en un lateral y espacios para separar el trabajo del ocio."
+msgid "Tabs in a sidebar, leaving more width for the page."
+msgstr "Pestañas en una barra lateral, con más ancho para la página."
 
 msgid "Tabs on top, as always"
 msgstr "Pestañas arriba, como siempre"
@@ -225,8 +225,8 @@ msgstr "Desinstalar Aegis"
 msgid "Uninstalling Aegis"
 msgstr "Desinstalando Aegis"
 
-msgid "Vertical tabs and spaces"
-msgstr "Pestañas verticales y espacios"
+msgid "Vertical tabs on the side"
+msgstr "Pestañas verticales al lado"
 
 msgid "WHAT WILL BE INSTALLED"
 msgstr "LO QUE SE INSTALA"

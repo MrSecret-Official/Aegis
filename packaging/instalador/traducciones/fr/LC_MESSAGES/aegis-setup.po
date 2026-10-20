@@ -186,8 +186,8 @@ msgstr "Strict+"
 msgid "Strict+ (recommended)"
 msgstr "Strict+ (recommandé)"
 
-msgid "Tabs on the side and spaces to keep work and leisure apart."
-msgstr "Les onglets sur le côté et des espaces pour séparer travail et loisirs."
+msgid "Tabs in a sidebar, leaving more width for the page."
+msgstr "Les onglets dans une barre latérale, et plus de largeur pour la page."
 
 msgid "Tabs on top, as always"
 msgstr "Les onglets en haut, comme toujours"
@@ -225,8 +225,8 @@ msgstr "Désinstaller Aegis"
 msgid "Uninstalling Aegis"
 msgstr "Désinstallation d’Aegis"
 
-msgid "Vertical tabs and spaces"
-msgstr "Onglets verticaux et espaces"
+msgid "Vertical tabs on the side"
+msgstr "Onglets verticaux sur le côté"
 
 msgid "WHAT WILL BE INSTALLED"
 msgstr "CE QUI SERA INSTALLÉ"

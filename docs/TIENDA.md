@@ -179,6 +179,9 @@ Arrastra el `.msix` de `salida/`. Partner Center lo valida al momento: si la ide
   `packaging/msix/distribution.ini`). La ficha de la Tienda se puede escribir en esos idiomas.
 
 ### Ficha de la Tienda (al menos en español y en inglés)
+- **Textos listos para pegar, en los seis idiomas del paquete:** [FICHA-TIENDA.md](FICHA-TIENDA.md) (descripción,
+  novedades, características, descripción corta, términos de búsqueda, requisitos adicionales y copyright, con los
+  límites de Partner Center y los caracteres de cada campo).
 - **Descripción:** puedes partir del principio de `README.md`. Honesta: Aegis no es Tor Browser y el bloqueador no es
   invisible al 100 % (docs/GUIA.md, principio 5). Sin «Firefox» ni «Mozilla» en el nombre ni en los iconos; en la
   descripción sí se puede decir «basado en el código de Mozilla Firefox».

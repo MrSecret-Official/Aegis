@@ -498,7 +498,7 @@ export component Instalador inherits Window {
 
                         Tarjeta {
                             texto: "Workflow";
-                            detalle: @tr("Vertical tabs and spaces");
+                            detalle: @tr("Vertical tabs on the side");
                             sel: root.modo == "workflow";
                             grupo: "modo";
                             indice: 1;
@@ -520,7 +520,7 @@ export component Instalador inherits Window {
                         padding-right: 40px;
                         Nota {
                             text: root.modo == "workflow"
-                                ? @tr("Tabs on the side and spaces to keep work and leisure apart.")
+                                ? @tr("Tabs in a sidebar, leaving more width for the page.")
                                 : @tr("A clean bar with the tabs on top and a discreet bookmarks bar.");
                         }
                     }

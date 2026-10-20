@@ -1,5 +1,5 @@
 // Aegis Setup · miniaturas de las tarjetas: el navegador en pequeño, en modo Estándar (pestañas arriba, barra de
-// favoritos discreta) o Workflow (pestañas verticales, esenciales y espacios), y en oscuro, claro o automático; y los
+// favoritos discreta) o Workflow (pestañas verticales y barra lateral), y en oscuro, claro o automático; y los
 // Escudos en pequeño (peticiones tachadas y el contador), uno por nivel.
 // Solo rectángulos: nada de imágenes, se dibujan nítidas a cualquier escala. Sus radios (1,5, 2,5, 3, 4,5, 5 y 8)
 // son la escala de DISENO §5 reducida al tamaño del navegador dibujado, no radios de la interfaz.
@@ -130,7 +130,7 @@ export component MiniNavegador inherits Rectangle {
         }
     }
 
-    // ---- Workflow: barra lateral con pestañas verticales, esenciales y espacios.
+    // ---- Workflow: barra lateral con las pestañas verticales.
     if root.vertical: lat := Rectangle {
         property <length> lado: root.width * 0.3;
         Rectangle {
