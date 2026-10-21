@@ -4,8 +4,9 @@
 
 /* Aegis · barra de marcadores vacía (docs/DISENO.md). Hoja de autor de la ventana (la pone barra-lateral.sys.mjs).
    El aviso de Firefox («Para un acceso rápido, coloca tus marcadores aquí…») lleva a la derecha «Ahora no»; pulsado
-   (pref aegis.marcadores.aviso_oculto), la barra no se muestra mientras el aviso esté a la vista, es decir, mientras
-   no haya marcadores en ella. Con el primero, Firefox oculta el aviso y la barra vuelve sola. Solo var(--aegis-*). */
+   (pref aegis.marcadores.aviso_oculto, atributo aegis-aviso-oculto en la barra), la barra no se muestra mientras el
+   aviso esté a la vista, es decir, mientras no haya marcadores en ella. Con el primero, Firefox oculta el aviso y la
+   barra vuelve sola. Solo var(--aegis-*). */
 
 /* Aviso: el texto y, separado, el botón; centrados en la barra de 32. */
 #personal-toolbar-empty {
@@ -28,6 +29,9 @@
   font: inherit;
   font-size: 12px;
   white-space: nowrap;
+  /* Como el texto del aviso en Firefox (#personal-toolbar-empty-description): la barra es zona de arrastrar la
+     ventana (xul.css) y un botón HTML no la anula solo. */
+  -moz-window-dragging: no-drag;
   transition: background-color var(--aegis-t-hover) var(--aegis-ease), color var(--aegis-t-hover) var(--aegis-ease);
 }
 .aegis-aviso-cerrar:hover:active {
@@ -55,12 +59,11 @@
 
 /* Aviso descartado: sin barra mientras esté vacía. Se pliega como la barra «collapsed» de Firefox (visibility y
    alto), no con display: none, para que Firefox siga montando la lista de marcadores y sepa cuándo hay uno. En
-   «Personalizar barra» se ve siempre. */
-@media -moz-pref("aegis.marcadores.aviso_oculto") {
-  #PersonalToolbar:not([customizing]):has(> #personal-toolbar-empty:not([hidden])) {
-    visibility: collapse;
-    min-height: 0 !important;
-    max-height: 0 !important;
-    overflow: hidden;
-  }
+   «Personalizar barra» se ve siempre. El atributo aegis-aviso-oculto lo pone barra-lateral.sys.mjs con la pref (no
+   @media -moz-pref(): un atributo se aplica en cuanto cambia). */
+#PersonalToolbar[aegis-aviso-oculto]:not([customizing]):has(> #personal-toolbar-empty:not([hidden])) {
+  visibility: collapse;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden;
 }

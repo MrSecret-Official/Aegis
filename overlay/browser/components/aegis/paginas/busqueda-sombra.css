@@ -10,3 +10,12 @@
 .search-handoff-button {
   font-family: var(--aegis-font) !important;
 }
+
+/* El texto de ayuda («Buscar con… o introducir una dirección»): Firefox lo pinta con opacidad 0,54 sobre el color del
+   texto. Con opacidad, la captura de la ventana (drawSnapshot, la de las pruebas) lo pierde y el buscador parece vacío;
+   con el gris secundario de Aegis (--aegis-sub, 7,1:1 sobre la superficie oscura y 6,3:1 sobre la clara) se ve igual y
+   sale siempre. */
+.fake-textbox {
+  opacity: 1 !important;
+  color: var(--aegis-sub) !important;
+}

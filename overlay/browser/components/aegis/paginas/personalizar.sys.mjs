@@ -27,6 +27,7 @@ import {
   MENSAJE_PROPIO,
   PROPIO,
   pintarPropio,
+  sinPerfil,
 } from "../enfasis.sys.mjs";
 import { clave, leerGuardados, validarAcento } from "../enfasis-propio.sys.mjs";
 import { abrirSelector, botonMas, nombreDe } from "../selector-enfasis.sys.mjs";
@@ -98,6 +99,12 @@ function enfasis(win) {
     const raiz = win.document?.documentElement;
     const datos = Services.cpmm.sharedData.get(CLAVE_COMPARTIDA);
     if (!raiz || !datos) {
+      return;
+    }
+    // Crear un perfil nuevo no es de ningún perfil: el énfasis de serie de Aegis (enfasis.sys.mjs, sinPerfil).
+    if (sinPerfil(win.document.documentURI)) {
+      raiz.removeAttribute("aegis-enfasis");
+      raiz.removeAttribute("aegis-enfasis-degradado");
       return;
     }
     if (datos.modo == "monocromo" || !(ENFASIS.includes(datos.modo) || datos.modo == PROPIO)) {

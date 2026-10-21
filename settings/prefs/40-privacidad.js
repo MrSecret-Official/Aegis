@@ -29,3 +29,9 @@ pref("security.certerrors.mitm.priming.enabled", false);
 // falla. En Linux sí (Portal/Geoclue → MLSFallback): mandaría las redes Wi-Fi cercanas a www.googleapis.com con una
 // clave vacía (esta build no tiene clave). Vacía en todas, también por si una versión futura la define en Windows.
 pref("geo.provider.network.url", "");
+
+// «Cerrar las sesiones al salir de Aegis» (Ajustes › Privacidad › Sesiones, sesiones.sys.mjs): apagado de serie, sin pref
+// propia; el interruptor enciende la limpieza al cerrar de Firefox solo con las cookies y los datos de las webs.
+// Mientras está encendido, aquí se guarda (JSON) el valor que tenía antes cada pref que cambia, para devolverlo al
+// apagarlo. Vacía de serie.
+pref("aegis.sesiones.previo", "");

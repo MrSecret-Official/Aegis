@@ -235,7 +235,16 @@ Fechas reales en `product-details.mozilla.org` (`NEXT_RELEASE_DATE`). **Firefox 
 ## Fase 3 · Modo Workflow → 0.5
 
 - [~] Interruptor de modo (Estándar ↔ Workflow sin perder nada) con pestañas verticales nativas.
-- [ ] Estilo de las pestañas verticales y de la barra lateral.
+- [~] Estilo de las pestañas verticales y de la barra lateral. 2026-10-20: filas de 36, la activa con `--aegis-sel`, el
+      filo y el título en 500 (`estilos/workflow.css`). Falta: etiquetas de los grupos de pestañas con los colores de Aegis.
+- [x] Contenedores cómodos (2026-10-20, `out/pruebas/2026-10-20-contenedores-workflow/`): selector de la barra de
+      direcciones (indicador de Firefox o botón propio sin contenedor, Ctrl+Mayús+L y la acción «Cambiar de contenedor»)
+      que reabre la pestaña en otro contenedor o abre una nueva en él, con aviso de lo escrito en formularios
+      (`contenedores.sys.mjs`); colores de los contenedores con la fórmula del énfasis y un punto en la pestaña en lugar
+      de la raya de Firefox (`tokens.css`, `estilos/contenedores.css`); textos de es-ES que faltaban del panel de crear y
+      del diálogo de editar (`tools/l10n-cambios.json`).
+- [x] Tutorial de Workflow (2026-10-20): cuatro pasos tras la bienvenida con Workflow y cuando se quiera (Ajustes ›
+      Pestañas y navegación y la acción «Ver el tutorial de Workflow»), `about:bienvenida?tutorial`.
 - [ ] **Espacios** (nombre, icono, contenedor propio, borrar al cerrar por espacio, `Ctrl+1…9`) guardados en la sesión.
 - [ ] **Esenciales** (fijadas por espacio, en rejilla).
 - [ ] **Modo compacto** y descarga de pestañas inactivas y de espacios ocultos.
@@ -362,6 +371,9 @@ Fechas reales en `product-details.mozilla.org` (`NEXT_RELEASE_DATE`). **Firefox 
       bloqueo tras 10 min de inactividad y al cerrar (2026-10-13, `contrasenas.sys.mjs`, sin parches). Windows Hello
       **no** sustituye a la principal: Firefox solo lo usa para ver, copiar y editar, y no cifra `key4.db`; cifrar con
       DPAPI exigiría parchear NSS u OSKeyStore en C++.
+- [x] **2026-10-20, decisión del usuario:** guardar ya no exige la contraseña principal (como Firefox); el panel y
+      `about:logins` avisan sin ella, con «Crear contraseña principal». La siguen exigiendo pasar y recibir de otro Aegis
+      y añadir un código de verificación. `aegis.contrasenas.principal_obligatoria` a true devuelve la regla de antes.
 - [x] Interfaz cerrada (2026-10-13): ver, copiar y editar **con autenticación** (Windows Hello o la principal) en vez de
       quitarlos; sin exportar en claro (menú y `LoginExport`); sin rellenar solo, solo el sitio exacto, nunca en http
       ni solo en iframes de otro origen. Panel de la barra lateral y `about:logins` con el aspecto de Aegis.
@@ -390,7 +402,7 @@ Antes de empezar: las apps OAuth registradas (ver «Lo que tienes que hacer tú�
 
 - [ ] `AegisProxyRouter` (filtro de canal por `userContextId`): perfiles SOCKS5, HTTP o Tor por espacio, DNS por el
       proxy, sumidero si el proxy cae, WebRTC solo por proxy.
-- [~] Tor (2026-10-13): «Nueva ventana privada con Tor» (menú ☰, Mayús+Alt+N) como instancia aparte con perfil de
+- [~] Tor (2026-10-13): «Nueva ventana privada con Tor» (menú ☰, Ctrl+Mayús+U) como instancia aparte con perfil de
       usar y tirar (todas las ventanas privadas, proxy SOCKS de tor con DNS remoto, Caja fuerte, sin WebRTC, HTTP/3
       ni DoH); tor descargado aparte a petición (`aegis.py tor-fijar`, `tor/tor.json`), portado de Tor Browser
       (puerto de control, arranque, aislamiento por sitio), puentes obfs4 y Snowflake, «Nueva identidad». Probado:

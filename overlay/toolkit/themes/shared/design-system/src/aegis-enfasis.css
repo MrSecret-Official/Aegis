@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · el énfasis de serie de Aegis, Monocromo, en los documentos de elegir perfil (docs/DISENO.md §2, «Énfasis»):
+   la ventana de perfiles al arrancar (about:profilemanager, o profileSelection.xhtml de toolkit) y sus diálogos de crear
+   perfil y de perfil más nuevo. Se abren antes de que haya perfil y de que arranque el código de Aegis, así que no les
+   llega ninguna hoja de Aegis: cada uno enlaza esta (parche 0500-ui/0003), detrás de las de Firefox, y redefine los
+   tokens de acento de Firefox (el violeta de Nova) con el blanco (oscuro) o casi negro (claro) de la acción principal.
+   Va en chrome://mozapps/skin/, que no es contentaccessible: una web no puede cargarla, y no se importa desde los
+   tokens de Firefox (una web que cargue tokens-shared.css sigue viendo los valores de Firefox, sin huella).
+   Dentro de un perfil, las hojas de Aegis (estilos/mapeo-firefox.css, sin capa y con !important) ponen el énfasis
+   elegido; fuera de un perfil, Monocromo (enfasis.sys.mjs, sinPerfil).
+   Es la única hoja con colores escritos fuera de estilos/tokens.css, que aquí no está cargado: son los suyos
+   (--aegis-prim, --aegis-text, --aegis-focus…) y tools/verificar.py comprueba que coinciden y que cada token de Firefox
+   que redefine sigue existiendo. Con alto contraste de Windows o «más contraste», mandan los colores de Firefox. */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  :root,
+  :host(.anonymous-content-host) {
+    /* Texto (--aegis-text): en claro, Nova lo tiñe de un violeta casi negro. */
+    --text-color: light-dark(#0a0a0b, #f4f4f5);
+    /* Énfasis: interruptores, casillas, radios, selección, foco (--aegis-prim y su encima). */
+    --color-accent-primary: light-dark(#1c1c1e, #ececee);
+    --color-accent-primary-hover: light-dark(#000000, #ffffff);
+    --color-accent-primary-active: light-dark(#3a3a3d, #d4d4d8);
+    --color-accent-primary-selected: light-dark(#1c1c1e, #ececee);
+    --text-color-accent-primary-selected: light-dark(#ffffff, #0b0b0c);
+    --icon-color-accent-primary-desaturated: light-dark(#5f5f67, #a1a1aa);
+    /* Foco: el texto al 55 % (--aegis-focus). */
+    --focus-outline-color: light-dark(rgb(10 10 11 / 0.55), rgb(244 244 245 / 0.55));
+    /* Enlaces del color del texto (--aegis-text), como en el resto de Aegis. */
+    --link-color: light-dark(#0a0a0b, #f4f4f5);
+    --link-color-hover: light-dark(#000000, #ffffff);
+    --link-color-active: light-dark(#5f5f67, #a1a1aa);
+    --link-color-visited: light-dark(#0a0a0b, #f4f4f5);
+
+    /* Botón principal: la acción destacada (--aegis-prim), también desactivado (Firefox le pone su opacidad). */
+    --button-background-color-primary: light-dark(#1c1c1e, #ececee);
+    --button-background-color-primary-hover: light-dark(#000000, #ffffff);
+    --button-background-color-primary-active: light-dark(#3a3a3d, #d4d4d8);
+    --button-background-color-primary-disabled: light-dark(#1c1c1e, #ececee);
+    --button-text-color-primary: light-dark(#ffffff, #0b0b0c);
+    --button-text-color-primary-hover: light-dark(#ffffff, #0b0b0c);
+    --button-text-color-primary-active: light-dark(#ffffff, #0b0b0c);
+    /* Los demás botones, grises (--aegis-control): Nova los tiñe de violeta y les pone un borde del acento. */
+    --button-text-color: light-dark(#0a0a0b, #f4f4f5);
+    --button-background-color-hover: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.10));
+    --button-background-color-active: light-dark(rgb(0 0 0 / 0.12), rgb(255 255 255 / 0.14));
+    --button-border-color: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.07));
+    --toolbarbutton-background-color-hover: light-dark(rgb(0 0 0 / 0.035), rgb(255 255 255 / 0.04));
+    --toolbarbutton-background-color-active: light-dark(rgb(0 0 0 / 0.05), rgb(255 255 255 / 0.07));
+    --button-background-color-toolbar-hover: light-dark(rgb(0 0 0 / 0.035), rgb(255 255 255 / 0.04));
+    --button-background-color-toolbar-active: light-dark(rgb(0 0 0 / 0.05), rgb(255 255 255 / 0.07));
+
+    /* Información, en gris: el color es solo para avisos y errores. */
+    --icon-color-information: light-dark(#0a0a0b, #f4f4f5);
+    --background-color-information: light-dark(rgb(0 0 0 / 0.05), rgb(255 255 255 / 0.07));
+    --info-bar-border-color: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.07));
+    /* El degradado del marco de Nova (violeta a la izquierda): el gris de Aegis (--aegis-grad-desde). */
+    --toolbox-background-color-gradient-leading: light-dark(#ffffff, #1a1a1d);
+  }
+}

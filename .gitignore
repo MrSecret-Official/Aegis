@@ -10,3 +10,7 @@ __pycache__/
 *.p12
 *.pfx
 updates/privado/
+
+# Grafo de conocimiento del desarrollo y bóvedas de Obsidian: generados, nunca en el repo
+/graphify-out/
+.obsidian/

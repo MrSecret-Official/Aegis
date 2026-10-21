@@ -6,10 +6,12 @@
  * Aegis · Contraseñas: lo que protege el gestor de contraseñas de Firefox frente al robo (fase 5). Detalle y límites,
  * en docs/PRIVACIDAD.md, «Contraseñas».
  *
- * - **Contraseña principal obligatoria.** Sin ella, key4.db (la clave que cifra logins.json) no lleva contraseña y
- *   cualquier programa que copie el perfil descifra todo. Antes de guardar la primera contraseña (al aceptar el aviso
- *   de guardar, al añadirla a mano, al importar o al usar una contraseña generada), Aegis pide crearla; si no se crea,
- *   no se guarda nada.
+ * - **Contraseña principal recomendada, no obligatoria para guardar** (decisión del usuario, 2026-10-20). Sin ella,
+ *   key4.db (la clave que cifra logins.json) no lleva contraseña y cualquier programa que copie el perfil descifra
+ *   todo: se guarda como en Firefox, y el panel y about:logins lo avisan con «Crear contraseña principal».
+ *   aegis.contrasenas.principal_obligatoria (false de serie) vuelve a exigirla antes de guardar la primera (aviso de
+ *   guardar, a mano, importar, contraseña generada). Lo que la exige siempre, con la pref o sin ella:
+ *   pedirPrincipal(), para pasar o recibir de otro Aegis y añadir un código de verificación.
  * - **Un solo diálogo, el de Aegis** (dialogos/contrasena-principal.xhtml): explica por qué, pide la contraseña dos
  *   veces con una fortaleza mínima obligatoria (dialogos/fortaleza.mjs) y avisa de que no se puede recuperar.
  *   Sustituye también al changemp.xhtml de Firefox («override» en el manifiesto chrome), así que Ajustes y
@@ -40,7 +42,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
-/** Si es false, se puede guardar sin contraseña principal (como en Firefox). */
+/** Si es true, no se guarda ninguna contraseña sin contraseña principal. De serie, false: como en Firefox. */
 const PREF_OBLIGATORIA = "aegis.contrasenas.principal_obligatoria";
 /** Minutos sin usar el equipo tras los que se cierra la bóveda; 0, nunca. Se elige en Ajustes › Privacidad. */
 export const PREF_BLOQUEO = "aegis.contrasenas.bloqueo_minutos";
@@ -135,11 +137,12 @@ function ventana() {
 
 /**
  * El diálogo de Aegis para crear la contraseña principal, modal en la ventana (gDialogBox, como los avisos de la
- * ventana) o, si no lo hay, en una ventana propia. «motivo» cambia los textos: «guardar» (antes de guardar: «No
- * guardar» y «Crear y guardar») o «crear». El propio diálogo avisa de «passwordmgr-primary-pw-changed» al crearla.
+ * ventana) o, si no lo hay, en una ventana propia. «motivo» cambia los textos: «guardar» (antes de guardar, solo con
+ * aegis.contrasenas.principal_obligatoria: «No guardar» y «Crear y guardar»), «accion» (antes de algo que la exige:
+ * pedirPrincipal) o «crear». El propio diálogo avisa de «passwordmgr-primary-pw-changed» al crearla.
  *
  * @param {Window} win
- * @param {"guardar"|"crear"} motivo
+ * @param {"guardar"|"accion"|"crear"} motivo
  */
 async function abrirDialogoPrincipal(win, motivo) {
   const args = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag2);
@@ -158,7 +161,7 @@ let creando = null;
  * de guardar. Una sola pregunta a la vez: si ya hay una abierta, se espera a esa.
  *
  * @param {Window} [win] ventana del navegador; si no, la de arriba
- * @param {"guardar"|"crear"} [motivo]
+ * @param {"guardar"|"accion"|"crear"} [motivo]
  * @returns {Promise<boolean>} si al final hay contraseña principal
  */
 function crearPrincipal(win, motivo = "crear") {
@@ -181,13 +184,27 @@ function crearPrincipal(win, motivo = "crear") {
 }
 
 /**
- * Antes de guardar: si no hay contraseña principal, el diálogo explica por qué hace falta y ofrece crearla. Un solo
- * diálogo, con «No guardar» (o Esc): entonces no se guarda nada.
+ * Lo que exige la contraseña principal aunque guardar no la exija: pasar las contraseñas a otro Aegis (las saca todas
+ * del equipo), recibirlas de otro Aegis y añadir un código de verificación (juntaría los dos pasos en un perfil que
+ * cualquiera que lo copie descifra). Si no la hay, el diálogo explica por qué y ofrece crearla; con «Cancelar» (o
+ * Esc), no se hace.
+ *
+ * @param {Window} [win] ventana del navegador; si no, la de arriba
+ * @returns {Promise<boolean>} si hay contraseña principal
+ */
+function pedirPrincipal(win) {
+  return crearPrincipal(win, "accion");
+}
+
+/**
+ * Antes de guardar, solo con aegis.contrasenas.principal_obligatoria: si no hay contraseña principal, el diálogo
+ * explica por qué hace falta y ofrece crearla, con «No guardar» (o Esc): entonces no se guarda nada. De serie, se
+ * guarda sin ella, como en Firefox.
  *
  * @returns {Promise<boolean>} si se puede guardar
  */
 function asegurarPrincipal() {
-  if (!Services.prefs.getBoolPref(PREF_OBLIGATORIA, true) || token().hasPassword) {
+  if (!Services.prefs.getBoolPref(PREF_OBLIGATORIA, false) || token().hasPassword) {
     return Promise.resolve(true);
   }
   return crearPrincipal(ventana(), "guardar");
@@ -336,6 +353,8 @@ export const AegisContrasenas = {
   },
 
   crearPrincipal,
+
+  pedirPrincipal,
 
   /** Para el diálogo de la contraseña principal (dialogos/contrasena-principal.mjs), justo antes de ponerla. */
   reforzarKdf,

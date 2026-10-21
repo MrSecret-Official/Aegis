@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: Sin consulta de filtraciones con el aviso apagado
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: el panel del candado (browser-trustPanel.js) comprueba en cada
+navegación si la web sale en una filtración: #checkForBreaches llama a
+#getApplicableBreaches, que abre la colección fxmonitor-breaches de Remote
+Settings (BreachAlertsData.getAllBreaches), y a
+#hasMonitorAccountOrStoredPasswords, que cuenta las contraseñas guardadas
+(countLoginsAsync) y, con una cuenta de Mozilla, pide sus clientes OAuth
+(fxAccounts.listAttachedOAuthClients, una petición de red). Lo mismo al abrir
+el panel y al pintar su vista principal. Firefox solo mira la pref
+browser.urlbar.trustPanel.breachAlerts al final (getBreachedStatus), después
+de todo eso. Aegis la pone en false (settings/prefs/61-contrasenas.js): con
+estas dos salidas tempranas, sin el aviso no se consulta nada.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0400-privacidad/0006-sin-consulta-de-filtraciones.patch
+
+diff --git a/browser/base/content/browser-trustPanel.js b/browser/base/content/browser-trustPanel.js
+index 544866fac7..197ed300ac 100644
+--- a/browser/base/content/browser-trustPanel.js
++++ b/browser/base/content/browser-trustPanel.js
+@@ -1092,6 +1092,10 @@ class TrustPanel {
+   }
+ 
+   async #hasMonitorAccountOrStoredPasswords() {
++    // Aegis: sin el aviso de filtraciones, ni cuenta de Monitor ni recuento.
++    if (!UrlbarPrefs.get("trustPanel.breachAlerts")) {
++      return false;
++    }
+     return (
+       (await this.#hasMonitorAccount()) || (await this.#hasStoredPasswords())
+     );
+@@ -2044,6 +2048,10 @@ class TrustPanel {
+   }
+ 
+   async #getApplicableBreaches(site) {
++    // Aegis: sin el aviso de filtraciones, ni Remote Settings.
++    if (!UrlbarPrefs.get("trustPanel.breachAlerts")) {
++      return [];
++    }
+     const breaches = await this.#breachAlertsData.getAllBreaches();
+ 
+     if (!site || !breaches.length) {

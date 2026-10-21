@@ -15,10 +15,12 @@
  *   entra en el shadow DOM. Sus colores salen de var(--aegis-*), que se heredan.
  */
 
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { AegisConexiones } from "./conexiones.sys.mjs";
 import { minutosDeBloqueo, OPCIONES_BLOQUEO, PREF_BLOQUEO } from "./contrasenas.sys.mjs";
 import { AegisEnfasis } from "./enfasis.sys.mjs";
 import { abrirSelector, botonMas } from "./selector-enfasis.sys.mjs";
+import { AegisSesiones } from "./sesiones.sys.mjs";
 import { AegisEscudosAyuda } from "./escudos-ayuda.sys.mjs";
 import { AegisEscudosAjustes } from "./escudos/ajustes.sys.mjs";
 import { AegisHuella } from "./huella.sys.mjs";
@@ -176,6 +178,11 @@ const RETEXTOS = new Map([
   ["home-prefs-content-header", ["aegis-ajustes-inicio"]],
   ["home-prefs-firefox-home-disabled-notice", ["aegis-ajustes-inicio-aviso"]],
   ["related-settings-home-link", ["aegis-ajustes-personalizar-inicio"]],
+  // «Disposición del navegador» (pestañas horizontales o verticales) son los modos Estándar y Workflow (modos.sys.mjs):
+  // con sus nombres, como en la bienvenida, que dice que se cambian aquí.
+  ["browser-layout-header2", ["aegis-ajustes-modo"]],
+  ["browser-layout-horizontal-tabs2", ["aegis-ajustes-modo-estandar"]],
+  ["browser-layout-vertical-tabs2", ["aegis-ajustes-modo-workflow"]],
 ]);
 const SELECTOR_RETEXTOS = [...RETEXTOS.keys()].map(id => `[data-l10n-id="${id}"]`).concat("[data-aegis-l10n]").join(",");
 
@@ -372,6 +379,8 @@ function enfasisDeLaInterfaz(doc) {
       circulo.setAttribute("aegis-enfasis-muestra", nombre);
       const nombreVisible = doc.createElement("span");
       nombreVisible.textContent = texto(`aegis-enfasis-${nombre}`).value ?? nombre;
+      // En una ventana muy estrecha la muestra se queda sin su nombre visible (ajustes.css): sale al pasar el ratón.
+      opcion.title = nombreVisible.textContent;
       opcion.append(radio, circulo, nombreVisible);
       opciones.append(opcion);
     }
@@ -1035,6 +1044,141 @@ function googleSeccion(doc) {
 }
 
 /**
+ * Privacidad › «Sesiones» (sesiones.sys.mjs): «Cerrar las sesiones al salir de Aegis», apagado de serie, y el diálogo de
+ * Firefox de las webs que conservan la sesión (excepciones de la limpieza al cerrar), con las notas de lo que protege
+ * y lo que no. Misma tarjeta que Google y Tor. Va detrás de Tor (o de Google, o de la huella); se coloca en cada
+ * «paneshown» (idempotente). data-subcategory="aegis-sesiones": openPreferences("privacy-aegis-sesiones") lleva aquí.
+ */
+function sesionesSeccion(doc) {
+  const win = doc.defaultView;
+  let seccion = null;
+  let interruptor = null;
+
+  const textos = (id, etiquetaDe) => {
+    const caja = doc.createElement(etiquetaDe ? "label" : "div");
+    caja.className = "aegis-tor-textos";
+    if (etiquetaDe) {
+      // Los textos son la etiqueta del interruptor: pulsarlos también lo cambia.
+      caja.htmlFor = etiquetaDe;
+    }
+    const nombre = doc.createElement("span");
+    nombre.id = `${id}-nombre`;
+    nombre.className = "aegis-tor-nombre";
+    nombre.textContent = texto(id).value ?? "";
+    const detalle = doc.createElement("span");
+    detalle.id = `${id}-detalle`;
+    detalle.className = "aegis-tor-detalle";
+    detalle.textContent = texto(`${id}-detalle`).value ?? "";
+    caja.append(nombre, detalle);
+    return caja;
+  };
+  const fila = (...hijos) => {
+    const f = doc.createElement("div");
+    f.className = "aegis-tor-fila";
+    f.append(...hijos);
+    return f;
+  };
+  const nota = id => {
+    const p = doc.createElement("p");
+    p.className = "aegis-huella-nota";
+    p.textContent = texto(id).value ?? "";
+    return p;
+  };
+
+  const construir = () => {
+    seccion = doc.createElement("div");
+    seccion.id = "aegis-sesiones";
+    seccion.className = "aegis-sesiones";
+    seccion.dataset.subcategory = "aegis-sesiones";
+
+    const titulo = doc.createElement("h2");
+    titulo.id = "aegis-sesiones-titulo";
+    titulo.className = "aegis-huella-seccion";
+    titulo.textContent = texto("aegis-sesiones-titulo").value ?? "";
+    const ayuda = doc.createElement("p");
+    ayuda.className = "aegis-huella-ayuda";
+    ayuda.textContent = texto("aegis-sesiones-descripcion").value ?? "";
+
+    const tarjeta = doc.createElement("div");
+    tarjeta.className = "aegis-huella-tarjeta";
+    tarjeta.setAttribute("role", "group");
+    tarjeta.setAttribute("aria-labelledby", titulo.id);
+
+    const id = "aegis-sesiones-cerrar";
+    interruptor = doc.createElement("input");
+    interruptor.type = "checkbox";
+    interruptor.id = `${id}-interruptor`;
+    interruptor.className = "aegis-interruptor-ajustes";
+    interruptor.setAttribute("role", "switch");
+    interruptor.setAttribute("aria-labelledby", `${id}-nombre`);
+    interruptor.setAttribute("aria-describedby", `${id}-detalle`);
+    interruptor.addEventListener("change", () => {
+      try {
+        AegisSesiones.poner(interruptor.checked);
+      } catch (e) {
+        console.error("Aegis: Sesiones", e);
+      }
+      marcar();
+    });
+    tarjeta.append(fila(textos(id, interruptor.id), interruptor));
+
+    const excepciones = doc.createElement("button");
+    excepciones.className = "aegis-huella-quitar aegis-tor-boton";
+    excepciones.textContent = texto("aegis-sesiones-boton-excepciones").value ?? "";
+    excepciones.setAttribute("aria-describedby", "aegis-sesiones-excepciones-detalle");
+    excepciones.addEventListener("click", () => AegisSesiones.abrirExcepciones(win));
+    tarjeta.append(fila(textos("aegis-sesiones-excepciones"), excepciones));
+
+    // Honestidad (principio 5): lo que protege y lo que no.
+    tarjeta.append(
+      nota("aegis-sesiones-protege"),
+      nota("aegis-sesiones-no-protege"),
+      nota("aegis-sesiones-cierre-forzado")
+    );
+    seccion.append(titulo, ayuda, tarjeta);
+  };
+
+  // Refleja las prefs (también si cambian desde Ajustes › Historial, la casilla de cookies de Firefox o about:config).
+  const marcar = () => {
+    if (interruptor) {
+      interruptor.checked = AegisSesiones.activo();
+    }
+  };
+
+  const colocar = () => {
+    const pagina = doc.querySelector('setting-pane[data-category="panePrivacy"] > section');
+    if (!pagina || seccion?.isConnected) {
+      return;
+    }
+    if (!seccion) {
+      construir();
+    }
+    marcar();
+    const ancla =
+      pagina.querySelector(":scope > #aegis-tor") ??
+      pagina.querySelector(":scope > #aegis-google") ??
+      pagina.querySelector(":scope > #aegis-huella") ??
+      pagina.querySelector(':scope > setting-group[groupid="etpStatus"]');
+    pagina.insertBefore(seccion, ancla?.nextSibling ?? pagina.firstElementChild?.nextSibling ?? null);
+  };
+
+  colocar();
+  doc.addEventListener("paneshown", colocar);
+  for (const pref of AegisSesiones.PREFS) {
+    Services.prefs.addObserver(pref, marcar);
+  }
+  win.addEventListener(
+    "unload",
+    () => {
+      for (const pref of AegisSesiones.PREFS) {
+        Services.prefs.removeObserver(pref, marcar);
+      }
+    },
+    { once: true }
+  );
+}
+
+/**
  * Enlace «Más información» a una sección de about:escudos («Cómo funcionan los Escudos», escudos-ayuda.sys.mjs). Se
  * abre en una pestaña junto a Ajustes (o en la que ya la tenga abierta), para leerlo mientras se cambia la opción.
  *
@@ -1122,11 +1266,11 @@ function conexionesSeccion(doc) {
   win.addEventListener("unload", () => Services.prefs.removeObserver("aegis.conexiones.", marcar), { once: true });
 }
 
-/** Grupos de Firefox con opciones de los Escudos: [groupid, tema del texto, ancla de about:escudos]. */
+/**
+ * Grupos de Firefox con opciones de los Escudos: [groupid, tema del texto, ancla de about:escudos]. Los de la
+ * protección contra rastreo (etpStatus, etpAdvanced, etpCustomize) ya no se ven (escudosEnPrivacidad).
+ */
 const AYUDA_ESCUDOS = [
-  ["etpStatus", "rastreo", "nivel"],
-  ["etpAdvanced", "rastreo", "nivel"],
-  ["etpCustomize", "cookies", "cookies"],
   ["httpsOnly", "https", "https"],
   ["cookiesAndSiteData2", "olvidar", "olvidar"],
 ];
@@ -1355,6 +1499,256 @@ function transferenciaSeccion(doc) {
   doc.addEventListener("paneshown", colocar);
 }
 
+/**
+ * Ajustes › Pestañas y navegación: debajo de «Disposición del navegador» (pestañas horizontales o verticales, es decir,
+ * los modos Estándar y Workflow; modos.sys.mjs), una tarjeta con la fila «Tutorial de Workflow» y su botón compacto,
+ * que abre el tutorial (about:bienvenida?tutorial, bienvenida.sys.mjs). Mismo esqueleto que «Transferencia de
+ * contraseñas».
+ *
+ * @param {Document} doc
+ */
+function tutorialWorkflow(doc) {
+  const win = doc.defaultView;
+  let seccion = null;
+
+  const construir = () => {
+    seccion = doc.createElement("div");
+    seccion.id = "aegis-tutorial-workflow";
+    seccion.className = "aegis-tutorial-workflow";
+    const textos = doc.createElement("div");
+    textos.className = "aegis-tor-textos";
+    const nombre = doc.createElement("span");
+    nombre.id = "aegis-tutorial-workflow-nombre";
+    nombre.className = "aegis-tor-nombre";
+    nombre.textContent = texto("aegis-ajustes-tutorial").value ?? "";
+    const detalle = doc.createElement("span");
+    detalle.id = "aegis-tutorial-workflow-detalle";
+    detalle.className = "aegis-tor-detalle";
+    detalle.textContent = texto("aegis-ajustes-tutorial-detalle").value ?? "";
+    textos.append(nombre, detalle);
+    const boton = doc.createElement("button");
+    boton.className = "aegis-huella-quitar aegis-tor-boton";
+    boton.textContent = texto("aegis-ajustes-tutorial-boton").value ?? "";
+    boton.setAttribute("aria-describedby", `${nombre.id} ${detalle.id}`);
+    boton.addEventListener("click", () => {
+      try {
+        ChromeUtils.importESModule(new URL("bienvenida.sys.mjs", import.meta.url).href).AegisBienvenida.abrirTutorial(
+          win.browsingContext.topChromeWindow
+        );
+      } catch (e) {
+        console.error("Aegis: Ajustes, tutorial de Workflow", e);
+      }
+    });
+    const fila = doc.createElement("div");
+    fila.className = "aegis-tor-fila";
+    fila.append(textos, boton);
+    const tarjeta = doc.createElement("div");
+    tarjeta.className = "aegis-huella-tarjeta";
+    tarjeta.append(fila);
+    seccion.append(tarjeta);
+  };
+
+  const colocar = () => {
+    const ancla = doc.querySelector('setting-pane[data-category="paneTabsBrowsing"] setting-group[groupid="browserLayout"]');
+    if (!ancla?.isConnected) {
+      return;
+    }
+    if (!seccion) {
+      construir();
+    }
+    if (seccion.previousElementSibling != ancla) {
+      ancla.after(seccion);
+    }
+  };
+
+  colocar();
+  doc.addEventListener("paneshown", colocar);
+}
+
+/** Subpáginas de la protección contra rastreo de Firefox (#etp, #etpCustomize): llevan a Ajustes › Escudos. */
+const SUBPAGINAS_RASTREO = new Set(["paneEtp", "paneEtpCustomize"]);
+/**
+ * Grupos de Firefox que ajustes.css oculta por la cara única de los Escudos. También fuera de la búsqueda de Ajustes
+ * (data-hidden-from-search, el atributo con que Firefox saca un grupo de ella): si no, sus coincidencias dejaban la
+ * burbuja amarilla de la búsqueda flotando arriba, sin nada debajo.
+ */
+const GRUPOS_OCULTOS = 'setting-group:is([groupid="securityPrivacyStatus"], [groupid^="etp"])';
+
+/**
+ * Privacidad: una sola cara para la protección, los Escudos (decisión del usuario, 2026-10-20). La protección contra
+ * rastreo de Firefox sigue trabajando por debajo con el nivel de los Escudos (escudos.sys.mjs, ponerNivel), pero no se
+ * ve como otra protección: ajustes.css oculta su tarjeta de estado («… recomienda algunas mejoras», con su contador del
+ * último mes y su aviso de actualizaciones), su grupo Estándar / Estricto / Personalizado con el enlace a
+ * about:protections y sus subpáginas; quien llegue a #etp o #etpCustomize va a Ajustes › Escudos.
+ *
+ * En su lugar, donde estaba su grupo, la sección «Escudos»: el nivel (el de Ajustes › Escudos y el panel) y «Abrir
+ * Escudos». Y arriba, solo en la versión que se actualiza sola (no en la de la Tienda, que actualiza la Tienda) y
+ * mientras «Actualizaciones» no esté permitida en Conexiones, una fila que lo dice tal cual y lleva a Conexiones (en
+ * lugar del «… tiene problemas para actualizarse» de Firefox, que salía tras «Ahora no»). Se coloca en cada
+ * «paneshown» (idempotente).
+ *
+ * @param {Document} doc
+ */
+function escudosEnPrivacidad(doc) {
+  const win = doc.defaultView;
+  const t = (id, args) => texto(id, args).value ?? "";
+  let seccion = null;
+  let nivel = null;
+  let aviso = null;
+
+  /** Fila de 44 con nombre, detalle y un botón compacto (el esqueleto de «Tutorial de Workflow»). */
+  const fila = (id, nombreTexto, detalleTexto, botonTexto, alPulsar) => {
+    const nombre = doc.createElement("span");
+    nombre.id = `${id}-nombre`;
+    nombre.className = "aegis-tor-nombre";
+    nombre.textContent = nombreTexto;
+    const detalle = doc.createElement("span");
+    detalle.id = `${id}-detalle`;
+    detalle.className = "aegis-tor-detalle";
+    detalle.textContent = detalleTexto;
+    const textos = doc.createElement("div");
+    textos.className = "aegis-tor-textos";
+    textos.append(nombre, detalle);
+    const boton = doc.createElement("button");
+    boton.className = "aegis-huella-quitar aegis-tor-boton";
+    boton.textContent = botonTexto;
+    boton.setAttribute("aria-describedby", `${nombre.id} ${detalle.id}`);
+    boton.addEventListener("click", alPulsar);
+    const caja = doc.createElement("div");
+    caja.className = "aegis-tor-fila";
+    caja.append(textos, boton);
+    return Object.assign(caja, { detalle });
+  };
+
+  const construir = () => {
+    seccion = doc.createElement("div");
+    seccion.id = "aegis-escudos-privacidad";
+    seccion.className = "aegis-escudos-privacidad";
+    const titulo = doc.createElement("h2");
+    titulo.id = "aegis-escudos-privacidad-titulo";
+    titulo.className = "aegis-huella-seccion";
+    titulo.textContent = t("aegis-ajustes-escudos");
+    const ayuda = doc.createElement("p");
+    ayuda.className = "aegis-huella-ayuda";
+    ayuda.textContent = t("aegis-ajustes-privacidad-escudos-descripcion");
+    nivel = fila(
+      "aegis-escudos-privacidad-nivel",
+      t("aegis-ajustes-escudos-nivel-titulo"),
+      "",
+      t("aegis-ajustes-privacidad-escudos-abrir"),
+      () => win.gotoPref?.(AegisEscudosAjustes.VISTA)
+    );
+    const tarjeta = doc.createElement("div");
+    tarjeta.className = "aegis-huella-tarjeta";
+    tarjeta.setAttribute("role", "group");
+    tarjeta.setAttribute("aria-labelledby", titulo.id);
+    tarjeta.append(nivel);
+    seccion.append(titulo, ayuda, tarjeta);
+
+    aviso = doc.createElement("div");
+    aviso.id = "aegis-actualizaciones-aviso";
+    aviso.className = "aegis-huella-tarjeta aegis-actualizaciones-aviso";
+    aviso.append(
+      fila(
+        "aegis-actualizaciones-aviso-fila",
+        t("aegis-ajustes-actualizaciones-apagadas"),
+        t("aegis-ajustes-actualizaciones-apagadas-detalle"),
+        t("aegis-ajustes-escudos-elegir-conexiones"),
+        () => AegisConexiones.abrir(win.browsingContext.topChromeWindow ?? win)
+      )
+    );
+  };
+
+  const marcar = () => {
+    if (!seccion) {
+      return;
+    }
+    const categoria = Services.prefs.getStringPref("browser.contentblocking.category", "standard");
+    const masLista = Services.prefs.getBoolPref("aegis.escudos.estricto_mas", true);
+    const id =
+      categoria == "standard"
+        ? "aegis-escudos-nivel-normal"
+        : categoria == "strict"
+          ? masLista
+            ? "aegis-escudos-nivel-estricto-mas"
+            : "aegis-escudos-nivel-estricto"
+          : "aegis-escudos-personalizado";
+    nivel.detalle.textContent = t(id);
+    // La versión de la Tienda no se actualiza sola (lo hace la Tienda): ahí el aviso no tiene sentido.
+    const seActualizaSola = AppConstants.MOZ_UPDATER && !Services.sysinfo.getProperty("isPackagedApp");
+    aviso.hidden = !seActualizaSola || AegisConexiones.permitido("actualizaciones");
+  };
+
+  const colocar = () => {
+    const pagina = doc.querySelector('setting-pane[data-category="panePrivacy"] > section');
+    if (!pagina) {
+      return;
+    }
+    if (!seccion) {
+      construir();
+    }
+    marcar();
+    const rastreo = pagina.querySelector(':scope > setting-group[groupid="etpStatus"]');
+    if (!seccion.isConnected) {
+      if (rastreo) {
+        rastreo.after(seccion);
+      } else {
+        pagina.insertBefore(seccion, pagina.firstElementChild?.nextSibling ?? null);
+      }
+    }
+    if (!aviso.isConnected) {
+      // Arriba del todo, detrás de la cabecera de la página.
+      pagina.insertBefore(aviso, pagina.firstElementChild?.nextSibling ?? null);
+    }
+  };
+
+  const fueraDeLaBusqueda = () => {
+    for (const g of doc.querySelectorAll(GRUPOS_OCULTOS)) {
+      if (g.getAttribute("data-hidden-from-search") != "true") {
+        g.setAttribute("data-hidden-from-search", "true");
+      }
+    }
+  };
+
+  const alMostrar = e => {
+    if (SUBPAGINAS_RASTREO.has(e.detail?.category)) {
+      // Sin dejar #etp en el historial: «Atrás» no vuelve a la subpágina oculta.
+      win.history.replaceState(win.history.state, "", "#escudos");
+      Promise.resolve().then(() => win.gotoPref?.(AegisEscudosAjustes.VISTA));
+      return;
+    }
+    colocar();
+    fueraDeLaBusqueda();
+  };
+
+  colocar();
+  fueraDeLaBusqueda();
+  doc.addEventListener("paneshown", alMostrar);
+  // Antes de cada búsqueda (en captura: antes que el oyente de findInPage.js en el campo).
+  doc.addEventListener(
+    "input",
+    e => {
+      if (e.target?.id == "searchInput") {
+        fueraDeLaBusqueda();
+      }
+    },
+    true
+  );
+  const prefs = ["browser.contentblocking.category", "aegis.escudos.estricto_mas", "aegis.conexiones."];
+  for (const p of prefs) {
+    Services.prefs.addObserver(p, marcar);
+  }
+  win.addEventListener(
+    "unload",
+    () => {
+      for (const p of prefs) {
+        Services.prefs.removeObserver(p, marcar);
+      }
+    },
+    { once: true }
+  );
+}
+
 function montar(doc) {
   const nav = doc.getElementById("categories");
   if (!nav) {
@@ -1369,15 +1763,20 @@ function montar(doc) {
     ["énfasis", () => enfasisDeLaInterfaz(doc)],
     ["webs en oscuro", () => websEnOscuro(doc)],
     ["huella digital", () => huellaDigital(doc)],
+    // Después de la huella: se pone justo detrás del grupo de rastreo de Firefox (oculto), así queda delante de ella.
+    ["escudos en privacidad", () => escudosEnPrivacidad(doc)],
     // Después de la huella: se coloca detrás de su sección.
     ["tor", () => torSeccion(doc)],
     // Después de Tor: las dos se ponen detrás de la huella, así que Google queda entre ambas.
     ["google", () => googleSeccion(doc)],
+    // Después de Tor y Google: se coloca detrás de Tor.
+    ["sesiones", () => sesionesSeccion(doc)],
     ["ayuda de los Escudos", () => enlacesDeAyuda(doc)],
     ["conexiones", () => conexionesSeccion(doc)],
     ["cierre de la bóveda", () => bloqueoDeContrasenas(doc)],
     // Después del cierre de la bóveda: se coloca detrás de su sección.
     ["pasar a otro Aegis", () => transferenciaSeccion(doc)],
+    ["tutorial de Workflow", () => tutorialWorkflow(doc)],
   ]) {
     try {
       paso();

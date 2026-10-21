@@ -58,6 +58,12 @@ aegis-escudos-boton =
     }
 aegis-escudos-boton-bajados =
     .tooltiptext = Escudos bajados en este sitio
+# Fila de los Escudos en el panel del candado (abre el panel de los Escudos). Corta: el panel es estrecho.
+aegis-escudos-confianza = { $count ->
+        [0] Escudos activos
+        [one] Escudos activos: 1 bloqueado
+       *[other] Escudos activos: { $count } bloqueados
+    }
 aegis-escudos-activos-sitio = Escudos activos para este sitio
 aegis-escudos-bajados-sitio = Escudos bajados para este sitio
 aegis-escudos-contador = { $count ->
@@ -88,11 +94,11 @@ aegis-escudos-cookies = Cookies de terceros
 aegis-escudos-cookies-entre-sitios = Bloquear rastreo
 aegis-escudos-cookies-todas = Bloquear todas
 aegis-escudos-olvidar = Olvidar este sitio al cerrar
-aegis-escudos-olvidar-detalle = Borra sus cookies y datos al cerrar { -brand-short-name }
+aegis-escudos-olvidar-detalle = Borra las cookies y los datos del sitio al cerrar { -brand-short-name }
 aegis-escudos-olvidar-privada = Una ventana privada ya lo olvida todo al cerrarla
 aegis-escudos-listas = Listas de filtros
 aegis-escudos-configuracion = Ajustes globales
-aegis-escudos-pie = Si este sitio se ve mal, baja los Escudos para él. Eso reduce su protección.
+aegis-escudos-pie = Si este sitio se ve mal, baja los Escudos para él. Eso reduce la protección en este sitio.
 aegis-escudos-lista-titulo = Lo bloqueado en esta página
 aegis-escudos-atras =
     .aria-label = Atrás
@@ -158,10 +164,10 @@ aegis-contrasenas-importar = Importar contraseñas
 # Botón del aviso del panel y de about:logins: abre el diálogo de la contraseña principal.
 aegis-contrasenas-principal-crear = Crear contraseña principal
 # Aviso del panel y de about:logins cuando no hay contraseña principal.
-aegis-contrasenas-sin-principal = Sin contraseña principal: cualquier programa que copie tu perfil podría leer las contraseñas guardadas.
+aegis-contrasenas-sin-principal = Sin contraseña principal, quien use tu sesión de Windows puede usar tus contraseñas guardadas, y un programa que copie tu perfil puede leerlas. Una contraseña principal lo hace mucho más difícil.
 # Estado vacío del panel de la barra lateral.
-aegis-contrasenas-panel-titulo = Tus contraseñas, bajo llave
-aegis-contrasenas-panel-texto = { -brand-short-name } las guarda cifradas en este equipo, bajo tu contraseña principal, y no las envía a ningún sitio.
+aegis-contrasenas-panel-titulo = Tus contraseñas, en este equipo
+aegis-contrasenas-panel-texto = { -brand-short-name } las guarda cifradas en este equipo y no las envía a ningún sitio.
 
 ## Ajustes › Contraseñas y autorrelleno: «Cierre automático de la bóveda» (ajustes.sys.mjs), detrás de «Contraseñas». Segmentos:
 ## Nunca, 15, 10, 5, 3, 2 y 1 min; caben siete en una fila, así que las etiquetas son cortas.
@@ -186,6 +192,8 @@ aegis-principal-titulo-cambiar = Cambia tu contraseña principal
 aegis-principal-explicacion-guardar = Para guardar contraseñas, { -brand-short-name } las cifra con una contraseña principal. Sin ella, cualquier programa que copie tu perfil podría leerlas. Te la pedirá una vez por sesión y otra vez tras un rato sin usar el equipo.
 # Desde el aviso del panel o de about:logins, o desde Ajustes.
 aegis-principal-explicacion-crear = { -brand-short-name } cifra con ella las contraseñas que guardas. Sin ella, cualquier programa que copie tu perfil podría leerlas. Te la pedirá una vez por sesión y otra vez tras un rato sin usar el equipo.
+# Antes de pasar o recibir de otro Aegis o de añadir un código de verificación, que la piden siempre.
+aegis-principal-explicacion-accion = Para esto, { -brand-short-name } necesita una contraseña principal. Cifra con ella tus contraseñas y códigos de verificación: sin ella, cualquier programa que copie tu perfil podría leerlos. Te la pedirá una vez por sesión y otra vez tras un rato sin usar el equipo.
 aegis-principal-explicacion-cambiar = Para cambiarla necesitas la actual. Tus contraseñas guardadas seguirán ahí, protegidas con la nueva.
 # Si una política de empresa exige la contraseña principal.
 aegis-principal-politica = Tu organización exige una contraseña principal.
@@ -305,6 +313,8 @@ aegis-autenticador-error-hotp = Los códigos por contador (HOTP) no se admiten: 
 aegis-autenticador-error-corta = La clave es demasiado corta para ser segura.
 aegis-autenticador-error-parametros = Este código usa un formato que no se admite (cifras o periodo poco habituales).
 aegis-autenticador-error-guardar = No se ha podido guardar el código. Vuelve a intentarlo.
+# Cambiar la clave de un código sin contraseña principal (quitarlo sí se puede).
+aegis-autenticador-error-sin-principal = Para cambiar la clave hace falta una contraseña principal. Créala desde el aviso del panel de contraseñas, o quita el código.
 # La tarjeta de honestidad: los dos pasos juntos en la bóveda.
 aegis-autenticador-honestidad-titulo = Los dos pasos, en un solo sitio
 aegis-autenticador-honestidad = Guardar el código junto a la contraseña reúne los dos pasos en { -brand-short-name }: quien desbloqueara tus contraseñas guardadas tendría los dos. Los protegen tu contraseña principal y la verificación de identidad al ver o copiar un código. Para tus cuentas más importantes, un autenticador en otro dispositivo es más seguro.
@@ -484,7 +494,7 @@ aegis-huella-aviso-bloquear =
     .label = Seguir bloqueando
     .accesskey = S
 
-## Tor: «Nueva ventana privada con Tor» (menú ☰, Mayús+Alt+N), Ajustes › Privacidad › Tor, el indicador de la barra
+## Tor: «Nueva ventana privada con Tor» (menú ☰, Ctrl+Mayús.+U), Ajustes › Privacidad › Tor, el indicador de la barra
 ## y about:privatebrowsing en la instancia con Tor. «Tor» y «Tor Browser» son nombres de otro proyecto: no se traducen.
 
 aegis-tor-titulo = Tor
@@ -507,7 +517,7 @@ aegis-tor-boton-cancelar = Cancelar
 aegis-tor-boton-borrar = Borrar
 aegis-tor-borrar-abierta = Cierra las ventanas con Tor para poder borrarlo.
 aegis-tor-abrir-titulo = Nueva ventana privada con Tor
-aegis-tor-abrir-detalle = También desde el menú o con Mayús+Alt+N.
+aegis-tor-abrir-detalle = También desde el menú o con Ctrl+Mayús.+U.
 aegis-tor-boton-abrir = Abrir
 aegis-tor-puentes-titulo = Puentes
 aegis-tor-puentes-descripcion = Para redes que bloquean Tor. Se aplica la próxima vez que abras una ventana con Tor.
@@ -557,6 +567,20 @@ aegis-google-limpio-detalle = Google sigue viendo tu IP, lo que buscas y, si ini
 aegis-google-solo-web = Solo resultados web en Google
 aegis-google-solo-web-detalle = En las búsquedas desde la barra de direcciones, sin respuestas de IA ni módulos.
 
+## Sesiones (Ajustes › Privacidad; sesiones.sys.mjs): opción de mayor seguridad, apagada de serie. Las excepciones
+## son el diálogo de la limpieza al cerrar (webs que conservan sus datos).
+
+aegis-sesiones-titulo = Sesiones
+aegis-sesiones-descripcion = { -brand-short-name } recuerda las webs en las que has iniciado sesión, para que no tengas que volver a entrar cada vez. Si prefieres más seguridad, puedes cerrar todas las sesiones al salir.
+aegis-sesiones-cerrar = Cerrar las sesiones al salir de { -brand-short-name }
+aegis-sesiones-cerrar-detalle = Al salir se borran las cookies, los datos y la caché de las webs: tendrás que volver a iniciar sesión. El historial, las contraseñas y los marcadores se quedan.
+aegis-sesiones-excepciones = Webs que conservan la sesión
+aegis-sesiones-excepciones-detalle = Sus cookies y sus datos no se borran al salir.
+aegis-sesiones-boton-excepciones = Elegir webs…
+aegis-sesiones-protege = Protege tus cuentas si alguien copia tu perfil: sin las cookies, no puede entrar en ellas.
+aegis-sesiones-no-protege = No protege de un programa malicioso mientras { -brand-short-name } está abierto: hasta que sales, las sesiones siguen en el equipo.
+aegis-sesiones-cierre-forzado = Si { -brand-short-name } se cierra a la fuerza (un fallo o un corte de luz), la limpieza se hace la próxima vez que lo abras.
+
 ## Enlaces a «Cómo funcionan los Escudos» (about:escudos)
 
 # Pie del panel de Escudos: abre la página de ayuda en una pestaña.
@@ -599,6 +623,13 @@ aegis-escudos-grupo-scriptlets = Scripts de las listas
 aegis-ajustes-escudos = Escudos
 aegis-ajustes-escudos-descripcion = Qué bloquean los Escudos en todas las webs y las excepciones de cada sitio.
 
+# Ajustes › Privacidad: la sección «Escudos» (en lugar de la protección contra rastreo de Firefox, que trabaja por debajo)
+# y el aviso de actualizaciones apagadas (solo en la versión que se actualiza sola). «Conexiones» es about:conexiones.
+aegis-ajustes-privacidad-escudos-descripcion = Bloquean anuncios y rastreadores en todas las webs. Su nivel, las molestias y las excepciones de cada sitio están en su página.
+aegis-ajustes-privacidad-escudos-abrir = Abrir Escudos
+aegis-ajustes-actualizaciones-apagadas = Actualizaciones automáticas apagadas
+aegis-ajustes-actualizaciones-apagadas-detalle = { -brand-short-name } no busca versiones nuevas porque no lo has permitido en Conexiones. Con ellas llegan las correcciones de seguridad.
+
 # Nivel: tarjetas de opción con una línea honesta cada una.
 aegis-ajustes-escudos-nivel-titulo = Nivel
 aegis-ajustes-escudos-nivel-descripcion = Cuánto bloquean los Escudos en todos los sitios. Es el mismo ajuste que el del panel.
@@ -608,7 +639,7 @@ aegis-ajustes-escudos-nivel-estricto = Estricto
 aegis-ajustes-escudos-nivel-estricto-descripcion = Además, bloquea vídeos, comentarios y botones de redes sociales que rastrean, y quita de los enlaces los datos de seguimiento. Alguna web puede verse incompleta.
 aegis-ajustes-escudos-nivel-estricto-mas = Estricto+ (recomendado)
 aegis-ajustes-escudos-nivel-estricto-mas-descripcion = Lo de Estricto y una lista de rastreo más amplia (AdGuard Tracking Protection). Usa algo más de memoria.
-aegis-ajustes-escudos-nivel-personalizado = Has cambiado a mano la protección contra rastreo en Privacidad, así que ningún nivel coincide. Elige uno para volver.
+aegis-ajustes-escudos-nivel-personalizado = Has cambiado a mano la protección contra rastreo, así que ningún nivel coincide. Elige uno para volver.
 aegis-ajustes-escudos-nivel-nota = Ningún nivel hace el bloqueo invisible: una web puede notar que faltan sus anuncios.
 
 # Molestias: tres interruptores generales (los nombres son aegis-escudos-grupo-*).
@@ -647,7 +678,7 @@ aegis-ajustes-escudos-resultado-sin-permiso = Falta el permiso de Conexiones par
 aegis-ajustes-escudos-resultado-error = No se han podido actualizar. Vuelve a intentarlo más tarde
 aegis-ajustes-escudos-automatica = Actualizar las listas solas
 aegis-ajustes-escudos-automatica-detalle = Una revisión al día; cada lista se pide solo cuando caduca.
-aegis-ajustes-escudos-automatica-sin-permiso = Necesita el permiso «Listas de protección» de Conexiones.
+aegis-ajustes-escudos-automatica-sin-permiso = Hace falta el permiso «Listas de protección» de Conexiones.
 aegis-ajustes-escudos-sin-conexiones = Mientras no lo des, los Escudos usan las listas que trae { -brand-short-name }.
 aegis-ajustes-escudos-elegir-conexiones = Elegir conexiones
 
@@ -825,6 +856,8 @@ aegis-pasar-guardado-codigos =
        *[other] { $codigos } códigos de verificación
     }.
 aegis-pasar-error-autenticacion = No se ha podido verificar tu identidad. Vuelve a intentarlo.
+# Sin contraseña principal no se pasa nada (si el diálogo se abre sin pasar por Ajustes).
+aegis-pasar-error-sin-principal = Para pasar tus contraseñas a otro { -brand-short-name } hace falta una contraseña principal. Créala desde el aviso del panel de contraseñas y vuelve a intentarlo.
 aegis-pasar-error-escribir = No se ha podido guardar el archivo. Elige otra carpeta y vuelve a intentarlo.
 aegis-pasar-error = No se ha podido crear el archivo. Vuelve a intentarlo.
 
@@ -851,7 +884,7 @@ aegis-recibir-error-caducado = Este archivo ha caducado: solo vale 24 horas. Cre
 aegis-recibir-error-reloj = Este archivo tiene una fecha posterior a la de este equipo. Comprueba la fecha y la hora de los dos equipos.
 aegis-recibir-error-usado = Este archivo ya se ha abierto aquí y solo vale una vez. Si hace falta, crea otro en el otro { -brand-short-name }.
 aegis-recibir-error-leer = No se ha podido leer el archivo. Comprueba que sigue en su sitio y vuelve a intentarlo.
-aegis-recibir-error-sin-principal = Sin contraseña principal no se guardan contraseñas. Créala y vuelve a intentarlo.
+aegis-recibir-error-sin-principal = Para recibir contraseñas de otro { -brand-short-name } hace falta una contraseña principal. Créala y vuelve a intentarlo.
 aegis-recibir-error-bloqueada = Hace falta tu contraseña principal para guardar las contraseñas. Vuelve a intentarlo.
 aegis-recibir-error = No se han podido recibir las contraseñas. Vuelve a intentarlo.
 # Paso 2: el resumen (una línea por cada cosa que no sea cero; la primera, siempre) y borrar el archivo. $n: cuántas.
@@ -961,6 +994,105 @@ aegis-bienvenida-usar-recomendado = Usar lo recomendado
 # Primer paso, después de cambiar algo: aplica lo elegido y sigue.
 aegis-bienvenida-usar-eleccion = Usar esta configuración
 
+## Contenedores: el selector de la barra de direcciones (contenedores.sys.mjs; DISENO §9, «Selector de contenedor»).
+## «Contenedor» es el término de Firefox en cada idioma (de «Umgebung», fr «conteneur», it «contenitore», pt-BR
+## «contêiner»). Panel de 340 px: textos cortos.
+
+# Botón de la barra cuando la pestaña no está en ningún contenedor (texto de ayuda y nombre para lectores de pantalla).
+# $atajo: el atajo de teclado tal como lo escribe el sistema (p. ej. «Ctrl+Mayús.+L»).
+aegis-contenedores-boton =
+    .tooltiptext = Cambiar de contenedor ({ $atajo })
+aegis-contenedores-titulo = Contenedor
+# Debajo del título. $nombre: el contenedor de la pestaña («Trabajo»).
+aegis-contenedores-actual = Esta pestaña está en { $nombre }
+aegis-contenedores-actual-ninguno = Esta pestaña no está en ningún contenedor
+# Etiqueta de sección encima de la lista (se ve en MAYÚSCULAS): cada fila es un contenedor.
+aegis-contenedores-reabrir-etiqueta = Pasar la pestaña a
+# Primera fila: la pestaña sin contenedor.
+aegis-contenedores-ninguno = Sin contenedor
+# Para lectores de pantalla, lo que hace cada fila. $nombre: el contenedor.
+aegis-contenedores-reabrir-en = Reabrir la pestaña en { $nombre }
+aegis-contenedores-reabrir-sin = Reabrir la pestaña sin contenedor
+# El «+» de cada fila (texto de ayuda y para lectores de pantalla). $nombre: el contenedor.
+aegis-contenedores-nueva-en = Nueva pestaña en { $nombre }
+aegis-contenedores-nueva-sin = Nueva pestaña sin contenedor
+# Línea de honestidad debajo de la lista (solo con una web en la pestaña): las cookies no pasan, la dirección sí (con lo
+# que lleve, p. ej. un código de sesión). El atajo es el de «Reabrir pestaña cerrada».
+aegis-contenedores-nota = La página se vuelve a cargar en el otro contenedor, que no tiene las cookies de este: quizá tengas que volver a iniciar sesión. La dirección sí pasa tal cual, con lo que lleve dentro. La pestaña de ahora se cierra; la recuperas con Ctrl+Mayús.+T.
+# Aviso si SessionStore tiene algo escrito en un formulario de la pestaña.
+aegis-contenedores-aviso-formulario = Has escrito algo en esta página. Si la pasas a otro contenedor, se perderá.
+aegis-contenedores-nuevo = Nuevo contenedor…
+aegis-contenedores-gestionar = Gestionar
+
+## Ajustes › Pestañas y navegación: la fila del tutorial de Workflow, debajo de «Disposición del navegador».
+
+aegis-ajustes-tutorial = Tutorial de Workflow
+aegis-ajustes-tutorial-detalle = Las pestañas verticales, los contenedores y las acciones, en cuatro pasos.
+aegis-ajustes-tutorial-boton = Ver el tutorial
+# «Disposición del navegador» de Firefox (pestañas horizontales o verticales) son los modos de Aegis: el grupo y sus
+# dos tarjetas se llaman como en la bienvenida.
+aegis-ajustes-modo =
+    .label = Modo
+aegis-ajustes-modo-estandar =
+    .label = Estándar
+    .description = Pestañas arriba, como siempre
+    .title = Pestañas arriba, como siempre
+aegis-ajustes-modo-workflow =
+    .label = Workflow
+    .description = Pestañas verticales al lado
+    .title = Pestañas verticales al lado
+
+## about:bienvenida: el tutorial de Workflow (bienvenida.sys.mjs). Sale al terminar la bienvenida con Workflow elegido
+## y cuando se quiera desde Ajustes › Pestañas y navegación o con la acción «Ver el tutorial de Workflow». Cuatro pasos;
+## cada uno con una chuleta: lo que se hace (izquierda) y cómo (derecha: un atajo o un gesto, corto). Los menús de
+## Firefox, con su nombre en cada idioma («Fijar pestaña»); las teclas, con el suyo (Mayús, Maj, Umschalt, Maiusc…).
+
+aegis-tutorial-pestana = Tutorial de Workflow
+aegis-tutorial-saltar = Saltar el tutorial
+aegis-tutorial-siguiente = Siguiente
+# Último paso, al venir de la bienvenida: lleva a elegir qué se conecta (about:conexiones).
+aegis-tutorial-empezar = Empezar
+# Último paso, abierto desde Ajustes o las acciones: cierra la pestaña.
+aegis-tutorial-hecho = Hecho
+
+aegis-tutorial-pestanas-titulo = Tus pestañas, en la barra lateral
+aegis-tutorial-pestanas-subtitulo = En Workflow van una debajo de otra, con su título entero, y la página gana ancho.
+aegis-tutorial-pestanas-plegar = Plegar o desplegar la barra lateral
+aegis-tutorial-pestanas-plegar-como = Ctrl+Alt+Z
+aegis-tutorial-pestanas-nueva = Abrir una pestaña nueva
+aegis-tutorial-pestanas-nueva-como = Ctrl+T
+aegis-tutorial-pestanas-cambiar = Ir a la pestaña siguiente
+aegis-tutorial-pestanas-cambiar-como = Ctrl+Tab
+
+aegis-tutorial-ordenar-titulo = Muévelas y fija las que más usas
+aegis-tutorial-ordenar-subtitulo = Ordena la barra a tu manera: lo de cada día, arriba y a mano.
+aegis-tutorial-ordenar-mover = Mover una pestaña
+aegis-tutorial-ordenar-mover-como = Arrástrala
+aegis-tutorial-ordenar-fijar = Fijarla arriba
+aegis-tutorial-ordenar-fijar-como = Clic derecho › Fijar pestaña
+aegis-tutorial-ordenar-grupo = Juntar varias en un grupo
+aegis-tutorial-ordenar-grupo-como = Arrastra una sobre otra
+
+aegis-tutorial-contenedores-titulo = Contenedores
+aegis-tutorial-contenedores-subtitulo = Cada contenedor guarda aparte sus cookies: puedes tener abiertas dos cuentas del mismo sitio a la vez.
+aegis-tutorial-contenedores-cambiar = Pasar la pestaña a otro contenedor
+aegis-tutorial-contenedores-cambiar-como = Ctrl+Mayús.+L
+aegis-tutorial-contenedores-nueva = Abrir una pestaña nueva en uno
+aegis-tutorial-contenedores-nueva-como = Clic derecho en +
+aegis-tutorial-contenedores-enlace = Abrir un enlace en uno
+aegis-tutorial-contenedores-enlace-como = Clic derecho en el enlace
+aegis-tutorial-contenedores-nota = El contenedor de la pestaña sale en la barra de direcciones: púlsalo para cambiarlo. Al cambiar, la página se vuelve a cargar y lo que hayas escrito en ella no pasa al otro.
+
+aegis-tutorial-acciones-titulo = Todo, desde la barra de direcciones
+aegis-tutorial-acciones-subtitulo = Escribe > y elige qué hacer, sin buscarlo en los menús.
+aegis-tutorial-acciones-abrir = Ver todas las acciones
+aegis-tutorial-acciones-abrir-como = Ctrl+L y >
+aegis-tutorial-acciones-modo = Cambiar de modo
+aegis-tutorial-acciones-modo-como = > modo
+aegis-tutorial-acciones-contenedor = Cambiar de contenedor
+aegis-tutorial-acciones-contenedor-como = > contenedor
+aegis-tutorial-acciones-nota = Vuelve a ver este tutorial en Ajustes › Pestañas y navegación, o con > tutorial.
+
 ## Barra de direcciones: modo «Acciones» (escribir «>» o elegir Acciones en el menú de la lupa) y la fila de botones
 ## que sale al escribir una palabra clave (acciones.sys.mjs). Cada acción es un botón pequeño: textos cortos, como los
 ## de las acciones del navegador («Ver descargas»). Los «-claves» son las palabras que la buscan: separadas por comas,
@@ -979,6 +1111,10 @@ aegis-accion-conexiones-claves = conexiones, conectar, red, privacidad
 aegis-accion-modo-workflow = Cambiar al modo Workflow
 aegis-accion-modo-estandar = Cambiar al modo Estándar
 aegis-accion-modo-claves = modo, workflow, estándar, pestañas verticales
+aegis-accion-contenedor = Cambiar de contenedor
+aegis-accion-contenedor-claves = contenedor, contenedores, cambiar de contenedor, pestaña contenedora, cuentas, identidad
+aegis-accion-tutorial = Ver el tutorial de Workflow
+aegis-accion-tutorial-claves = tutorial, ayuda, workflow, pestañas verticales, cómo se usa
 aegis-accion-apariencia = Apariencia y énfasis
 aegis-accion-apariencia-claves = apariencia, énfasis, color, tema oscuro, tema claro
 aegis-accion-tor = Nueva ventana privada con Tor
@@ -991,3 +1127,40 @@ aegis-accion-recibir = Recibir contraseñas de otro { -brand-short-name }
 aegis-accion-recibir-claves = recibir contraseñas, transferencia, código de transferencia, contraseñas
 aegis-accion-importar = Importar datos de otro navegador
 aegis-accion-importar-claves = importar, importar datos, chrome, edge, brave, migrar
+
+## Ventana de perfiles (about:profilemanager): borrar otro perfil sin entrar en él (perfiles.sys.mjs).
+## $nombre es el nombre del perfil.
+
+aegis-perfiles-borrar-titulo = ¿Borrar el perfil «{ $nombre }»?
+aegis-perfiles-borrar-texto = Se borrarán de este equipo los marcadores, el historial, las contraseñas, las cookies, las extensiones y los ajustes del perfil. No se puede deshacer.
+aegis-perfiles-borrar-acceso = También se quitará el acceso directo del perfil en el escritorio.
+aegis-perfiles-borrar-cancelar = Cancelar
+aegis-perfiles-borrar-confirmar = Borrar perfil
+aegis-perfiles-borrar-error = No se ha podido borrar «{ $nombre }». Si está abierto en otra ventana de { -brand-short-name }, ciérrala y vuelve a intentarlo.
+
+## Nueva pestaña › Correo: el sobre junto a Personalizar, su diálogo, su menú y su sección de Personalizar
+## (paginas/correo.sys.mjs). $sitio es el sitio de la bandeja guardada (p. ej. «mail.proton.me»). Diálogo de 440 px.
+
+aegis-correo-titulo = Correo
+aegis-correo-boton-elegir = Elegir el correo
+aegis-correo-boton-abrir = Abrir el correo ({ $sitio })
+aegis-correo-dialogo-titulo = Tu correo
+aegis-correo-dialogo-texto = Escribe la dirección de tu bandeja de entrada. El sobre de la nueva pestaña la abrirá; { -brand-short-name } no se conecta a ella hasta que lo pulses. La dirección se guarda solo en este equipo.
+aegis-correo-dialogo-campo = Dirección
+aegis-correo-dialogo-ejemplos = Por ejemplo: mail.proton.me, mail.google.com u outlook.live.com
+aegis-correo-error-vacio = Escribe la dirección de tu correo.
+aegis-correo-error-esquema = Solo vale una dirección segura (https://). Revísala y vuelve a probar.
+aegis-correo-error-direccion = Esa dirección no es válida. Comprueba que está bien escrita.
+aegis-correo-cancelar = Cancelar
+aegis-correo-guardar = Guardar
+aegis-correo-menu-anadir = Añadir la dirección del correo…
+aegis-correo-menu-cambiar = Cambiar la dirección del correo…
+aegis-correo-quitar = Quitar
+aegis-correo-sin = Sin dirección: el sobre la pedirá al pulsarlo.
+aegis-correo-actual = Abre { $sitio }
+aegis-correo-anadir = Añadir…
+aegis-correo-cambiar = Cambiar…
+
+## Nueva pestaña: nombre de la lista de accesos para el lector de pantalla (Firefox lo trae escrito en inglés).
+
+aegis-accesos-titulo = Accesos directos

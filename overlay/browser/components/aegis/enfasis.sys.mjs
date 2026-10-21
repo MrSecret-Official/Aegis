@@ -51,25 +51,27 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export const PREF = "aegis.enfasis";
 /**
  * Énfasis que se pueden elegir con una muestra, en el orden de los selectores: arriba Monocromo y los automáticos,
- * debajo los temas en dos filas de siete con el «+» del personalizado al final. El primero es el de serie.
+ * debajo los temas en dos filas de siete con el «+» del personalizado al final. El primero es el de serie. Los temas van
+ * por tono, como una rueda de color (de la frambuesa, rojo, al malva), y al final los dos casi grises (Piedra, cálido, y
+ * Pizarra, frío), junto al «+».
  */
 export const ENFASIS = [
   "monocromo",
   "windows",
   "fondo",
-  "hielo",
-  "pizarra",
-  "salvia",
-  "ambar",
-  "coral",
-  "lavanda",
-  "malva",
-  "cobalto",
-  "piedra",
-  "laguna",
-  "musgo",
   "frambuesa",
+  "coral",
+  "ambar",
+  "musgo",
+  "salvia",
+  "laguna",
+  "hielo",
+  "cobalto",
+  "lavanda",
   "ciruela",
+  "malva",
+  "piedra",
+  "pizarra",
 ];
 /** El personalizado: un valor más de aegis.enfasis, sin muestra propia (lo abre el «+»). */
 export const PROPIO = "propio";
@@ -169,11 +171,28 @@ function esDeLaInterfaz(doc) {
   );
 }
 
+/**
+ * Páginas que no son de ningún perfil: elegir, crear o gestionar perfiles (la ventana de perfiles y crear uno nuevo, y la
+ * elección de perfil de serie de Firefox). Ahí va siempre el énfasis de serie de Aegis (Monocromo), aunque el perfil en
+ * uso tenga otro: el del perfil es solo de ese perfil (DISENO §2, «Énfasis»).
+ */
+const SIN_PERFIL = ["about:profilemanager", "about:newprofile", "chrome://mozapps/content/profile/"];
+
+/** ¿Es una página que no pertenece a ningún perfil? */
+export function sinPerfil(uri) {
+  return SIN_PERFIL.some(prefijo => (uri ?? "").startsWith(prefijo));
+}
+
 /** Pone el énfasis actual en la raíz de un documento. */
 function pintar(doc) {
   const raiz = doc.documentElement;
   // Sin .style: la raíz no es un elemento HTML, XUL ni SVG (p. ej., un XML sin hoja de estilos visto como árbol).
   if (!raiz?.style) {
+    return;
+  }
+  if (sinPerfil(doc.documentURI)) {
+    raiz.removeAttribute("aegis-enfasis");
+    raiz.removeAttribute("aegis-enfasis-degradado");
     return;
   }
   if (estado.modo == "monocromo") {

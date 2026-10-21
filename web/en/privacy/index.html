@@ -37,7 +37,7 @@
     <p class="entradilla">Aegis is a browser that doesn’t collect data from the people who use it. This policy explains,
       first briefly and then in detail, what is stored on your device, who the browser may connect to and what you can
       decide.</p>
-    <p class="vigencia">Effective October 17, 2026 · Version 1.0</p>
+    <p class="vigencia">Effective October 21, 2026 · Version 1.1</p>
 
     <section class="tarjeta" aria-labelledby="summary">
       <h2 class="etiqueta" id="summary">In short</h2>
@@ -54,8 +54,9 @@
           security and blocking lists, video codecs…) have their own switch. Those that depend on something you do, such
           as installing an add-on or letting a website know your location, are explained below one by one, with how to
           turn them off.</li>
-        <li><strong>Your passwords are encrypted on your device.</strong> They stay in your profile, protected by a
-          primary password that only you know, and they aren’t sent anywhere.</li>
+        <li><strong>Your passwords stay on your device.</strong> They’re stored encrypted in your profile and aren’t
+          sent anywhere. Without a primary password, anyone who copies your profile can read them; with one that only
+          you know, they can’t.</li>
         <li><strong>The websites you visit do see you.</strong> As with any browser, every website receives your IP
           address. Aegis reduces what they can learn about you, but it doesn’t make you anonymous: it isn’t Tor
           Browser.</li>
@@ -117,9 +118,18 @@
       cookies and website data, the cache, the permissions you give each site and your settings. None of it is sent to
       Secret Studios or anyone else, and you can delete it whenever you want from the browser’s privacy settings.</p>
     <ul>
-      <li><strong>Passwords.</strong> They’re stored encrypted in your profile. Before saving the first one, Aegis asks
-        you to create a primary password, without which they can’t be decrypted. Nobody else has that key: if you forget
-        it, it can’t be recovered.</li>
+      <li><strong>Passwords.</strong> They’re stored encrypted in your profile. A primary password is
+        optional for saving them, and Aegis recommends creating one:
+        <ul>
+          <li><strong>Without a primary password,</strong> the key that decrypts them is in the same profile,
+            unprotected: anyone who copies your profile (a malicious program, someone with access to your disk) can read
+            them, and anyone using your Windows session can sign in to websites with them. To view or copy them, Aegis
+            asks for your Windows credentials.</li>
+          <li><strong>With a primary password,</strong> the key is encrypted with it and they can’t be decrypted
+            without it. Nobody else has it: if you forget it, it can’t be recovered.</li>
+          <li>Moving your passwords to another Aegis, receiving them from another Aegis and adding a two-step
+            verification code require one: if you haven’t created it, Aegis asks you to create it before going on.</li>
+        </ul></li>
       <li><strong>Two-step verification codes</strong> you add: encrypted with the same key as your passwords.</li>
       <li><strong>Moving your passwords to another Aegis</strong> creates an encrypted file, wherever you choose, that
         only opens with a six-word code. Unless you untick the box, it also carries your two-step verification codes.
@@ -425,6 +435,10 @@
     <p>If Aegis changes what it connects to or adds features that process data (for example, the planned encrypted sync
       with your own cloud), we’ll update this policy before releasing that version, change the date and version number
       here and explain what changed. Previous versions remain in the history of this website’s repository.</p>
+    <p><strong>Version 1.1 (October 21, 2026).</strong> Saving passwords no longer requires a primary password: without
+      one, they’re still stored and anyone who copies your profile can read them (section 3). Moving and
+      receiving passwords between Aegis profiles and adding verification codes still require it. What Aegis connects to
+      hasn’t changed.</p>
     <p class="nota">This English version is a translation. If it differs from the Spanish version, the Spanish one
       prevails.</p>
 

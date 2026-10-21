@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Herramienta única de Aegis: de la fuente de Firefox a un navegador compilado y actualizable.
 
-    aegis.py fetch                 descarga el tarball de upstream.json y lo verifica (sha256 + GPG), y las
-                                   traducciones fijadas (upstream.json › l10n) a ~/.mozbuild/l10n-central
+    aegis.py fetch                 descarga el tarball de upstream.json y lo verifica (sha256 + GPG), las
+                                   traducciones fijadas (upstream.json › l10n) a ~/.mozbuild/l10n-central y los
+                                   diccionarios de ortografía (upstream.json › diccionarios) a cache/diccionarios
     aegis.py prepare [--limpio]    descomprime, crea un repo git, aplica patches/series y overlay/
     aegis.py patch [--check]       aplica los parches que falten (o comprueba la serie entera, con cada motor)
     aegis.py overlay               vuelve a copiar overlay/ (y las claves MAR) al árbol
@@ -222,9 +223,11 @@ def tarball():
 
 
 def cmd_fetch(a):
-    """La fuente de Firefox (tarball firmado) y las traducciones de la interfaz (upstream.json › l10n)."""
+    """La fuente de Firefox (tarball firmado), las traducciones de la interfaz (upstream.json › l10n) y los diccionarios
+    de ortografía (upstream.json › diccionarios)."""
     fetch_firefox()
     fetch_l10n()
+    fetch_diccionarios()
     return 0
 
 
@@ -341,30 +344,104 @@ def sello_esperado(d):
             "cambios": sha(os.path.join(REPO, L10N_CAMBIOS))}
 
 
+# Tipos de cambio de tools/l10n-cambios.json: «sustituciones» (la marca) y «correcciones» (un texto de la traducción
+# que Aegis cambia por otro más claro) reemplazan un trozo del mensaje; «anadidos», un mensaje que falta.
+REEMPLAZOS_L10N = ("sustituciones", "correcciones")
+CLAVES_L10N = (*REEMPLAZOS_L10N, "anadidos")
+
+
+# .properties que admiten los reemplazos (aún no están en Fluent: los avisos de permisos de browser.properties, la
+# petición de la contraseña principal de NSS, pipnss.properties, y la autenticación HTTP y el gestor de contraseñas de
+# toolkit/chrome/): prefijo en el monorepo -> (carpeta de en-US en el árbol de Firefox, carpeta en el paquete; {i} =
+# idioma). browser/chrome/ va en browser/omni.ja; security/ y toolkit/ (toolkit/locales/jar.mn), en omni.ja.
+PROPERTIES_L10N = {
+    "browser/chrome/": ("browser/locales/en-US/chrome/", "chrome/{i}/locale/"),
+    "security/manager/chrome/": ("security/manager/locales/en-US/chrome/", "chrome/{i}/locale/{i}/"),
+    "toolkit/chrome/": ("toolkit/locales/en-US/chrome/", "chrome/{i}/locale/{i}/"),
+}
+# Nada de la marca en las correcciones ni en los añadidos, ni en lo que deja una sustitución.
+MARCAS_L10N = re.compile(r"\b(Firefox|Mozilla)\b")
+
+
+def prefijo_properties(archivo):
+    return next((p for p in PROPERTIES_L10N if archivo.startswith(p) and archivo.endswith(".properties")), None)
+
+
+def archivo_l10n_valido(archivo, ident, anadido=False):
+    """Un .ftl del monorepo (mensaje Fluent) o, solo para reemplazos, un .properties de PROPERTIES_L10N (clave con
+    puntos). Sin «..»."""
+    if ".." in archivo.split("/"):
+        return False
+    if re.fullmatch(r"[a-z]+/[\w/.-]+\.ftl", archivo):
+        return bool(re.fullmatch(r"-?[a-zA-Z][\w-]*", ident))
+    return (not anadido and bool(prefijo_properties(archivo)) and bool(re.fullmatch(r"[\w/.-]+", archivo))
+            and bool(re.fullmatch(r"[a-zA-Z][\w.-]*", ident)))
+
+
+def ruta_paquete_l10n(idioma, archivo):
+    """Dónde lleva el paquete un archivo de traducción del monorepo: un .ftl en localization/<idioma>/…; un
+    .properties, donde dice PROPERTIES_L10N."""
+    p = prefijo_properties(archivo)
+    if p:
+        return PROPERTIES_L10N[p][1].format(i=idioma) + archivo[len(p):]
+    return f"localization/{idioma}/{archivo.split('/', 1)[1]}"
+
+
+def ruta_en_us_l10n(src, archivo):
+    """El archivo en-US del árbol de Firefox que corresponde a uno del monorepo de traducciones."""
+    p = prefijo_properties(archivo)
+    if p:
+        return os.path.join(src, *(PROPERTIES_L10N[p][0] + archivo[len(p):]).split("/"))
+    modulo, resto = archivo.split("/", 1)
+    return os.path.join(src, modulo, "locales", "en-US", *resto.split("/"))
+
+
 def cambios_l10n():
-    """tools/l10n-cambios.json, comprobado: sustituciones (idioma, archivo, id, antes, después) y añadidos (idioma,
-    archivo, id, texto). Solo .ftl, rutas del monorepo sin «..», y nada repetido."""
+    """tools/l10n-cambios.json, comprobado: sustituciones y correcciones (idioma, archivo, id, antes, después) y
+    añadidos (idioma, archivo, id, texto). Solo .ftl (y .properties de PROPERTIES_L10N en los reemplazos), rutas
+    del monorepo sin «..», nada repetido ni encadenado, y la marca solo en el «antes» de las sustituciones."""
     with open(os.path.join(REPO, L10N_CAMBIOS), encoding="utf-8") as f:
         c = json.load(f)
     vistos = set()
     for clave, campos in (("sustituciones", ("idioma", "archivo", "id", "antes", "despues")),
+                          ("correcciones", ("idioma", "archivo", "id", "antes", "despues")),
                           ("anadidos", ("idioma", "archivo", "id", "texto"))):
         for e in c.get(clave, []):
             if not all(isinstance(e.get(k), str) and e[k] for k in campos):
                 raise Error(f"{L10N_CAMBIOS} › {clave}: entrada incompleta {e}", 2)
-            if (not re.fullmatch(r"[a-z]+/[\w/.-]+\.ftl", e["archivo"]) or ".." in e["archivo"].split("/")
-                    or not re.fullmatch(r"-?[a-zA-Z][\w-]*", e["id"])):
+            if not archivo_l10n_valido(e["archivo"], e["id"], clave == "anadidos"):
                 raise Error(f"{L10N_CAMBIOS} › {clave}: archivo o id no válido: {e['archivo']} {e['id']}", 2)
             if clave == "anadidos" and not e["texto"].startswith(e["id"] + " ="):
                 raise Error(f"{L10N_CAMBIOS} › añadido {e['id']}: el texto tiene que empezar por «{e['id']} =»", 2)
             if (e["idioma"], e["archivo"], e["id"], e.get("antes")) in vistos:
                 raise Error(f"{L10N_CAMBIOS}: entrada repetida ({e['idioma']} {e['id']})", 2)
             vistos.add((e["idioma"], e["archivo"], e["id"], e.get("antes")))
+            if clave in REEMPLAZOS_L10N and e["antes"] in e["despues"]:
+                raise Error(f"{L10N_CAMBIOS} › {clave}: en {e['id']} el «antes» queda dentro del «después» (el paquete "
+                            "no podría comprobar el cambio): usa un «antes» más largo", 2)
+            marcas = MARCAS_L10N.search({"sustituciones": e.get("despues", ""), "anadidos": e.get("texto", ""),
+                                         "correcciones": e.get("antes", "") + "\n" + e.get("despues", "")}[clave])
+            if marcas:
+                raise Error(f"{L10N_CAMBIOS} › {clave}: {e['id']} lleva «{marcas.group(1)}» (la marca solo puede "
+                            "estar en el «antes» de una sustitución, que la quita)", 2)
+    # Dos reemplazos del mismo mensaje no se encadenan: el «antes» de uno no puede estar en el «después» de otro (el
+    # paquete daría el cambio por no hecho). Se juntan en una sola entrada.
+    por_mensaje = {}
+    for clave in REEMPLAZOS_L10N:
+        for e in c.get(clave, []):
+            por_mensaje.setdefault((e["idioma"], e["archivo"], e["id"]), []).append(e)
+    for (idioma, _, ident), lista in por_mensaje.items():
+        for a in lista:
+            for b in lista:
+                if a is not b and a["antes"] in b["despues"]:
+                    raise Error(f"{L10N_CAMBIOS}: {idioma} {ident} tiene reemplazos encadenados («{a['antes']}» está "
+                                "en el «después» de otro): júntalos en una sola entrada", 2)
     return c
 
 
 def bloque_ftl(lineas, ident):
-    """(inicio, fin) de las líneas del mensaje `ident` de un .ftl (la suya y sus líneas sangradas), o None."""
+    """(inicio, fin) de las líneas del mensaje `ident` de un .ftl (la suya y sus líneas sangradas), o None. Vale
+    también para una clave de un .properties (su línea; las siguientes no van sangradas)."""
     for i, l in enumerate(lineas):
         if re.match(rf"^{re.escape(ident)}\s*=", l):
             j = i + 1
@@ -381,24 +458,25 @@ def aplicar_cambios_l10n(raiz, idiomas):
     c = cambios_l10n()
     src = arbol()
     n = 0
-    for clave in ("sustituciones", "anadidos"):
+    for clave in CLAVES_L10N:
         for e in c.get(clave, []):
             if e["idioma"] not in idiomas:
                 continue
             ruta = os.path.join(raiz, e["idioma"], *e["archivo"].split("/"))
             if not os.path.isfile(ruta):
                 raise Error(f"{L10N_CAMBIOS}: {e['idioma']}/{e['archivo']} ya no existe en las traducciones", 3)
-            modulo, resto = e["archivo"].split("/", 1)
             if os.path.isfile(os.path.join(src, "mach")):
-                en_us = os.path.join(src, modulo, "locales", "en-US", *resto.split("/"))
+                en_us = ruta_en_us_l10n(src, e["archivo"])
+                if not os.path.isfile(en_us):
+                    raise Error(f"{L10N_CAMBIOS}: Firefox ya no tiene {os.path.relpath(en_us, src)}", 3)
                 with open(en_us, encoding="utf-8") as f:
                     if not bloque_ftl(f.read().split("\n"), e["id"]):
-                        raise Error(f"{L10N_CAMBIOS}: Firefox ya no tiene {e['id']} en {modulo}/locales/en-US/{resto}",
+                        raise Error(f"{L10N_CAMBIOS}: Firefox ya no tiene {e['id']} en {os.path.relpath(en_us, src)}",
                                     3)
             with open(ruta, encoding="utf-8") as f:
                 lineas = f.read().split("\n")
             sitio = bloque_ftl(lineas, e["id"])
-            if clave == "sustituciones":
+            if clave in REEMPLAZOS_L10N:
                 bloque = "\n".join(lineas[sitio[0]:sitio[1]]) if sitio else ""
                 if bloque.count(e["antes"]) != 1:
                     raise Error(f"{L10N_CAMBIOS}: en {e['idioma']}/{e['archivo']}, {e['id']} ya no dice «{e['antes']}» "
@@ -508,7 +586,135 @@ def extraer_l10n(ruta, d):
     hecho(f"traducciones de {', '.join(d['idiomas'])} en {base} ({n} archivos)")
 
 
-# --- Tor (descarga aparte, opcional) -----------------------------------------------------------------
+# --- Diccionarios de ortografía (dentro de la build) -----------------------------------------------
+#
+# Uno por idioma de la interfaz (upstream.json › diccionarios; el de en-US ya lo trae Firefox). `package-multi-locale`
+# no los pone (en modo «chrome», l10n_stage se salta los LOCALIZED_FILES, entre ellos los diccionarios de
+# extensions/spellcheck/locales): por eso van como archivos de la build. `fetch` los deja comprobados (sha256 de cada
+# archivo) en cache/diccionarios: los de fuente «l10n» salen de las traducciones ya extraídas (los mismos que Mozilla
+# pone en sus builds de ese idioma) y los de «libreoffice», de LibreOffice/dictionaries en el commit fijado (Mozilla
+# no tiene de/it: su política solo admite licencias compatibles con la MPL dentro de su árbol). `overlay` los copia a
+# DICC_DESTINO, cuyo moz.build (overlay/…/diccionarios) los instala en dist/bin/dictionaries: built_in_addons.json
+# los registra y el paquete los mete en el omni.ja de Gecko. `package`, `mar` y `msix` comprueban que están.
+DICC_FUENTES = ("l10n", "libreoffice")
+DICC_LO_URL = "https://raw.githubusercontent.com/LibreOffice/dictionaries/{commit}/"
+DICC_DIR = os.path.join(CACHE, "diccionarios")
+DICC_DESTINO = "browser/components/aegis/diccionarios"
+DICC_NOMBRE = re.compile(r"^[A-Za-z]{2,3}(-[A-Za-z0-9]+)?(\.(aff|dic)|-[\w.-]+\.(txt|md))$")
+DICC_RUTA = re.compile(r"^[\w.-]+(/[\w.-]+)*$")
+BUILT_IN_ADDONS = "chrome/browser/content/browser/built_in_addons.json"
+
+
+def diccionarios():
+    """upstream.json › diccionarios, comprobado. Devuelve {nombre en dictionaries/: {ruta, sha256, fuente}}: por idioma
+    de l10n › idiomas, <idioma>.dic y <idioma>.aff (el nombre es el código del idioma de la interfaz) y sus avisos."""
+    d = leer_json("upstream.json").get("diccionarios")
+    if not d:
+        raise Error("upstream.json no tiene la sección «diccionarios» (docs/GUIA.md, «Idiomas»)", 2)
+    lo = d.get("libreoffice") or {}
+    if not re.fullmatch(r"[0-9a-f]{40}", lo.get("commit", "")) or lo.get("url") != DICC_LO_URL.format(commit=lo["commit"]):
+        raise Error(f"upstream.json › diccionarios › libreoffice: commit completo y url {DICC_LO_URL}", 2)
+    idiomas = d.get("idiomas") or {}
+    if sorted(idiomas) != sorted(l10n(sin_suma=True)["idiomas"]):
+        raise Error(f"upstream.json › diccionarios › idiomas ({', '.join(sorted(idiomas))}) no son los de l10n › idiomas", 2)
+    archivos = {}
+    for idioma, e in idiomas.items():
+        if e.get("fuente") not in DICC_FUENTES or not e.get("licencia") or not e.get("nombre"):
+            raise Error(f"upstream.json › diccionarios › {idioma}: fuente ({', '.join(DICC_FUENTES)}), nombre y licencia",
+                        2)
+        arch = e.get("archivos") or {}
+        if f"{idioma}.dic" not in arch or f"{idioma}.aff" not in arch:
+            raise Error(f"upstream.json › diccionarios › {idioma}: faltan {idioma}.dic o {idioma}.aff", 2)
+        for nombre, f in arch.items():
+            ruta = f.get("ruta", "")
+            if (not nombre.startswith((f"{idioma}.", f"{idioma}-")) or not DICC_NOMBRE.match(nombre)
+                    or not DICC_RUTA.match(ruta) or ".." in ruta.split("/")
+                    or (e["fuente"] == "l10n" and not ruta.startswith(f"{idioma}/"))):
+                raise Error(f"upstream.json › diccionarios › {idioma}: nombre o ruta no válidos ({nombre}: {ruta})", 2)
+            if not re.fullmatch(r"[0-9a-f]{64}", f.get("sha256", "")):
+                raise Error(f"upstream.json › diccionarios › {idioma} › {nombre}: sha256 no válido", 2)
+            archivos[nombre] = {"ruta": ruta, "sha256": f["sha256"], "fuente": e["fuente"]}
+    return archivos
+
+
+def diccionarios_al_dia(archivos):
+    """cache/diccionarios tiene exactamente esos archivos, con su sha256."""
+    try:
+        presentes = sorted(os.listdir(DICC_DIR))
+    except OSError:
+        return False
+    return presentes == sorted(archivos) and all(sha(os.path.join(DICC_DIR, n)) == f["sha256"]
+                                                 for n, f in archivos.items())
+
+
+def fetch_diccionarios():
+    archivos = diccionarios()
+    if diccionarios_al_dia(archivos):
+        hecho(f"diccionarios ya comprobados en {DICC_DIR}")
+        return
+    lo = leer_json("upstream.json")["diccionarios"]["libreoffice"]
+    tmp = DICC_DIR + ".parcial"
+    if os.path.exists(tmp):
+        shutil.rmtree(tmp)
+    os.makedirs(tmp)
+    try:
+        for nombre, f in sorted(archivos.items()):
+            destino = os.path.join(tmp, nombre)
+            if f["fuente"] == "l10n":
+                origen = os.path.join(l10n_base(), *f["ruta"].split("/"))
+                if not os.path.isfile(origen):
+                    raise Error(f"diccionarios: falta {origen} (de las traducciones): ejecuta `aegis.py fetch`", 2)
+                shutil.copyfile(origen, destino)
+            else:
+                descargar(lo["url"] + f["ruta"], destino)
+            suma = sha(destino)
+            if suma != f["sha256"]:
+                raise Error(f"diccionarios: {nombre} ({f['fuente']}: {f['ruta']}) tiene sha256 {suma}, no el de "
+                            "upstream.json › diccionarios", 3)
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    if os.path.exists(DICC_DIR):
+        shutil.rmtree(DICC_DIR)
+    os.replace(tmp, DICC_DIR)
+    total = sum(os.path.getsize(os.path.join(DICC_DIR, n)) for n in archivos)
+    hecho(f"diccionarios de {', '.join(sorted(n[:-4] for n in archivos if n.endswith('.dic')))} comprobados en "
+          f"{DICC_DIR} ({len(archivos)} archivos, {total // 1024} KB)")
+
+
+def comprobar_diccionarios_paquete(pkg):
+    """El omni.ja de Gecko del zip lleva dictionaries/<archivo> de upstream.json › diccionarios (con su sha256) y el de
+    en-US, y built_in_addons.json registra exactamente esos diccionarios (los de los idiomas de la interfaz)."""
+    archivos = diccionarios()
+    with zipfile.ZipFile(pkg) as z:
+        raiz = {n.split("/", 1)[0] for n in z.namelist()}
+        if len(raiz) != 1:
+            raise Error(f"{os.path.basename(pkg)} no tiene una sola carpeta raíz", 3)
+        raiz = raiz.pop()
+        gre = omni(z, f"{raiz}/omni.ja")
+        nav = omni(z, f"{raiz}/browser/omni.ja")
+    dentro = set(gre.namelist())
+    for nombre, f in sorted(archivos.items()):
+        ruta = f"dictionaries/{nombre}"
+        if ruta not in dentro:
+            raise Error(f"el paquete no lleva {ruta} (upstream.json › diccionarios): `fetch`, `overlay`, `build` y "
+                        "`package`", 3)
+        if hashlib.sha256(gre.read(ruta)).hexdigest() != f["sha256"]:
+            raise Error(f"{ruta} del paquete no es el de upstream.json › diccionarios (sha256)", 3)
+    idiomas = sorted([IDIOMA_BASE] + [n[:-4] for n in archivos if n.endswith(".dic")])
+    try:
+        registrados = json.loads(nav.read(BUILT_IN_ADDONS))["dictionaries"]
+    except (KeyError, ValueError):
+        raise Error(f"el paquete no lleva {BUILT_IN_ADDONS} con «dictionaries»", 3)
+    esperados = {i: f"dictionaries/{i}.dic" for i in idiomas}
+    if registrados != esperados:
+        raise Error(f"{BUILT_IN_ADDONS} registra {', '.join(sorted(registrados))}; se esperaba {', '.join(idiomas)}", 3)
+    if not all(f"dictionaries/{i}.{x}" in dentro for i in idiomas for x in ("aff", "dic")):
+        raise Error(f"el paquete no lleva el .aff y el .dic de cada uno de {', '.join(idiomas)}", 3)
+    hecho(f"diccionarios del paquete: {', '.join(idiomas)} (registrados en built_in_addons.json)")
+
+
+# --- Tor (descarga aparte, opcional)-----------------------------------------------------------------
 #
 # El navegador NO lleva tor dentro: lo descarga el usuario, si quiere, desde Ajustes › Privacidad › Tor
 # (overlay/browser/components/aegis/tor/). Lo que sí va en la build es qué descargar y su sha256, en
@@ -1040,6 +1246,10 @@ def copiar_overlay(src):
     origenes = [(base, "")]
     if os.path.isdir(os.path.join(REPO, FILTROS)):
         origenes.append((os.path.join(REPO, FILTROS), FILTROS_DESTINO + "/"))
+    # Los diccionarios de ortografía (upstream.json › diccionarios), comprobados, junto a su moz.build.
+    if not diccionarios_al_dia(diccionarios()):
+        fetch_diccionarios()
+    origenes.append((DICC_DIR, DICC_DESTINO + "/"))
     for origen, prefijo in origenes:
         for raiz, _, archivos in os.walk(origen):
             for a in archivos:
@@ -1462,6 +1672,7 @@ def cmd_package(a):
     pkg = paquete(a.objetivo)
     if pkg.endswith(".zip"):
         comprobar_idiomas_paquete(pkg, [IDIOMA_BASE] + idiomas)
+        comprobar_diccionarios_paquete(pkg)
     else:
         info("paquete de Linux: los idiomas y la marca no se comprueban todavía (solo el zip de Windows)")
     hecho(f"{os.path.basename(pkg)} ({os.path.getsize(pkg) // (1 << 20)} MB): {IDIOMA_BASE} + {', '.join(idiomas)}, "
@@ -1519,11 +1730,11 @@ def comprobar_idiomas_paquete(pkg, idiomas):
     # Los cambios de Aegis a las traducciones (tools/l10n-cambios.json) están en el paquete.
     c = cambios_l10n()
     aplicados = 0
-    for clave in ("sustituciones", "anadidos"):
+    for clave in CLAVES_L10N:
         for e in c.get(clave, []):
             if e["idioma"] not in idiomas:
                 continue
-            nombre = f"localization/{e['idioma']}/{e['archivo'].split('/', 1)[1]}"
+            nombre = ruta_paquete_l10n(e["idioma"], e["archivo"])
             z = nav if nombre in nav.namelist() else gre
             try:
                 lineas = z.read(nombre).decode("utf-8").split("\n")
@@ -1531,7 +1742,7 @@ def comprobar_idiomas_paquete(pkg, idiomas):
                 raise Error(f"el paquete no lleva {nombre} ({L10N_CAMBIOS})", 3)
             sitio = bloque_ftl(lineas, e["id"])
             bloque = "\n".join(lineas[sitio[0]:sitio[1]]) if sitio else ""
-            if not sitio or (clave == "sustituciones" and (e["antes"] in bloque or e["despues"] not in bloque)):
+            if not sitio or (clave in REEMPLAZOS_L10N and (e["antes"] in bloque or e["despues"] not in bloque)):
                 raise Error(f"{nombre}: {e['id']} no lleva el cambio de Aegis ({L10N_CAMBIOS}): `fetch` y `package`", 3)
             aplicados += 1
     hecho(f"idiomas del paquete: {', '.join(multi)}; {vistos} archivos de marca, todos de Aegis; {aplicados} cambios "
@@ -1729,6 +1940,7 @@ def cmd_mar(a):
     sin_cargador_dev(pkg)
     if pkg.endswith(".zip"):              # el MAR lleva los mismos idiomas que el paquete multi-idioma
         comprobar_idiomas_paquete(pkg, [IDIOMA_BASE] + sorted(l10n()["idiomas"]))
+        comprobar_diccionarios_paquete(pkg)
     os.makedirs(SALIDA, exist_ok=True)
     nombre_mar = f"aegis-{va}-{objetivo}.complete.mar"
     destino = os.path.join(SALIDA, nombre_mar)
@@ -2215,6 +2427,7 @@ def cmd_msix(a):
     sin_cargador_dev(pkg)
     idiomas = [IDIOMA_BASE] + sorted(l10n()["idiomas"])
     comprobar_idiomas_paquete(pkg, idiomas)      # el AppxManifest declara estos idiomas: el zip tiene que traerlos
+    comprobar_diccionarios_paquete(pkg)
     # mach toma los assets de la marca del árbol: tienen que ser los de overlay/ (tools/iconos.py los genera).
     propios_dir = os.path.join(REPO, "overlay", "browser", "branding", "aegis", "msix", "Assets")
     arbol_dir = os.path.join(arbol(), "browser", "branding", "aegis", "msix", "Assets")

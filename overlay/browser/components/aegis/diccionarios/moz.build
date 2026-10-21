@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Diccionarios de ortografía de los idiomas de la interfaz (upstream.json › diccionarios), con sus avisos y licencias.
+# No están en el repo: `aegis.py fetch` los baja y comprueba (sha256) y `aegis.py overlay` los copia aquí. Van a
+# dist/bin/dictionaries (no a dist/bin/browser, que es lo de serie bajo browser/), como el en-US de Firefox: así
+# built_in_addons.json los registra (gen_built_in_addons.py busca «dictionaries/*.dic») y el paquete los mete en el
+# omni.ja de Gecko (resource://gre/dictionaries/). Cada nombre es el código de un idioma de la interfaz: el corrector
+# usa de serie el del idioma de la app (EditorSpellCheck.cpp, «Priority 4»). Esta lista y upstream.json tienen que
+# coincidir (tools/verificar.py).
+
+FINAL_TARGET = "dist/bin"
+
+FINAL_TARGET_FILES.dictionaries += [
+    "de-COPYING-GPLv2.txt",
+    "de-COPYING-GPLv3.txt",
+    "de-README-extension.txt",
+    "de-README.txt",
+    "de.aff",
+    "de.dic",
+    "es-ES-LICENSE.md",
+    "es-ES-README.txt",
+    "es-ES.aff",
+    "es-ES.dic",
+    "fr-README.txt",
+    "fr.aff",
+    "fr.dic",
+    "it-README.txt",
+    "it.aff",
+    "it.dic",
+    "pt-BR-README.txt",
+    "pt-BR.aff",
+    "pt-BR.dic",
+]

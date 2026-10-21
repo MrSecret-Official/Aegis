@@ -1,0 +1,434 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · contenedores (DISENO §2 «Contenedores» y §9 «Selector de contenedor»). La pone AegisArranque en todos los
+   documentos de la interfaz (como tokens.css), porque los colores de los contenedores salen en la ventana, en sus
+   menús, en Ajustes › Contenedores y en el diálogo de crear o editar uno:
+   - los colores de Firefox (las clases identity-color-<color>) pasan a los de tokens.css (--aegis-contenedor);
+   - el indicador de la barra de direcciones (#userContext-icons) y el botón de Aegis cuando la pestaña no tiene
+     contenedor (#aegis-contenedor-button), que abren el selector (contenedores.sys.mjs);
+   - el punto del contenedor en el icono de la pestaña (Aegis quita la raya de color de Firefox, interfaz.css);
+   - el panel del selector.
+   Solo var(--aegis-*); los colores, fuera de alto contraste (ahí mandan los de Firefox y los del sistema). */
+
+/* ── Colores de los contenedores ─────────────────────────────────────────────────────────────────────────────── */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* Firefox pinta con estas variables el glifo (menús, Ajustes, el diálogo), la raya de la pestaña, el indicador de la
+     barra (con Nova, un tinte del 15 %) y las muestras de color del editor. Todas, al color de Aegis. */
+  [class*="identity-color-"] {
+    --identity-tab-color: var(--aegis-contenedor) !important;
+    --identity-icon-color: var(--aegis-contenedor) !important;
+    --identity-fill-color: var(--aegis-contenedor) !important;
+    --identity-stroke-color: var(--aegis-contenedor) !important;
+    --identity-fill-tint: color-mix(in srgb, var(--aegis-contenedor) 14%, transparent) !important;
+  }
+}
+
+/* ── Indicador de la barra de direcciones ────────────────────────────────────────────────────────────────────── */
+
+/* El de Firefox (glifo y nombre del contenedor) es un botón de la barra más: radio 5 (concéntrico con la barra, como
+   los de #page-action-buttons), 4 entre glifo, nombre y el chevron que dice que abre una lista. El nombre, en 12 px y
+   en el gris secundario (el color va en el glifo; DISENO §2: nunca en textos). */
+#userContext-icons {
+  gap: var(--aegis-s-4) !important;
+  min-height: 24px;
+  margin-inline: 2px !important;
+  padding: 0 var(--aegis-s-4) 0 6px !important;
+  border-radius: var(--aegis-r-5) !important;
+  cursor: default !important;
+
+  &::after {
+    content: "";
+    order: 3;
+    width: 12px;
+    height: 12px;
+    background: url("iconos/escudo-desplegar.svg") center / 12px no-repeat;
+    -moz-context-properties: fill;
+    fill: currentColor;
+  }
+}
+#userContext-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+/* Mientras sirve solo de ancla del panel de creación (pestaña sin contenedor), Firefox lo deja vacío: aquí lleva el glifo
+   del botón de Aegis, que se oculta, así el panel sale del mismo sitio. */
+#userContext-icons.container-anchor-pinned {
+  min-width: 26px;
+  padding: 0 !important;
+  justify-content: center;
+
+  &::after {
+    display: none;
+  }
+  &::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    background: url("iconos/contenedor.svg") center / 16px no-repeat;
+    -moz-context-properties: fill;
+    fill: currentColor;
+  }
+}
+
+/* Botón de Aegis: el glifo de la caja, como los demás botones de la barra. Solo sin el indicador de Firefox. */
+#aegis-contenedor-button > .urlbar-icon {
+  list-style-image: url("iconos/contenedor.svg");
+}
+#page-action-buttons:has(> #userContext-icons:not([hidden])) > #aegis-contenedor-button {
+  display: none;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  #userContext-icons {
+    background-color: transparent !important;
+    color: var(--aegis-sub);
+
+    &:hover {
+      background-color: var(--aegis-hover) !important;
+      color: var(--aegis-text);
+    }
+    &:is([open], :hover:active) {
+      background-color: var(--aegis-control) !important;
+      color: var(--aegis-text);
+    }
+  }
+  #userContext-label {
+    color: inherit !important;
+  }
+}
+
+/* ── Punto del contenedor en la pestaña ──────────────────────────────────────────────────────────────────────── */
+
+/* Un punto de 6 en la esquina del icono de la pestaña, con un recorte de 1,5 px del fondo de la fila para separarlo del
+   favicon (como el contador de Escudos). Firefox marca el contenedor con una raya de color en la pestaña; Aegis la
+   quita (DISENO §9, «sin rayas de color») y deja este punto, que se lee igual en la fila de pestañas, en la barra
+   lateral y con la barra lateral plegada. */
+.tabbrowser-tab[usercontextid] .tab-icon-stack::after {
+  content: "";
+  position: absolute;
+  /* Anclado al borde del icono (16 px), no al de su contenedor: con la barra lateral desplegada y en la fila de
+     pestañas, .tab-icon-stack es más ancho que el icono (lleva su margen hasta el título) y el punto caía sobre la
+     primera letra. */
+  inset-block-end: -1px;
+  inset-inline-start: calc(var(--icon-size, 16px) - 6px);
+  inset-inline-end: auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* En la fila de pestañas, Firefox no enseña el favicon genérico (una web sin icono): el punto ocupa entonces el sitio
+   del icono, delante del título, en lugar de quedar encima de la primera letra. */
+#tabbrowser-tabs[orient="horizontal"] .tabbrowser-tab[usercontextid]:not([image], [pinned], [busy]) .tab-icon-stack::after {
+  position: static;
+  align-self: center;
+  margin-inline-end: var(--aegis-s-8);
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .tabbrowser-tab[usercontextid] .tab-icon-stack::after {
+    background-color: var(--aegis-contenedor);
+    box-shadow: 0 0 0 1.5px var(--aegis-bg);
+  }
+  /* El recorte sigue al fondo de la fila: con el ratón encima, el resalte (--aegis-hover: el texto al 4 %). */
+  .tabbrowser-tab[usercontextid]:hover:not([selected]) .tab-icon-stack::after {
+    box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--aegis-text) 4%, var(--aegis-bg));
+  }
+  .tabbrowser-tab[usercontextid][selected] .tab-icon-stack::after {
+    box-shadow: 0 0 0 1.5px var(--aegis-surface);
+  }
+  @media -moz-pref("sidebar.verticalTabs") {
+    .tabbrowser-tab[usercontextid] .tab-icon-stack::after {
+      box-shadow: 0 0 0 1.5px var(--aegis-sidebar);
+    }
+    .tabbrowser-tab[usercontextid]:hover:not([selected]) .tab-icon-stack::after {
+      box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--aegis-text) 4%, var(--aegis-sidebar));
+    }
+    .tabbrowser-tab[usercontextid][selected] .tab-icon-stack::after {
+      box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--aegis-text) 7.5%, var(--aegis-sidebar));
+    }
+  }
+}
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .tabbrowser-tab[usercontextid] .tab-icon-stack::after {
+    background-color: CanvasText;
+  }
+}
+
+/* ── Panel del selector ──────────────────────────────────────────────────────────────────────────────────────── */
+
+#aegis-contenedores-panel {
+  --panel-padding: 0 !important;
+}
+/* Entrada como el panel de Escudos: fundido con un deslizamiento corto (200 ms, OutCubic). */
+#aegis-contenedores-panel:not([animate="false"]) {
+  transition-duration: var(--aegis-t-fade) !important;
+  transition-timing-function: var(--aegis-ease) !important;
+}
+@media (prefers-reduced-motion: no-preference) and (-moz-panel-animations) {
+  #aegis-contenedores-panel {
+    transform: translateY(-8px);
+  }
+}
+#aegis-contenedores-panel:is([animate="open"], [animate="false"]) {
+  transform: none;
+}
+
+.aegis-contenedores {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aegis-s-12);
+  box-sizing: border-box;
+  width: 340px;
+  padding: var(--aegis-s-16);
+  font: 13px var(--aegis-font);
+
+  & button {
+    font: inherit;
+    color: inherit;
+  }
+  & :focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: -2px;
+  }
+}
+
+/* Cabecera: «Contenedor» (15 px 600), el de la pestaña debajo (12 px) y el atajo a la derecha. */
+.aegis-contenedores-cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--aegis-s-12);
+}
+.aegis-contenedores-cabecera-textos {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.aegis-contenedores-titulo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.aegis-contenedores-actual {
+  margin: 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.aegis-contenedores-atajo {
+  flex: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+/* Etiqueta de sección (11 px 600 en mayúsculas) y la lista en una tarjeta de radio 12 con filas de 36 (radio 8 a 4 px
+   del borde: concéntricas). */
+.aegis-contenedores-etiqueta {
+  margin: 0 0 calc(-1 * var(--aegis-s-4));
+  padding-inline: var(--aegis-s-4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.aegis-contenedores-lista {
+  display: flex;
+  flex-direction: column;
+  max-height: 360px;
+  padding: var(--aegis-s-4);
+  overflow-y: auto;
+  border-radius: var(--aegis-r-12);
+}
+.aegis-contenedores-fila {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.aegis-contenedores-reabrir {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--aegis-s-12);
+  min-width: 0;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 var(--aegis-s-8);
+  border: 0;
+  border-radius: var(--aegis-r-8);
+  background: none;
+  text-align: start;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  &[aria-current="true"] > .aegis-contenedores-nombre {
+    font-weight: 600;
+  }
+}
+/* El glifo del contenedor (el de Firefox, de línea) en su color; «Sin contenedor», el círculo tachado en gris. */
+.aegis-contenedores-icono {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background: var(--identity-icon) center / 16px no-repeat;
+  -moz-context-properties: fill;
+}
+.aegis-contenedores-nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aegis-contenedores-visto,
+.aegis-contenedores-mas {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill;
+}
+/* «+»: botón de icono de 28, radio 7 (DISENO §9). */
+.aegis-contenedores-nueva {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0 var(--aegis-s-4) 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  background: none;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  &:active {
+    scale: 0.97;
+  }
+}
+
+/* Aviso de lo escrito: tarjeta con el glifo en el color de aviso (el estado solo tiñe el icono, DISENO §9). */
+.aegis-contenedores-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--aegis-s-8);
+  padding: var(--aegis-s-12);
+  border-radius: var(--aegis-r-12);
+  font-size: 12px;
+  line-height: 1.45;
+
+  &[hidden] {
+    display: none;
+  }
+}
+.aegis-contenedores-aviso-glifo {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill;
+}
+.aegis-contenedores-nota {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+/* Pie: dos secundarios de 34 en una fila. */
+.aegis-contenedores-botones {
+  display: flex;
+  gap: var(--aegis-s-8);
+}
+/* Llenan el ancho creciendo por igual desde su texto, en una línea (como el pie del panel de extensiones). */
+.aegis-contenedores-secundario {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 34px;
+  padding: var(--aegis-s-4) var(--aegis-s-8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 0;
+  border-radius: var(--aegis-r-8);
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  &:active {
+    scale: 0.97;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aegis-contenedores * {
+    transition: none !important;
+  }
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  .aegis-contenedores {
+    color: var(--aegis-text);
+  }
+  .aegis-contenedores-actual,
+  .aegis-contenedores-atajo,
+  .aegis-contenedores-etiqueta,
+  .aegis-contenedores-nota {
+    color: var(--aegis-muted);
+  }
+  .aegis-contenedores-lista,
+  .aegis-contenedores-aviso {
+    background-color: var(--aegis-control);
+  }
+  .aegis-contenedores-icono {
+    fill: var(--aegis-contenedor, var(--aegis-sub));
+  }
+  /* Sobre la tarjeta, el secundario va en --aegis-sub (regla del apagado). */
+  .aegis-contenedores-visto,
+  .aegis-contenedores-mas,
+  .aegis-contenedores-icono-ninguno {
+    fill: var(--aegis-sub);
+  }
+  .aegis-contenedores-reabrir:not([aria-disabled="true"]):hover,
+  .aegis-contenedores-nueva:hover {
+    background-color: var(--aegis-hover);
+  }
+  .aegis-contenedores-reabrir:not([aria-disabled="true"]):hover:active,
+  .aegis-contenedores-nueva:hover:active {
+    background-color: var(--aegis-sel);
+  }
+  .aegis-contenedores-nueva:hover > .aegis-contenedores-mas {
+    fill: var(--aegis-text);
+  }
+  .aegis-contenedores-aviso-glifo {
+    fill: var(--aegis-warn);
+  }
+  .aegis-contenedores-secundario {
+    background-color: var(--aegis-control);
+
+    &:hover {
+      background-color: var(--aegis-control-hover);
+    }
+    &:hover:active {
+      background-color: var(--aegis-control-down);
+    }
+  }
+}
+
+/* Alto contraste: los controles propios necesitan un borde para verse (colores del sistema). */
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .aegis-contenedores-lista,
+  .aegis-contenedores-aviso,
+  .aegis-contenedores-secundario {
+    border: 1px solid currentColor;
+  }
+  .aegis-contenedores-icono,
+  .aegis-contenedores-visto,
+  .aegis-contenedores-mas,
+  .aegis-contenedores-aviso-glifo {
+    fill: CanvasText;
+  }
+}

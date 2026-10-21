@@ -13,6 +13,19 @@ pref("signon.management.page.vulnerable-passwords.enabled", false);
 // Enlace de los avisos a monitor.firefox.com: vacío, para que ninguna página lo ofrezca.
 pref("signon.management.page.breachAlertUrl", "");
 
+// Aviso de filtraciones del panel del candado (Firefox 158): en cada navegación, browser-trustPanel.js
+// (#checkForBreaches) busca la web en la colección fxmonitor-breaches de Remote Settings y mira si hay contraseñas
+// guardadas; si la web sale en una filtración reciente, cambia el icono del candado y ofrece Mozilla Monitor. Esa
+// colección nunca se sincroniza en Aegis (parche 0400-privacidad/0003: no está entre las permitidas), así que no habría
+// datos, pero el aviso no debe existir. Con breachAlerts en false, getBreachedStatus da siempre «disabled»: el icono no
+// cambia nunca y no se ofrece nada. Firefox solo mira la pref al final, después de consultar; el parche
+// 0400-privacidad/0006 hace que #getApplicableBreaches y #hasMonitorAccountOrStoredPasswords salgan enseguida con ella
+// en false: ni Remote Settings, ni recuento de contraseñas, ni la consulta de la cuenta de Mozilla, en ninguna página
+// (verificar.py vigila que no haya otra llamada). featureGate en false quita además su casilla de Ajustes › Privacidad
+// (config/privacy.mjs).
+pref("browser.urlbar.trustPanel.breachAlerts", false);
+pref("browser.urlbar.trustPanel.breachAlerts.featureGate", false);
+
 // ───────── Protección frente al robo de credenciales (fase 5) ─────────
 // Lo que protege cada una y lo que no: docs/PRIVACIDAD.md, «Contraseñas». Código: contrasenas.sys.mjs.
 
@@ -38,8 +51,11 @@ pref("signon.management.page.os-auth.locked.enabled", true);
 // de HTTP: es una forma conocida de suplantar un inicio de sesión. Firefox: 2 (todos pueden).
 pref("network.auth.subresource-http-auth-allow", 1);
 
-// Contraseña principal obligatoria antes de guardar la primera contraseña (sin ella, key4.db no está cifrada).
-pref("aegis.contrasenas.principal_obligatoria", true);
+// Exigir la contraseña principal antes de guardar la primera contraseña. Apagado (decisión del usuario, 2026-10-20): se
+// guarda como en Firefox, y el panel y about:logins avisan con honestidad de lo que eso deja expuesto (key4.db sin
+// contraseña: quien copie el perfil las lee) y ofrecen crearla. true vuelve a exigirla al guardar. Pasar a otro Aegis,
+// recibir de otro Aegis y añadir un código de verificación la piden siempre, con esta pref o sin ella.
+pref("aegis.contrasenas.principal_obligatoria", false);
 
 // Minutos sin usar el equipo tras los que se cierra la bóveda y se vuelve a pedir la contraseña principal. Se elige en
 // Ajustes › Contraseñas y autorrelleno › «Cierre automático de la bóveda»: 0 (nunca), 15, 10, 5, 3, 2 o 1; otro valor se lleva al más

@@ -61,6 +61,12 @@ aegis-escudos-boton =
     }
 aegis-escudos-boton-bajados =
     .tooltiptext = Shields are down for this site
+# Shields row in the padlock panel (opens the Shields panel). Keep it short: the panel is narrow.
+aegis-escudos-confianza = { $count ->
+        [0] Shields are up
+        [one] Shields are up: 1 blocked
+       *[other] Shields are up: { $count } blocked
+    }
 aegis-escudos-activos-sitio = Shields are up for this site
 aegis-escudos-bajados-sitio = Shields are down for this site
 aegis-escudos-contador = { $count ->
@@ -161,10 +167,10 @@ aegis-contrasenas-importar = Import passwords
 # Botón del aviso del panel y de about:logins: abre el diálogo de la contraseña principal.
 aegis-contrasenas-principal-crear = Create primary password
 # Aviso del panel y de about:logins cuando no hay contraseña principal.
-aegis-contrasenas-sin-principal = No primary password: any program that copies your profile could read your saved passwords.
+aegis-contrasenas-sin-principal = Without a primary password, anyone using your Windows session can use your saved passwords, and a program that copies your profile can read them. A primary password makes both much harder.
 # Estado vacío del panel de la barra lateral.
-aegis-contrasenas-panel-titulo = Your passwords, under lock
-aegis-contrasenas-panel-texto = { -brand-short-name } keeps them encrypted on this device, locked with your primary password, and never sends them anywhere.
+aegis-contrasenas-panel-titulo = Your passwords, on this device
+aegis-contrasenas-panel-texto = { -brand-short-name } keeps them encrypted on this device and never sends them anywhere.
 
 ## Ajustes › Contraseñas y autorrelleno: «Cierre automático de la bóveda» (ajustes.sys.mjs), detrás de «Contraseñas». Segmentos:
 ## Nunca, 15, 10, 5, 3, 2 y 1 min; caben siete en una fila, así que las etiquetas son cortas.
@@ -189,6 +195,8 @@ aegis-principal-titulo-cambiar = Change your primary password
 aegis-principal-explicacion-guardar = To save passwords, { -brand-short-name } encrypts them with a primary password. Without one, any program that copies your profile could read them. You’ll enter it once per session, and again after some time away from your computer.
 # Desde el aviso del panel o de about:logins, o desde Ajustes.
 aegis-principal-explicacion-crear = { -brand-short-name } uses it to encrypt the passwords you save. Without one, any program that copies your profile could read them. You’ll enter it once per session, and again after some time away from your computer.
+# Antes de pasar o recibir de otro Aegis o de añadir un código de verificación, que la piden siempre.
+aegis-principal-explicacion-accion = For this, { -brand-short-name } needs a primary password. It encrypts your passwords and verification codes with it: without one, any program that copies your profile could read them. You’ll enter it once per session, and again after some time away from your computer.
 aegis-principal-explicacion-cambiar = You need your current one to change it. Your saved passwords stay where they are, protected by the new one.
 # Si una política de empresa exige la contraseña principal.
 aegis-principal-politica = Your organization requires a primary password.
@@ -308,6 +316,8 @@ aegis-autenticador-error-hotp = Counter-based codes (HOTP) aren’t supported, o
 aegis-autenticador-error-corta = The key is too short to be secure.
 aegis-autenticador-error-parametros = This code uses an unsupported format (unusual digits or period).
 aegis-autenticador-error-guardar = The code couldn’t be saved. Try again.
+# Cambiar la clave de un código sin contraseña principal (quitarlo sí se puede).
+aegis-autenticador-error-sin-principal = Changing the key needs a primary password. Create one from the notice in the passwords panel, or remove the code.
 # La tarjeta de honestidad: los dos pasos juntos en la bóveda.
 aegis-autenticador-honestidad-titulo = Both steps in one place
 aegis-autenticador-honestidad = Saving the code next to the password puts both steps in { -brand-short-name }: anyone who unlocked your saved passwords would have both. Your primary password and identity check when viewing or copying a code protect them. For your most important accounts, an authenticator on another device is safer.
@@ -487,7 +497,7 @@ aegis-huella-aviso-bloquear =
     .label = Keep blocking
     .accesskey = K
 
-## Tor: “New private window with Tor” (☰ menu, Shift+Alt+N), Settings › Privacy › Tor, the toolbar indicator and
+## Tor: “New private window with Tor” (☰ menu, Ctrl+Shift+U), Settings › Privacy › Tor, the toolbar indicator and
 ## about:privatebrowsing in the Tor instance. “Tor” and “Tor Browser” belong to another project: never translated.
 
 aegis-tor-titulo = Tor
@@ -510,7 +520,7 @@ aegis-tor-boton-cancelar = Cancel
 aegis-tor-boton-borrar = Delete
 aegis-tor-borrar-abierta = Close the Tor windows to delete it.
 aegis-tor-abrir-titulo = New private window with Tor
-aegis-tor-abrir-detalle = Also from the menu or with Shift+Alt+N.
+aegis-tor-abrir-detalle = Also from the menu or with Ctrl+Shift+U.
 aegis-tor-boton-abrir = Open
 aegis-tor-puentes-titulo = Bridges
 aegis-tor-puentes-descripcion = For networks that block Tor. Applies the next time you open a window with Tor.
@@ -560,6 +570,20 @@ aegis-google-limpio-detalle = Google still sees your IP, what you search for and
 aegis-google-solo-web = Web results only in Google
 aegis-google-solo-web-detalle = For searches from the address bar, without AI answers or extra modules.
 
+## Sessions (Settings › Privacy; sesiones.sys.mjs): an extra-security option, off by default. The exceptions are
+## the clear-on-close dialog (sites that keep their data).
+
+aegis-sesiones-titulo = Sessions
+aegis-sesiones-descripcion = { -brand-short-name } remembers the sites you’re signed in to, so you don’t have to sign in every time. For extra security, you can sign out of all of them when you quit.
+aegis-sesiones-cerrar = Sign out of all sites when you quit { -brand-short-name }
+aegis-sesiones-cerrar-detalle = Cookies, site data and cache are deleted when you quit: you’ll need to sign in again. History, passwords and bookmarks stay.
+aegis-sesiones-excepciones = Sites that stay signed in
+aegis-sesiones-excepciones-detalle = Their cookies and data aren’t deleted when you quit.
+aegis-sesiones-boton-excepciones = Choose sites…
+aegis-sesiones-protege = Protects your accounts if someone copies your profile: without the cookies, they can’t get in.
+aegis-sesiones-no-protege = Doesn’t protect against malware while { -brand-short-name } is open: until you quit, your sessions are on the computer.
+aegis-sesiones-cierre-forzado = If { -brand-short-name } is forced to close (a crash or a power cut), the cleanup happens the next time you open it.
+
 ## Links to “How Shields work” (about:escudos)
 
 # Pie del panel de Escudos: abre la página de ayuda en una pestaña.
@@ -602,6 +626,14 @@ aegis-escudos-grupo-scriptlets = List scripts
 aegis-ajustes-escudos = Shields
 aegis-ajustes-escudos-descripcion = What Shields block on every site, and the exceptions for each site.
 
+# Settings › Privacy: the «Shields» section (instead of the browser’s own tracking protection, which keeps working
+# underneath) and the notice that automatic updates are off (only in the version that updates itself). «Connections»
+# is about:conexiones.
+aegis-ajustes-privacidad-escudos-descripcion = They block ads and trackers on every site. Their level, annoyances and each site’s exceptions are on their own page.
+aegis-ajustes-privacidad-escudos-abrir = Open Shields
+aegis-ajustes-actualizaciones-apagadas = Automatic updates are off
+aegis-ajustes-actualizaciones-apagadas-detalle = { -brand-short-name } doesn’t look for new versions because you haven’t allowed it in Connections. Security fixes come with them.
+
 # Level: option cards, each with one honest line.
 aegis-ajustes-escudos-nivel-titulo = Level
 aegis-ajustes-escudos-nivel-descripcion = How much Shields block on all sites. It’s the same setting as in the panel.
@@ -611,7 +643,7 @@ aegis-ajustes-escudos-nivel-estricto = Strict
 aegis-ajustes-escudos-nivel-estricto-descripcion = Also blocks tracking videos, comments and social media buttons, and strips tracking data from links. Some sites may look incomplete.
 aegis-ajustes-escudos-nivel-estricto-mas = Strict+ (recommended)
 aegis-ajustes-escudos-nivel-estricto-mas-descripcion = Everything in Strict plus a broader tracking list (AdGuard Tracking Protection). Uses a little more memory.
-aegis-ajustes-escudos-nivel-personalizado = You changed tracking protection by hand in Privacy, so no level matches. Pick one to go back.
+aegis-ajustes-escudos-nivel-personalizado = You changed tracking protection by hand, so no level matches. Pick one to go back.
 aegis-ajustes-escudos-nivel-nota = No level makes blocking invisible: a site can notice that its ads are missing.
 
 # Annoyances: three global switches (their names are aegis-escudos-grupo-*).
@@ -828,6 +860,8 @@ aegis-pasar-guardado-codigos =
        *[other] { $codigos } verification codes
     }.
 aegis-pasar-error-autenticacion = Your identity couldn’t be verified. Try again.
+# Sin contraseña principal no se pasa nada (si el diálogo se abre sin pasar por Ajustes).
+aegis-pasar-error-sin-principal = Moving your passwords to another { -brand-short-name } needs a primary password. Create one from the notice in the passwords panel and try again.
 aegis-pasar-error-escribir = The file couldn’t be saved. Choose another folder and try again.
 aegis-pasar-error = The file couldn’t be created. Try again.
 
@@ -854,7 +888,7 @@ aegis-recibir-error-caducado = This file has expired: it’s only valid for 24 h
 aegis-recibir-error-reloj = This file is dated later than this computer’s clock. Check the date and time on both computers.
 aegis-recibir-error-usado = This file has already been opened here, and it’s only valid once. If needed, create another one in the other { -brand-short-name }.
 aegis-recibir-error-leer = The file couldn’t be read. Check that it’s still there and try again.
-aegis-recibir-error-sin-principal = Without a primary password, no passwords are saved. Create one and try again.
+aegis-recibir-error-sin-principal = Receiving passwords from another { -brand-short-name } needs a primary password. Create one and try again.
 aegis-recibir-error-bloqueada = Your primary password is needed to save the passwords. Try again.
 aegis-recibir-error = The passwords couldn’t be received. Try again.
 # Paso 2: el resumen (una línea por cada cosa que no sea cero; la primera, siempre) y borrar el archivo. $n: cuántas.
@@ -964,6 +998,105 @@ aegis-bienvenida-usar-recomendado = Use recommended
 # Primer paso, después de cambiar algo: aplica lo elegido y sigue.
 aegis-bienvenida-usar-eleccion = Use this setup
 
+## Contenedores: el selector de la barra de direcciones (contenedores.sys.mjs; DISENO §9, «Selector de contenedor»).
+## «Contenedor» es el término de Firefox en cada idioma (de «Umgebung», fr «conteneur», it «contenitore», pt-BR
+## «contêiner»). Panel de 340 px: textos cortos.
+
+# Botón de la barra cuando la pestaña no está en ningún contenedor (texto de ayuda y nombre para lectores de pantalla).
+# $atajo: el atajo de teclado tal como lo escribe el sistema (p. ej. «Ctrl+Mayús+L»).
+aegis-contenedores-boton =
+    .tooltiptext = Switch container ({ $atajo })
+aegis-contenedores-titulo = Container
+# Debajo del título. $nombre: el contenedor de la pestaña («Trabajo»).
+aegis-contenedores-actual = This tab is in { $nombre }
+aegis-contenedores-actual-ninguno = This tab isn’t in a container
+# Etiqueta de sección encima de la lista (se ve en MAYÚSCULAS): cada fila es un contenedor.
+aegis-contenedores-reabrir-etiqueta = Move this tab to
+# Primera fila: la pestaña sin contenedor.
+aegis-contenedores-ninguno = No container
+# Para lectores de pantalla, lo que hace cada fila. $nombre: el contenedor.
+aegis-contenedores-reabrir-en = Reopen this tab in { $nombre }
+aegis-contenedores-reabrir-sin = Reopen this tab without a container
+# El «+» de cada fila (texto de ayuda y para lectores de pantalla). $nombre: el contenedor.
+aegis-contenedores-nueva-en = New tab in { $nombre }
+aegis-contenedores-nueva-sin = New tab without a container
+# Línea de honestidad debajo de la lista (solo con una web en la pestaña): las cookies no pasan, la dirección sí (con lo
+# que lleve, p. ej. un código de sesión). El atajo es el de «Reabrir pestaña cerrada».
+aegis-contenedores-nota = The page reloads in the other container, which doesn’t have this one’s cookies: you may need to sign in again. The address carries over as is, along with anything in it. The current tab closes; get it back with Ctrl+Shift+T.
+# Aviso si SessionStore tiene algo escrito en un formulario de la pestaña.
+aegis-contenedores-aviso-formulario = You’ve typed something on this page. It will be lost if you move it to another container.
+aegis-contenedores-nuevo = New container…
+aegis-contenedores-gestionar = Manage
+
+## Ajustes › Pestañas y navegación: la fila del tutorial de Workflow, debajo de «Disposición del navegador».
+
+aegis-ajustes-tutorial = Workflow tutorial
+aegis-ajustes-tutorial-detalle = Vertical tabs, containers and actions, in four steps.
+aegis-ajustes-tutorial-boton = Show tutorial
+# «Disposición del navegador» de Firefox (pestañas horizontales o verticales) son los modos de Aegis: el grupo y sus
+# dos tarjetas se llaman como en la bienvenida.
+aegis-ajustes-modo =
+    .label = Mode
+aegis-ajustes-modo-estandar =
+    .label = Standard
+    .description = Tabs on top, as always
+    .title = Tabs on top, as always
+aegis-ajustes-modo-workflow =
+    .label = Workflow
+    .description = Vertical tabs on the side
+    .title = Vertical tabs on the side
+
+## about:bienvenida: el tutorial de Workflow (bienvenida.sys.mjs). Sale al terminar la bienvenida con Workflow elegido
+## y cuando se quiera desde Ajustes › Pestañas y navegación o con la acción «Ver el tutorial de Workflow». Cuatro pasos;
+## cada uno con una chuleta: lo que se hace (izquierda) y cómo (derecha: un atajo o un gesto, corto). Los menús de
+## Firefox, con su nombre en cada idioma («Fijar pestaña»); las teclas, con el suyo (Mayús, Maj, Umschalt, Maiusc…).
+
+aegis-tutorial-pestana = Workflow tutorial
+aegis-tutorial-saltar = Skip tutorial
+aegis-tutorial-siguiente = Next
+# Último paso, al venir de la bienvenida: lleva a elegir qué se conecta (about:conexiones).
+aegis-tutorial-empezar = Get started
+# Último paso, abierto desde Ajustes o las acciones: cierra la pestaña.
+aegis-tutorial-hecho = Done
+
+aegis-tutorial-pestanas-titulo = Your tabs, in the sidebar
+aegis-tutorial-pestanas-subtitulo = In Workflow they sit one below the other with their full titles, and the page gets wider.
+aegis-tutorial-pestanas-plegar = Collapse or expand the sidebar
+aegis-tutorial-pestanas-plegar-como = Ctrl+Alt+Z
+aegis-tutorial-pestanas-nueva = Open a new tab
+aegis-tutorial-pestanas-nueva-como = Ctrl+T
+aegis-tutorial-pestanas-cambiar = Go to the next tab
+aegis-tutorial-pestanas-cambiar-como = Ctrl+Tab
+
+aegis-tutorial-ordenar-titulo = Move them and pin the ones you use most
+aegis-tutorial-ordenar-subtitulo = Arrange the sidebar your way: your everyday tabs at the top, always at hand.
+aegis-tutorial-ordenar-mover = Move a tab
+aegis-tutorial-ordenar-mover-como = Drag it
+aegis-tutorial-ordenar-fijar = Pin it to the top
+aegis-tutorial-ordenar-fijar-como = Right-click › Pin Tab
+aegis-tutorial-ordenar-grupo = Put several in a group
+aegis-tutorial-ordenar-grupo-como = Drag one onto another
+
+aegis-tutorial-contenedores-titulo = Containers
+aegis-tutorial-contenedores-subtitulo = Each container keeps its own cookies, so you can have two accounts on the same site open at once.
+aegis-tutorial-contenedores-cambiar = Move the tab to another container
+aegis-tutorial-contenedores-cambiar-como = Ctrl+Shift+L
+aegis-tutorial-contenedores-nueva = Open a new tab in one
+aegis-tutorial-contenedores-nueva-como = Right-click +
+aegis-tutorial-contenedores-enlace = Open a link in one
+aegis-tutorial-contenedores-enlace-como = Right-click the link
+aegis-tutorial-contenedores-nota = The tab’s container shows in the address bar: click it to switch. Switching reloads the page, and anything you typed on it doesn’t carry over.
+
+aegis-tutorial-acciones-titulo = Everything from the address bar
+aegis-tutorial-acciones-subtitulo = Type > and choose what to do, without digging through menus.
+aegis-tutorial-acciones-abrir = See all actions
+aegis-tutorial-acciones-abrir-como = Ctrl+L, then >
+aegis-tutorial-acciones-modo = Switch mode
+aegis-tutorial-acciones-modo-como = > mode
+aegis-tutorial-acciones-contenedor = Switch container
+aegis-tutorial-acciones-contenedor-como = > container
+aegis-tutorial-acciones-nota = See this tutorial again in Settings › Tabs and browsing, or with > tutorial.
+
 ## Barra de direcciones: modo «Acciones» (escribir «>» o elegir Acciones en el menú de la lupa) y la fila de botones
 ## que sale al escribir una palabra clave (acciones.sys.mjs). Cada acción es un botón pequeño: textos cortos, como los
 ## de las acciones del navegador («Ver descargas»). Los «-claves» son las palabras que la buscan: separadas por comas,
@@ -982,6 +1115,10 @@ aegis-accion-conexiones-claves = connections, connect, network, privacy
 aegis-accion-modo-workflow = Switch to Workflow mode
 aegis-accion-modo-estandar = Switch to Standard mode
 aegis-accion-modo-claves = mode, workflow, standard, vertical tabs
+aegis-accion-contenedor = Switch container
+aegis-accion-contenedor-claves = container, containers, switch container, container tab, accounts, identity
+aegis-accion-tutorial = Show the Workflow tutorial
+aegis-accion-tutorial-claves = tutorial, help, workflow, vertical tabs, how to
 aegis-accion-apariencia = Appearance and accent
 aegis-accion-apariencia-claves = appearance, accent, color, colour, dark theme, light theme
 aegis-accion-tor = New private window with Tor
@@ -994,3 +1131,40 @@ aegis-accion-recibir = Receive passwords from another { -brand-short-name }
 aegis-accion-recibir-claves = receive passwords, transfer, transfer code, passwords
 aegis-accion-importar = Import data from another browser
 aegis-accion-importar-claves = import, import data, chrome, edge, brave, migrate
+
+## Profiles window (about:profilemanager): deleting another profile without opening it (perfiles.sys.mjs).
+## $nombre is the profile name.
+
+aegis-perfiles-borrar-titulo = Delete the profile “{ $nombre }”?
+aegis-perfiles-borrar-texto = Its bookmarks, history, passwords, cookies, extensions and settings will be deleted from this device. This can’t be undone.
+aegis-perfiles-borrar-acceso = Its desktop shortcut will be removed too.
+aegis-perfiles-borrar-cancelar = Cancel
+aegis-perfiles-borrar-confirmar = Delete profile
+aegis-perfiles-borrar-error = “{ $nombre }” couldn’t be deleted. If it’s open in another { -brand-short-name } window, close it and try again.
+
+## New tab › Email: the envelope next to Customize, its dialog, its menu and its Customize section
+## (paginas/correo.sys.mjs). $sitio is the site of the saved inbox (e.g. “mail.proton.me”). 440 px dialog.
+
+aegis-correo-titulo = Email
+aegis-correo-boton-elegir = Choose your email
+aegis-correo-boton-abrir = Open email ({ $sitio })
+aegis-correo-dialogo-titulo = Your email
+aegis-correo-dialogo-texto = Enter the address of your inbox. The envelope on the new tab page will open it; { -brand-short-name } doesn’t connect to it until you click it. The address is saved only on this device.
+aegis-correo-dialogo-campo = Address
+aegis-correo-dialogo-ejemplos = For example: mail.proton.me, mail.google.com or outlook.live.com
+aegis-correo-error-vacio = Enter the address of your email.
+aegis-correo-error-esquema = Only secure addresses (https://) work. Check it and try again.
+aegis-correo-error-direccion = That address isn’t valid. Check that it’s spelled correctly.
+aegis-correo-cancelar = Cancel
+aegis-correo-guardar = Save
+aegis-correo-menu-anadir = Add email address…
+aegis-correo-menu-cambiar = Change email address…
+aegis-correo-quitar = Remove
+aegis-correo-sin = No address: the envelope will ask for one when you click it.
+aegis-correo-actual = Opens { $sitio }
+aegis-correo-anadir = Add…
+aegis-correo-cambiar = Change…
+
+## New tab: name of the shortcuts list for screen readers (Firefox has it hard-coded in English).
+
+aegis-accesos-titulo = Shortcuts

@@ -91,6 +91,16 @@ body {
 :is(.bienvenida-icono, .bienvenida-glifo)[data-icono="apariencia"] {
   background-image: url("../estilos/iconos/bienvenida-apariencia.svg");
 }
+/* Tutorial de Workflow: pestañas verticales (el glifo del modo), fijar, contenedores y acciones. */
+.bienvenida-icono[data-icono="fijar"] {
+  background-image: url("../estilos/iconos/fijar.svg");
+}
+.bienvenida-icono[data-icono="contenedor"] {
+  background-image: url("../estilos/iconos/contenedor.svg");
+}
+.bienvenida-icono[data-icono="acciones"] {
+  background-image: url("../estilos/iconos/acciones.svg");
+}
 .bienvenida-icono,
 .bienvenida-glifo,
 .bienvenida-chevron {
@@ -223,6 +233,60 @@ body {
   width: 16px;
   height: 16px;
   background: url("../estilos/iconos/escudo-chevron.svg") center / 16px no-repeat;
+}
+
+/* ── Tutorial de Workflow: la chuleta de cada paso y «Saltar el tutorial» ───────────────────────────────────────── */
+/* El grupo de filas del resumen, sin acción: lo que se hace a la izquierda (14 px) y cómo, a la derecha (13 px en
+   --aegis-sub, en cifras tabulares por los atajos). Filas de 40 como las del resumen. */
+.bienvenida-chuleta {
+  margin-block-start: 20px;
+}
+.bienvenida-fila-estatica {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-16);
+  min-height: 40px;
+  padding: var(--aegis-s-8) var(--aegis-s-16);
+  text-align: start;
+
+  & > .bienvenida-fila-nombre {
+    flex: 1;
+    width: auto;
+    white-space: normal;
+  }
+  & > .bienvenida-fila-valor {
+    flex: none;
+    max-width: 55%;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    white-space: normal;
+  }
+}
+/* Arriba a la derecha, frente a la marca: un botón de texto de 13 px con zona de 28 (radio 7). */
+.bienvenida-saltar {
+  position: absolute;
+  top: 20px;
+  inset-inline-end: 24px;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 var(--aegis-s-8);
+  border: 0;
+  border-radius: var(--aegis-r-7);
+  background: none;
+  font: 13px var(--aegis-font);
+  cursor: pointer;
+
+  &[hidden] {
+    display: none;
+  }
+  &:disabled {
+    opacity: 0.28;
+    cursor: default;
+  }
+}
+.bienvenida-secundario[hidden] {
+  display: none;
 }
 
 /* ── Tarjetas con miniatura (Tarjeta de componentes.slint) ───────────────────────────────────────────────────────── */
@@ -466,6 +530,20 @@ body {
   }
   .bienvenida-chevron {
     fill: var(--aegis-muted);
+  }
+  .bienvenida-fila-estatica {
+    color: var(--aegis-text);
+  }
+  .bienvenida-saltar {
+    color: var(--aegis-sub);
+
+    &:hover:not(:disabled) {
+      background-color: var(--aegis-hover);
+      color: var(--aegis-text);
+    }
+    &:hover:active:not(:disabled) {
+      background-color: var(--aegis-control);
+    }
   }
 
   .bienvenida-grupo {
@@ -836,8 +914,8 @@ body {
   width: 50%;
 }
 
-/* Workflow: barra lateral (30 %) con el buscador, los esenciales, las pestañas verticales y los espacios; la página
-   a la derecha. */
+/* Workflow: barra lateral (30 %) con el buscador y las pestañas verticales; la página a la derecha. Solo lo que existe:
+   ni esenciales ni espacios (DISENO §9; principio 5 de la guía). */
 .m-buscar {
   top: 5px;
   left: 5px;
@@ -847,22 +925,6 @@ body {
     left: 5px;
     width: 45%;
   }
-}
-.m-esencial {
-  top: 19px;
-  width: calc(10% - 6px);
-  height: 9px;
-  border-radius: var(--aegis-mini-r-3);
-  background-color: color-mix(in srgb, var(--t) 8%, transparent);
-}
-.m-esencial-1 {
-  left: 5px;
-}
-.m-esencial-2 {
-  left: calc(10% + 3px);
-}
-.m-esencial-3 {
-  left: calc(20% + 1px);
 }
 .m-vertical {
   left: 4px;
@@ -885,7 +947,7 @@ body {
   }
 }
 .m-v1 {
-  top: 34px;
+  top: 19px;
   background-color: color-mix(in srgb, var(--t) 10%, transparent);
 
   & .m-raya {
@@ -894,37 +956,23 @@ body {
   }
 }
 .m-v2 {
-  top: 45px;
+  top: 30px;
 }
 .m-v3 {
-  top: 56px;
+  top: 41px;
 
   & .m-raya {
     width: calc((100% - 16px) * 0.5);
   }
 }
 .m-v4 {
-  top: 67px;
+  top: 52px;
 }
 .m-v5 {
-  top: 78px;
+  top: 63px;
 }
-.m-espacio {
-  bottom: 6px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: color-mix(in srgb, var(--t) 18%, transparent);
-}
-.m-espacio-1 {
-  left: calc(15% - 11.5px);
-  background-color: color-mix(in srgb, var(--t) 45%, transparent);
-}
-.m-espacio-2 {
-  left: calc(15% - 2.5px);
-}
-.m-espacio-3 {
-  left: calc(15% + 6.5px);
+.m-v6 {
+  top: 74px;
 }
 .bienvenida-mini .m-hoja-lateral {
   top: 4px;

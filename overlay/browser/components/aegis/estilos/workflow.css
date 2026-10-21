@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · modo Workflow: las pestañas verticales de Firefox con la forma de DISENO §4 y §9 («Pestaña vertical» y
+   «Pestaña activa»). La pone AegisArranque en la ventana del navegador. Solo con pestañas verticales
+   (sidebar.verticalTabs, la pref que sigue el modo; modos.sys.mjs): en el modo Estándar no cambia nada.
+   - Filas de 36: el resalte de 32 (radio 8) con 2 arriba y 2 abajo. Firefox suma a cada pestaña 5 px de relleno (3 + 2)
+     y dejaba filas de 41.
+   - La pestaña activa: --aegis-sel con el filo de 1 px de la activa (el énfasis), sin el contorno de línea de la
+     horizontal, y el título en --aegis-text 500 frente al --aegis-sub de las demás (no depende solo del relleno).
+   Solo var(--aegis-*); los colores, fuera de alto contraste y sin tema elegido ([lwtheme]: mandan sus colores). */
+
+@media -moz-pref("sidebar.verticalTabs") {
+  #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab:not([pinned]) {
+    padding-block: 0 !important;
+  }
+  #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[selected] .tab-label {
+    font-weight: 500;
+  }
+
+  @media not ((forced-colors: active) or (prefers-contrast: more)) {
+    /* En la pestaña: mapeo-firefox.css pone ahí los de la horizontal (superficie y línea). */
+    :root:not([lwtheme]) #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab {
+      --tab-background-color-selected: var(--aegis-sel) !important;
+      --tab-border-color-selected: transparent !important;
+    }
+  }
+}

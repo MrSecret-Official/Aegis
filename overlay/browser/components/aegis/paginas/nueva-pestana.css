@@ -167,6 +167,12 @@
   color: transparent;
 }
 
+/* Acceso con un favicon pequeño de Firefox (.default-icon, de 16 a 95 px) para el que hay uno más grande de una
+   dirección equivalente: el grande, en la misma caja (si no, el pequeño ampliado a 40 se ve pixelado). */
+.top-site-outer[aegis-logo] .tile .top-site-icon.default-icon {
+  background: var(--aegis-logo) center / contain no-repeat !important;
+}
+
 /* Logo negro y monocromo con fondo transparente (paginas/logos.sys.mjs marca con aegis-logo-oscuro el elemento que
    pinta la imagen, solo ese): en el tema oscuro, en blanco, para que se vea sobre la loseta (como pinta Brave el de
    GitHub). */
@@ -311,16 +317,22 @@
   display: none !important;
 }
 
-/* ── Personalizar: un engranaje discreto arriba a la derecha (como Brave), no el lápiz de color abajo ────────── */
+/* ── Personalizar: una brocha discreta arriba a la derecha (como Brave), no el lápiz de color abajo; a su izquierda,
+   el sobre del correo (paginas/correo.sys.mjs), el mismo botón ─────────────────────────────────────────────── */
 
 .personalizeButtonWrapper {
   inset-block: var(--aegis-s-16) auto !important;
   inset-inline-end: var(--aegis-s-16) !important;
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-4);
 }
 
-.open-customization-button {
-  /* El icono es un <img> dentro del shadow DOM de moz-button; moz-button.css le pone «content: var(--button-icon-content)». */
-  --button-icon-content: url("chrome://global/skin/icons/settings.svg");
+.open-customization-button,
+.aegis-correo-abrir {
+  /* El icono es un <img> dentro del shadow DOM de moz-button; moz-button.css le pone «content: var(--button-icon-content)».
+     Los glifos van por chrome://aegis-iconos/ (AegisArranque): la CSP de la página no deja cargar resource://. */
+  --button-icon-content: url("chrome://aegis-iconos/content/brocha.svg");
   --button-icon-fill: currentColor;
   --button-background-color-primary: transparent;
   --button-background-color-primary-hover: var(--aegis-hover);
@@ -808,5 +820,217 @@
   .aegis-np-deslizador::-moz-range-thumb {
     background-color: var(--aegis-prim);
     border-color: var(--aegis-line-strong);
+  }
+}
+
+/* ── Correo (paginas/correo.sys.mjs; DISENO §9, «Botón del correo») ──────────────────────────────────────────────
+   El sobre usa el mismo moz-button que la brocha (arriba): 32 × 32, radio 8, sin fondo; al pasar --aegis-hover. Su
+   diálogo tiene el marco de los diálogos de Aegis (440, relleno 24, radio 12) y su menú, el de los menús (radio 12,
+   filas de 32 con radio 7 a 4 px). */
+
+.aegis-correo-abrir {
+  --button-icon-content: url("chrome://aegis-iconos/content/correo.svg");
+}
+
+dialog.aegis-correo {
+  box-sizing: border-box;
+  width: min(440px, calc(100vw - 2 * var(--aegis-s-16)));
+  max-width: none;
+  padding: var(--aegis-s-24);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+  font: 13px/1.5 var(--aegis-font);
+  text-align: start;
+}
+dialog.aegis-correo::backdrop {
+  background: none;
+}
+.aegis-correo .aegis-correo-form {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.aegis-correo .aegis-correo-titulo {
+  margin: 0 0 var(--aegis-s-8);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.aegis-correo .aegis-correo-texto {
+  margin: 0 0 var(--aegis-s-16);
+}
+.aegis-correo .aegis-correo-rotulo {
+  margin-block-end: var(--aegis-s-4);
+  font-size: 13px;
+}
+.aegis-correo .aegis-correo-campo {
+  box-sizing: border-box;
+  height: var(--aegis-h-field);
+  margin: 0;
+  padding: 0 var(--aegis-s-12);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-7);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.aegis-correo :is(.aegis-correo-ejemplos, .aegis-correo-error) {
+  margin: var(--aegis-s-8) 0 0;
+  font-size: 12px;
+}
+.aegis-correo .aegis-correo-error:empty {
+  display: none;
+}
+.aegis-correo .aegis-correo-pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--aegis-s-8);
+  margin-block-start: var(--aegis-s-24);
+}
+.aegis-correo .aegis-correo-boton {
+  min-height: 34px;
+  padding: 0 var(--aegis-s-16);
+  border: none;
+  border-radius: var(--aegis-r-8);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.aegis-correo .aegis-correo-boton.aegis-correo-principal {
+  min-width: 112px;
+  font-weight: 600;
+}
+.aegis-correo .aegis-correo-boton:disabled {
+  opacity: 0.28;
+}
+.aegis-correo .aegis-correo-boton:focus-visible {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: 2px;
+}
+
+.aegis-correo-menu {
+  position: fixed;
+  inset: var(--aegis-correo-arriba) var(--aegis-correo-derecha) auto auto;
+  min-width: 200px;
+  margin: 0;
+  padding: var(--aegis-s-4);
+  border: 1px solid transparent;
+  border-radius: var(--aegis-r-12);
+  font: 13px/1.4 var(--aegis-font);
+}
+.aegis-correo-menu-elemento {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 var(--aegis-s-12);
+  border: none;
+  border-radius: var(--aegis-r-7);
+  background: none;
+  font: inherit;
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.aegis-correo-menu-elemento:focus-visible {
+  outline: 2px solid var(--aegis-focus);
+  outline-offset: -2px;
+}
+
+/* Sección «Correo» de Personalizar: la dirección (o que no hay) y sus botones compactos. */
+.aegis-correo-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--aegis-s-8) var(--aegis-s-12);
+}
+.aegis-correo-estado {
+  margin: 0;
+  min-width: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.aegis-correo-botones {
+  display: flex;
+  gap: var(--aegis-s-8);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aegis-correo :is(.aegis-correo-boton, .aegis-correo-campo),
+  .aegis-correo-menu-elemento {
+    transition: background-color var(--aegis-t-hover) var(--aegis-ease), border-color var(--aegis-t-hover) var(--aegis-ease);
+  }
+  .aegis-correo .aegis-correo-boton:hover:active {
+    scale: 0.97;
+    transition-duration: var(--aegis-t-press);
+  }
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  dialog.aegis-correo {
+    background-color: var(--aegis-dialog);
+    border-color: var(--aegis-line);
+    box-shadow: var(--aegis-shadow);
+    color: var(--aegis-text);
+  }
+  .aegis-correo :is(.aegis-correo-texto, .aegis-correo-ejemplos) {
+    color: var(--aegis-sub);
+  }
+  .aegis-correo .aegis-correo-error {
+    color: var(--aegis-err);
+  }
+  .aegis-correo .aegis-correo-campo {
+    background-color: var(--aegis-hover);
+    border-color: var(--aegis-field-border);
+    color: var(--aegis-text);
+  }
+  .aegis-correo .aegis-correo-campo::placeholder {
+    color: var(--aegis-sub);
+    opacity: 1;
+  }
+  .aegis-correo .aegis-correo-campo:focus {
+    background-color: var(--aegis-control);
+    border-color: var(--aegis-focus);
+  }
+  .aegis-correo .aegis-correo-campo[aria-invalid] {
+    border-color: var(--aegis-err-fill);
+  }
+  .aegis-correo .aegis-correo-boton {
+    background-color: var(--aegis-control);
+    color: var(--aegis-text);
+  }
+  .aegis-correo .aegis-correo-boton:hover {
+    background-color: var(--aegis-control-hover);
+  }
+  .aegis-correo .aegis-correo-boton:hover:active {
+    background-color: var(--aegis-control-down);
+  }
+  .aegis-correo .aegis-correo-boton.aegis-correo-principal {
+    background-color: var(--aegis-prim);
+    color: var(--aegis-on-prim);
+  }
+  .aegis-correo .aegis-correo-boton.aegis-correo-principal:hover {
+    background-color: var(--aegis-prim-hover);
+  }
+  .aegis-correo .aegis-correo-boton.aegis-correo-principal:hover:active {
+    background-color: var(--aegis-prim-down);
+  }
+  .aegis-correo-menu {
+    background-color: var(--aegis-menu);
+    border-color: var(--aegis-line);
+    box-shadow: var(--aegis-shadow);
+    color: var(--aegis-text);
+  }
+  .aegis-correo-menu-elemento {
+    color: var(--aegis-text);
+  }
+  .aegis-correo-menu-elemento:hover {
+    background-color: var(--aegis-hover);
+  }
+  .aegis-correo-menu-elemento:hover:active {
+    background-color: var(--aegis-control);
+  }
+  .aegis-correo-estado {
+    color: var(--aegis-sub);
   }
 }

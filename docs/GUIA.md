@@ -86,11 +86,32 @@ Aegis/
     `msix` lo vuelven a comprobar; `msix` declara los seis en el `AppxManifest.xml`.
   - Nada de paquetes de idioma (langpacks) de addons.mozilla.org: traen la marca de Firefox. Ajustes › Idioma solo
     ofrece los seis (sin «Buscar más idiomas…»; `intl.multilingual.downloadEnabled` en false).
+  - **Diccionarios de ortografía** (`upstream.json` › `diccionarios`): uno por idioma, con el código del idioma de la
+    interfaz por nombre (`de.dic`, `es-ES.dic`…), así el corrector usa de serie el del idioma de la app (no se fija
+    `spellchecker.dictionary`). es-ES, pt-BR y fr son los de firefox-l10n (los que Mozilla pone en sus builds de esos
+    idiomas); de e it, de LibreOffice/dictionaries en un commit fijado (GPL; Mozilla no los tiene). `fetch` los
+    comprueba archivo a archivo (sha256) en `cache/diccionarios`, `overlay` los copia junto a
+    `browser/components/aegis/diccionarios/moz.build`, que los instala en `dist/bin/dictionaries` (built_in_addons.json
+    los registra; van en el omni.ja de Gecko), y `package`, `mar` y `msix` comprueban que están. Hace falta porque
+    `package-multi-locale` no pone los diccionarios de las traducciones. «Elegir más diccionarios» (addons.mozilla.org)
+    sigue para otros idiomas.
   - **Cambios de Aegis a las traducciones** (`tools/l10n-cambios.json`, MPL-2.0, apuntado en `NOTICE.md`): una lista
     cerrada que `fetch` aplica al extraer, como las sustituciones de LibreWolf. «sustituciones»: textos visibles que
     nombran a «Firefox» con todas las letras donde en-US usa la marca (pt-BR: aviso de actualización del menú y
-    `about:profiles`; de: la «Firefox-Startseite» y otros 15); el nombre pasa a `{ -brand-short-name }`. «anadidos»: los
-    textos del menú principal que faltan en es-ES (p. ej. «Help and Report»). `fetch` falla si un texto ya no está tal
+    `about:profiles`; de: la «Firefox-Startseite» y otros 15); el nombre pasa a `{ -brand-short-name }`.
+    «correcciones»: textos de es-ES que Aegis cambia por otros más claros o de tú, sin marca de por medio (menú de los
+    accesos de la nueva pestaña: «Desfijar» en vez de «Soltar», «Quitar» en vez de «Ignorar»; el aviso de la barra de
+    marcadores vacía, que trataba de usted); se aplican y comprueban como las sustituciones. **Aegis en español va de
+    tú** (decisión del usuario, 2026-10-20): los textos de usted que se ven en un uso normal (Ajustes, panel del sitio,
+    barra de direcciones, permisos, diálogos, ventana privada, perfiles, contraseñas, errores) son correcciones, y se
+    dice «contraseña principal», nunca «maestra». Una corrección puede ir también en un `.properties` de
+    `browser/chrome/`, `security/manager/chrome/` o `toolkit/chrome/` (avisos de permisos de `browser.properties`,
+    contraseña principal de NSS en `pipnss.properties`, autenticación HTTP y contraseñas: aún no están en Fluent;
+    `PROPERTIES_L10N` en `aegis.py`). Una entrada por mensaje (dos del mismo mensaje no se encadenan), el «antes» nunca
+    dentro del «después», y «Firefox» o «Mozilla» solo en el «antes» de una sustitución: `aegis.py` y `verificar.py`
+    lo rechazan, y `verificar.py` comprueba que cada mensaje sigue en el en-US del árbol. «anadidos»: los
+    textos del menú principal, de los contenedores y de lo demás que se ve y falta en es-ES (p. ej. «Help and Report»,
+    «Add New Container», la ventana privada, `about:keyboard`), siempre en .ftl. `fetch` falla si un texto ya no está tal
     cual, si un añadido ya existe o si Firefox ya no tiene el mensaje: entonces se revisa la entrada. `package` y
     `verificar.py` comprueban que están en el paquete. Fuera de la lista, a propósito: lo que atribuye el origen o es
     legal (créditos de it, «respaldado por Mozilla» en `certError.ftl`, «Absturzbericht an Mozilla»: informes de fallos

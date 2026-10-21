@@ -7,9 +7,11 @@
  * paginas/logos.sys.mjs: los logos de los accesos de la nueva pestaña (logos.sys.mjs). Solo atiende a about:newtab y
  * about:home cargadas en el proceso de las páginas privilegiadas, nunca a una web. También a about:logins
  * (paginas/contrasenas.sys.mjs): si hay contraseña principal y el diálogo para crearla (../contrasenas.sys.mjs), y el
- * código de verificación de la contraseña elegida (../autenticador/).
+ * código de verificación de la contraseña elegida (../autenticador/). Y el correo de la nueva pestaña: leer, guardar,
+ * quitar y abrir la dirección de la bandeja (../correo.sys.mjs, que la valida).
  */
 
+import { AegisCorreo } from "../correo.sys.mjs";
 import { iconosLocales, logo } from "../logos.sys.mjs";
 
 const PAGINAS = ["about:newtab", "about:home"];
@@ -97,6 +99,15 @@ export class AegisPaginasParent extends JSWindowActorParent {
           return await iconosLocales(mensaje.data?.urls);
         case "Aegis:Logo":
           return await logo(mensaje.data?.url, this.browsingContext.topChromeWindow);
+        // El correo de la nueva pestaña (../correo.sys.mjs): la dirección se valida y se abre aquí.
+        case "Aegis:Correo:Leer":
+          return { url: AegisCorreo.leer() };
+        case "Aegis:Correo:Guardar":
+          return AegisCorreo.guardar(mensaje.data?.url);
+        case "Aegis:Correo:Quitar":
+          return AegisCorreo.quitar();
+        case "Aegis:Correo:Abrir":
+          return AegisCorreo.abrir(this.browsingContext, mensaje.data);
       }
     } catch (e) {
       console.error(`Aegis: ${mensaje.name}`, e);

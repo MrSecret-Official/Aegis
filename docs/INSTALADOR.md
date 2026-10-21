@@ -38,7 +38,7 @@ contenido de Aegis, copiado medida a medida:
 | | Paso | Qué hay |
 |---|---|---|
 | 1 | **Bienvenida** | El icono, «Aegis» (30 px) y «Un navegador privado, limpio y rápido». Debajo, «LO QUE SE INSTALA»: modo, Escudos, buscador, apariencia y carpeta con sus valores (cada fila lleva a su paso). Botón principal «Instalar» (instala con eso) y secundario «Personalizar» |
-| 2 | **¿Cómo quieres navegar?** | Dos tarjetas con miniatura: Estándar (pestañas arriba, barra de marcadores discreta) y Workflow (pestañas verticales, esenciales y espacios) |
+| 2 | **¿Cómo quieres navegar?** | Dos tarjetas con miniatura: Estándar (pestañas arriba, barra de marcadores discreta) y Workflow (pestañas verticales en la barra lateral; los esenciales y los espacios aún no existen y no se dibujan) |
 | 3 | **¿Cuánto quieres bloquear?** | Los Escudos: tres tarjetas con miniatura (una página con sus peticiones, tachadas las bloqueadas, y el contador del botón de los Escudos, que sube con el nivel): Normal, Estricto y Estricto+, el elegido de serie, con la insignia «RECOMENDADO». Debajo de cada una, qué hace (los niveles y textos de Ajustes › Escudos) |
 | 4 | **¿Dónde quieres buscar?** | El buscador: cuatro tarjetas sin miniatura en rejilla de 2 × 2, solo texto (sin logotipos): DuckDuckGo, Startpage, Brave Search o Google, cada una con una frase honesta («Google guarda lo que buscas») |
 | 5 | **Elige el aspecto** | Tres tarjetas: Oscuro, Claro y Automático (sigue a Windows) |
@@ -175,6 +175,17 @@ La versión de la **Microsoft Store** (MSIX, `docs/TIENDA.md`) y el **zip** no p
   archivos del navegador); el módulo solo trabaja cuando el usuario pulsa algo.
 
 Probado el 2026-10-19 en Gecko con perfiles nuevos y el código del repo (`out/pruebas/2026-10-19-bienvenida/`).
+
+**Tutorial de Workflow** (2026-10-20, misma página y mismo módulo): si se termina la bienvenida con **Workflow**
+elegido, lo elegido se aplica en ese momento (la ventana pasa a pestañas verticales y la marca deja de estar pendiente)
+y sale un tutorial de cuatro pasos (pestañas verticales, mover y fijar, contenedores y su cambio rápido, acciones con
+`>`), con una chuleta de atajos en cada uno. Se salta con «Saltar el tutorial» (arriba a la derecha) o Esc en el primer
+paso; al acabar o saltarlo, la pestaña va a `about:conexiones`, como siempre. Si se cierra a medias, `about:conexiones`
+sale en el siguiente arranque (como al cerrar la bienvenida: la red sigue cerrada hasta aceptar). Con Estándar (lo
+recomendado, lo que pulsa `tools/auditar-red.py`) no cambia nada. Para verlo cuando se quiera:
+`about:bienvenida?tutorial` (Ajustes › Pestañas y navegación, debajo de «Disposición del navegador», y la acción «Ver
+el tutorial de Workflow»); solo el tutorial, y al acabar se cierra su pestaña. Sin red ni temporizadores. Probado con
+Marionette (`out/pruebas/2026-10-20-contenedores-workflow/`).
 
 ## Tecnología
 

@@ -165,15 +165,37 @@ function sinPestanasSincronizadas(win) {
   win.dispatchEvent(new win.CustomEvent("SidebarItemChanged"));
 }
 
+/** Atributo de la barra de marcadores con el aviso descartado (estilos/barra-marcadores.css). */
+const ATRIBUTO_AVISO = "aegis-aviso-oculto";
+let observandoAviso = false;
+
+/** Pone o quita ATRIBUTO_AVISO en la barra de marcadores de cada ventana según la pref. */
+function marcarAvisoOculto() {
+  const oculto = Services.prefs.getBoolPref(PREF_AVISO, false);
+  for (const win of Services.wm.getEnumerator("navigator:browser")) {
+    win.document.getElementById("PersonalToolbar")?.toggleAttribute(ATRIBUTO_AVISO, oculto);
+  }
+}
+
 /**
  * «Ahora no» junto al aviso de la barra de marcadores vacía. Pulsado, la barra se oculta mientras esté vacía
- * (estilos/barra-marcadores.css lo hace con -moz-pref y :has, así que vuelve sola con el primer marcador).
+ * (estilos/barra-marcadores.css lo hace con :has, así que vuelve sola con el primer marcador).
+ *
+ * La barra lleva el atributo aegis-aviso-oculto, que este módulo pone al pulsar y cuando cambia la pref (en todas las
+ * ventanas): un cambio de atributo se aplica en el mismo restilo. Antes la hoja leía la pref con @media -moz-pref(),
+ * que depende de que Gecko vuelva a evaluar las consultas de medios de la ventana; el aviso del usuario se quedaba a la
+ * vista tras pulsar «Ahora no» y solo se iba al cambiar el tamaño de la ventana (que sí las reevalúa).
  *
  * @param {Window} win
  */
 function avisoDeMarcadores(win) {
   const doc = win.document;
   const aviso = doc.getElementById("personal-toolbar-empty");
+  if (!observandoAviso) {
+    observandoAviso = true;
+    Services.prefs.addObserver(PREF_AVISO, marcarAvisoOculto);
+  }
+  doc.getElementById("PersonalToolbar")?.toggleAttribute(ATRIBUTO_AVISO, Services.prefs.getBoolPref(PREF_AVISO, false));
   if (!aviso || aviso.querySelector(".aegis-aviso-cerrar")) {
     return;
   }
@@ -184,7 +206,10 @@ function avisoDeMarcadores(win) {
   if (attributes.title) {
     boton.title = attributes.title;
   }
-  boton.addEventListener("click", () => Services.prefs.setBoolPref(PREF_AVISO, true));
+  boton.addEventListener("click", () => {
+    Services.prefs.setBoolPref(PREF_AVISO, true);
+    marcarAvisoOculto();
+  });
   aviso.append(boton);
 }
 

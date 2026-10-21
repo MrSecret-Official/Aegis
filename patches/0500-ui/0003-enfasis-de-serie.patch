@@ -1,0 +1,125 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aegis <aegis@localhost>
+Subject: =?UTF-8?q?=C3=89nfasis=20de=20Aegis=20en=20la=20elecci=C3=B3n=20d?=
+ =?UTF-8?q?e=20perfil?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Por qué: la ventana para elegir perfil al arrancar (about:profilemanager, o la de
+toolkit con profileSelection.xhtml) y sus diálogos de crear perfil y de perfil más
+nuevo se abren antes de que haya perfil y de que arranque el código de Aegis, así que
+salían con el violeta del design system de Firefox 158 (Nova) en la casilla, la tarjeta
+de crear perfil y los botones. (Crear, editar y borrar un perfil, en cambio, solo se
+abren desde un perfil en marcha: ahí ponen el énfasis las hojas de Aegis; y como se
+cargan en un proceso de contenido, no podrían cargar esta hoja sin hacerla
+contentaccessible.) Cada uno
+enlaza ahora la hoja con el énfasis de serie de Aegis, Monocromo
+(toolkit/themes/shared/design-system/src/aegis-enfasis.css, del overlay). Va en el skin
+de mozapps, que no es contentaccessible: una web no puede cargarla, y como no se
+importa desde los tokens de Firefox, una web que cargue tokens-shared.css sigue viendo
+los valores de Firefox (sin huella). Las tarjetas de perfil pintaban además los colores
+guardados con el tema de serie, los de Firefox (violeta): con un tema sin colores
+propios usan los tokens; con otro tema, los suyos. Una línea por documento, la entrada
+en mozapps.inc.mn y un método en profile-card.mjs. Dentro de un perfil, las hojas de
+Aegis ponen el énfasis de ese perfil.
+Bug upstream: ninguno
+Origen: Aegis
+
+Aegis-Parche: 0500-ui/0003-enfasis-de-serie.patch
+
+diff --git a/browser/components/profiles/content/profile-card.mjs b/browser/components/profiles/content/profile-card.mjs
+index b219d565bb..3d3157d01c 100644
+--- a/browser/components/profiles/content/profile-card.mjs
++++ b/browser/components/profiles/content/profile-card.mjs
+@@ -41,18 +41,28 @@ export class ProfileCard extends MozLitElement {
+     this.setAvatarImage();
+   }
+ 
++  // Aegis: con un tema sin colores propios (el de serie, Claro u Oscuro), los colores guardados son los de Firefox; la
++  // tarjeta usa entonces el fondo y el texto de la página (monocromo). Con otro tema, los suyos.
++  colores() {
++    let { themeId, themeFg, themeBg } = this.profile.theme;
++    if (!themeId || !themeFg || !themeBg || /^(default-theme|firefox-compact-(dark|light))@mozilla\.org$/.test(themeId)) {
++      return { themeBg: "var(--background-color-canvas)", themeFg: "var(--text-color)" };
++    }
++    return { themeFg, themeBg };
++  }
++
+   setBackgroundImage() {
+     this.backgroundImage.style.backgroundImage = `url("chrome://browser/content/profiles/assets/profilesBackground${
+       this.profile.id % 5
+     }.svg")`;
+-    let { themeFg, themeBg } = this.profile.theme;
++    let { themeFg, themeBg } = this.colores();
+     this.backgroundImage.style.fill = themeBg;
+     this.backgroundImage.style.stroke = themeFg;
+   }
+ 
+   async setAvatarImage() {
+     this.avatarImage.style.backgroundImage = `url(${await this.profile.getAvatarURL(80)})`;
+-    let { themeFg, themeBg } = this.profile.theme;
++    let { themeFg, themeBg } = this.colores();
+     this.avatarImage.style.fill = themeBg;
+     this.avatarImage.style.stroke = themeFg;
+   }
+diff --git a/browser/components/profiles/content/profiles.html b/browser/components/profiles/content/profiles.html
+index a326ad9270..b7907dd962 100644
+--- a/browser/components/profiles/content/profiles.html
++++ b/browser/components/profiles/content/profiles.html
+@@ -21,6 +21,7 @@
+     <link rel="localization" href="browser/profiles.ftl" />
+ 
+     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
++    <link rel="stylesheet" href="chrome://mozapps/skin/aegis-enfasis.css" />
+     <link
+       rel="stylesheet"
+       href="chrome://browser/content/profiles/profile-selector.css"
+diff --git a/toolkit/profile/content/createProfileWizard.xhtml b/toolkit/profile/content/createProfileWizard.xhtml
+index 407cefe7b7..088e9c4e66 100644
+--- a/toolkit/profile/content/createProfileWizard.xhtml
++++ b/toolkit/profile/content/createProfileWizard.xhtml
+@@ -18,6 +18,7 @@
+ >
+   <linkset>
+     <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
++    <html:link rel="stylesheet" href="chrome://mozapps/skin/aegis-enfasis.css" />
+ 
+     <html:link rel="localization" href="branding/brand.ftl" />
+     <html:link
+diff --git a/toolkit/profile/content/profileDowngrade.xhtml b/toolkit/profile/content/profileDowngrade.xhtml
+index e53f6dae6a..ef9b472508 100644
+--- a/toolkit/profile/content/profileDowngrade.xhtml
++++ b/toolkit/profile/content/profileDowngrade.xhtml
+@@ -14,6 +14,7 @@
+         data-l10n-attrs="title,style">
+ <linkset>
+   <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
++  <html:link rel="stylesheet" href="chrome://mozapps/skin/aegis-enfasis.css" />
+   <html:link
+     rel="stylesheet"
+     href="chrome://mozapps/skin/profileDowngrade.css"
+diff --git a/toolkit/profile/content/profileSelection.xhtml b/toolkit/profile/content/profileSelection.xhtml
+index cb7b5b9ffa..af9a2cffed 100644
+--- a/toolkit/profile/content/profileSelection.xhtml
++++ b/toolkit/profile/content/profileSelection.xhtml
+@@ -34,6 +34,7 @@
+         rel="stylesheet"
+         href="chrome://mozapps/skin/profileSelection.css"
+       />
++      <html:link rel="stylesheet" href="chrome://mozapps/skin/aegis-enfasis.css" />
+ 
+       <html:link rel="localization" href="branding/brand.ftl" />
+       <html:link
+diff --git a/toolkit/themes/shared/mozapps.inc.mn b/toolkit/themes/shared/mozapps.inc.mn
+index dddc5be799..67d1d48f66 100644
+--- a/toolkit/themes/shared/mozapps.inc.mn
++++ b/toolkit/themes/shared/mozapps.inc.mn
+@@ -7,6 +7,7 @@
+ # be specified once. As a result, the source file paths are relative
+ # to the location of the actual manifest.
+ 
++  skin/classic/mozapps/aegis-enfasis.css                     (../../shared/design-system/src/aegis-enfasis.css)
+   skin/classic/mozapps/downloads/unknownContentType.css      (../../shared/downloads/unknownContentType.css)
+   skin/classic/mozapps/extensions/dictionaryGeneric.svg      (../../shared/extensions/category-dictionaries.svg)
+   skin/classic/mozapps/extensions/extensionGeneric.svg       (../../shared/extensions/extensionGeneric.svg)

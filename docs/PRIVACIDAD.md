@@ -330,13 +330,29 @@ Relay y sin los avisos de filtraciones de Mozilla Monitor (no se compara nada co
 `overlay/browser/components/aegis/contrasenas.sys.mjs`; prefs: `settings/prefs/61-contrasenas.js`.
 
 **Lo que hace cada medida:**
-- **Contraseña principal obligatoria.** Antes de guardar la primera contraseña (al pulsar «Guardar» en el aviso, al
-  añadirla a mano, al importar o al usar una contraseña generada), Aegis pide crearla; si no la creas, no guarda nada.
-  Sin ella, `key4.db` no lleva contraseña y cualquiera que copie tu perfil (un programa de los que roban datos de
-  navegadores, alguien con tu disco) lee todas tus contraseñas en segundos. Con ella, tiene que adivinarla.
-  - Si ya tenías contraseñas sin contraseña principal (o la quitas en Ajustes), el panel «Contraseñas» y
-    `about:logins` lo avisan, con un botón para crearla.
-  - Se puede desactivar en `about:config` (`aegis.contrasenas.principal_obligatoria`); no lo recomendamos.
+- **Contraseña principal recomendada (no obligatoria para guardar).** Hasta el 2026-10-20, Aegis no guardaba nada sin
+  ella; ahora guarda como Firefox (decisión del usuario: era la única salida del aviso de guardar, «No guardar»). Lo
+  que eso significa, sin adornos:
+  - **Sin contraseña principal**, las contraseñas van cifradas en `logins.json` con la clave de `key4.db`, que está en
+    el mismo perfil y **no lleva contraseña**. En Windows no la protege nada del sistema (ni DPAPI ni Windows Hello: eso
+    solo guarda la puerta de «ver», «copiar» y «editar»). Quien copie tu perfil (un programa de los que roban datos de
+    navegadores, alguien con tu disco sin BitLocker, otra cuenta de administrador del equipo) **lee todas tus
+    contraseñas en segundos**, y quien use tu sesión de Windows puede **entrar con ellas** en las webs (elegirlas en el
+    desplegable no pide nada).
+  - **Con contraseña principal**, `key4.db` va cifrada con ella (600 000 iteraciones, abajo): una copia del perfil no
+    sirve sin adivinarla, y la bóveda se cierra sola (abajo).
+  - Mientras no la tengas, el panel «Contraseñas» y `about:logins` lo dicen arriba, en una línea, con el botón «Crear
+    contraseña principal». No hay más avisos ni ventanas: guardar funciona como en Firefox.
+  - Quien quiera la regla de antes (no guardar nada sin ella): `about:config`,
+    `aegis.contrasenas.principal_obligatoria` a `true`.
+  - **La siguen pidiendo siempre**, con la pref o sin ella, tres cosas: **pasar las contraseñas a otro Aegis** (las saca
+    todas del equipo de una vez; sin ella, bastaría el PIN de Windows o, con la autenticación del sistema apagada,
+    nada), **recibirlas de otro Aegis** (llegan con sus códigos de verificación, protegidas en el otro equipo por su
+    contraseña principal) y **añadir un código de verificación o cambiar su clave** (abajo). Si no la hay, el diálogo de
+    Aegis explica por qué y pide crearla; al crearla, se abre solo lo que habías pedido (sin repetir el paso), y con
+    «Cancelar», no se hace nada. No basta con saltarse ese paso: el módulo de la transferencia no verifica la identidad
+    ni crea el archivo sin contraseña principal aunque el diálogo de pasar se abra escribiendo su dirección (entonces
+    ofrece crearla o dice cómo).
   - **Un solo diálogo, el de Aegis** (`overlay/browser/components/aegis/dialogos/`), para crearla y para cambiarla, venga
     de donde venga (el aviso de guardar, el panel, `about:logins` o Ajustes): sustituye al de Firefox con un
     «override» del manifiesto chrome, sin parche. Explica por qué hace falta, la pide dos veces (con un botón para
@@ -361,7 +377,7 @@ Relay y sin los avisos de filtraciones de Mozilla Monitor (no se compara nada co
   `key4.db` cuesta 60 veces más. Abrir la bóveda tarda unos 0,3 s, una vez por sesión. Vale al crear o cambiar la
   contraseña principal: si ya la tenías, cámbiala (puede ser por la misma) para reforzarla. Aun así, **una contraseña
   principal corta o conocida se adivina**: usa una frase larga que no uses en ningún otro sitio.
-- **Se cierra sola.** Tras un rato sin usar el equipo, **al suspender el equipo** y al cerrar Aegis, la bóveda se
+- **Se cierra sola** (solo con contraseña principal: sin ella no hay nada que cerrar). Tras un rato sin usar el equipo, **al suspender el equipo** y al cerrar Aegis, la bóveda se
   cierra y lo siguiente que necesite una contraseña vuelve a pedir la principal. El rato lo eliges en Ajustes ›
   Contraseñas y autorrelleno › «Cierre automático de la bóveda»: Nunca, 15, 10 (de serie), 5, 3, 2 o 1 minutos
   (`aegis.contrasenas.bloqueo_minutos`; un valor fuera de la lista se lleva al más cercano). El cambio vale al momento.
@@ -375,7 +391,9 @@ Relay y sin los avisos de filtraciones de Mozilla Monitor (no se compara nada co
   el historial del portapapeles (Windows + V) ni la sincroniza con otros equipos. No se borra sola del portapapeles:
   eso pediría un temporizador por cada copia en el código de Firefox. Pega y copia otra cosa cuando termines.
 - **Ver, copiar y editar piden autenticación.** En Windows, la de tu sesión (Windows Hello, PIN o tu contraseña de
-  Windows), también sin contraseña principal; con la bóveda cerrada, la contraseña principal. Después de autenticarte,
+  Windows), también sin contraseña principal (sin ella, es lo único que hay entre quien use tu sesión y tus
+  contraseñas a la vista; elegirlas en el desplegable de una web no la pide); con la bóveda cerrada, la contraseña
+  principal. Después de autenticarte,
   Firefox no lo vuelve a pedir durante 5 minutos en esa página (es fijo en su código). En Linux no hay autenticación del
   sistema: solo la contraseña principal.
 - **No se exportan en claro.** «Exportar contraseñas» (un CSV con todas legibles) no está en el menú y, aunque se
@@ -395,6 +413,8 @@ Relay y sin los avisos de filtraciones de Mozilla Monitor (no se compara nada co
   puede abrir el diálogo de usuario y contraseña de HTTP (una forma conocida de suplantar un inicio de sesión).
 
 **Lo que no protege:**
+- **Sin contraseña principal, una copia de tu perfil:** `key4.db` no lleva contraseña y descifra `logins.json` en
+  cualquier equipo. Es lo mismo que en Firefox sin contraseña principal. Créala si guardas algo que importe.
 - **Un programa malicioso que ya controla tu sesión de Windows** puede registrar lo que tecleas (también la contraseña
   principal), leer la memoria de Aegis mientras la bóveda está abierta o capturar la pantalla. Ningún navegador puede
   impedirlo. Lo que sí evita la contraseña principal es el robo «en frío»: copiar tu perfil y descifrarlo en otro sitio.
@@ -422,9 +442,15 @@ pestaña que se está viendo o de una imagen. Código: `overlay/browser/componen
 
 **Cómo se protege:**
 - **Cifrado con la clave de las contraseñas.** Los secretos van en `aegis-autenticador.json`, en el perfil, cifrados
-  con la misma clave de `key4.db` que cifra `logins.json` (SDR de NSS), así que dependen de la contraseña principal
-  obligatoria. En claro solo quedan el identificador del inicio de sesión y su origen (los mismos que ya están en claro
-  en `logins.json`): así Aegis sabe si una web tiene código sin descifrar nada. Nada va a las prefs.
+  con la misma clave de `key4.db` que cifra `logins.json` (SDR de NSS), así que dependen de la contraseña principal.
+  **Añadir un código, cambiar su clave o recibirlo de otro Aegis la exigen siempre**, aunque guardar contraseñas ya
+  no la exija: sin ella, quien copie el perfil tendría los dos pasos de la cuenta. Si no la hay, el diálogo de Aegis
+  pide crearla antes de abrir el de los códigos, y el módulo se niega a guardar ningún secreto sin ella (se llegue por
+  donde se llegue). **Quitar uno, no:** si quitas la contraseña principal en Ajustes, los códigos que ya tenías se
+  quedan, con la misma protección que tus contraseñas; su diálogo se abre igual para quitarlos, y si intentas cambiar
+  la clave, dice cómo crear la contraseña principal. En claro solo quedan el identificador del inicio de sesión y su
+  origen (los mismos que ya están en claro en `logins.json`): así Aegis sabe si una web tiene código sin descifrar
+  nada. Nada va a las prefs.
   - Por qué un archivo aparte y no un campo de la entrada: Firefox 158 no tiene ningún campo para esto, y el único
     libre es de Firefox Sync, que lo reescribe. El archivo aparte no cambia el formato de `logins.json`. Al borrar
     un inicio de sesión (o todos, también al restablecer la contraseña principal), se borra su código.
@@ -450,7 +476,7 @@ pestaña que se está viendo o de una imagen. Código: `overlay/browser/componen
 **Lo que no protege, y lo que hay que saber:**
 - **Juntar los dos pasos en la bóveda.** La verificación en dos pasos existe para que una contraseña robada no baste.
   Si el código vive junto a la contraseña, quien abra tu bóveda tiene los dos. Lo mitigan la contraseña principal
-  obligatoria (con su mínimo), la KDF reforzada y la verificación al ver o copiar, pero **para tus cuentas más
+  (obligatoria para añadir códigos, con su mínimo), la KDF reforzada y la verificación al ver o copiar, pero **para tus cuentas más
   importantes, un autenticador en otro dispositivo es más seguro**. El diálogo lo dice.
 - **El autorrelleno no verifica tu identidad** (como el de las contraseñas): con la bóveda abierta, alguien delante de
   tu equipo desbloqueado puede rellenar un código en la web de la cuenta.
@@ -552,8 +578,9 @@ minutos), sal o IV de otra longitud, claves de más en la cabecera, un tamaño q
 etiqueta y archivos de más de 32 MiB.
 
 **Al recibir:** entran por el importador de Firefox (`LoginHelper.maybeImportLogins`), que no duplica las que ya están
-(mismo sitio y usuario) y, si la del archivo es más reciente, actualiza la contraseña. Todo pasa por la **contraseña
-principal obligatoria**: si no la hay, se pide antes de abrir el diálogo; con la bóveda cerrada, una vez.
+(mismo sitio y usuario) y, si la del archivo es más reciente, actualiza la contraseña. **Pasar y recibir piden siempre
+la contraseña principal**, aunque guardar una contraseña ya no la exija: si no la hay, se ofrece crearla antes de abrir
+el diálogo; con la bóveda cerrada, se pide una vez.
 
 **Portapapeles:** «Copiar el código» lo marca como sensible (fuera del historial del portapapeles de Windows) y lo borra
 a los 60 s si sigue ahí (`aegis.contrasenas.transferencia.portapapeles_segundos`; también al cerrar Aegis). Firefox no
@@ -572,9 +599,75 @@ basura, como en `about:logins`.
 - **Borrar el archivo** («Borrar el archivo» o a mano) lo quita como cualquier otro, sin sobrescribirlo, y en un SSD o en
   la nube pueden quedar copias: sin el código no sirven, pero bórralas también.
 
+## Sesiones
+
+Ajustes › Privacidad › Sesiones › **«Cerrar las sesiones al salir de Aegis»**: opción de mayor seguridad, **apagada de
+serie** (decisión del usuario, 2026-10-21: iniciar sesión cada vez molesta a la mayoría). De serie, Aegis guarda las
+sesiones como Firefox. Código: `overlay/browser/components/aegis/sesiones.sys.mjs` (interruptor en `ajustes.sys.mjs`).
+
+**Qué hace.** No es un borrado propio: enciende la limpieza al cerrar de Firefox (`Sanitizer.sys.mjs`) solo con lo que
+cierra las sesiones, y la sesión guardada sin datos de las webs:
+- `privacy.sanitize.sanitizeOnShutdown` y `privacy.clearOnShutdown_v2.cookiesAndStorage`: al cerrar se borran, de cada
+  web http, https o file, sus cookies y sus datos (`CLEAR_COOKIES_AND_SITE_DATA` en Firefox 158: cookies,
+  `localStorage`, IndexedDB, Cache API, suscripciones push, HSTS, licencias de DRM, inicios de sesión HTTP y tokens en
+  memoria, permisos de acceso al almacenamiento, estado de la protección contra rastreo por rebote).
+- `privacy.clearOnShutdown_v2.cache`: también la caché, como la casilla «Eliminar cookies y datos de los sitios al
+  cerrar» de Firefox (así las dos dicen lo mismo).
+- `privacy.clearOnShutdown_v2.browsingHistoryAndDownloads`, `.formdata` y `.siteSettings` en false. **Ojo:** Firefox
+  trae las dos primeras de la caché y del historial a true, así que encender solo `sanitizeOnShutdown` borraría también
+  el historial y las descargas. Si la limpieza al cerrar ya estaba encendida (elegida en «Historial»), esas tres se
+  dejan como estaban. Antes de cambiar nada se hace la migración de Firefox a las prefs `_v2`
+  (`Sanitizer.maybeMigratePrefs`, como su casilla): si no, la del primer cierre copiaría encima las antiguas
+  `privacy.clearOnShutdown.*`, con el historial y los formularios a true.
+- `browser.sessionstore.privacy_level` = 2: la sesión guardada (`sessionstore.jsonlz4`, para restaurar las pestañas)
+  no lleva las cookies de sesión ni lo escrito en los formularios de ninguna web.
+
+**Qué no se borra:** el historial, las descargas, los formularios, los marcadores, las contraseñas (`logins.json` y
+`key4.db`: la limpieza no los toca), los códigos de verificación, los permisos de cada web (cámara, notificaciones…),
+las excepciones de los Escudos y de la huella, la configuración de Aegis y los datos de las extensiones (solo se
+borran webs http, https y file). Con esta limpieza Firefox borra además los identificadores de cámara y
+micrófono que da a las webs (`CLEAR_MEDIA_DEVICES`) y las conversaciones de su ventana con IA (Smart Window), estas
+solo si se ha aceptado usarla (`browser.smartwindow.tos.consentTime`).
+
+**Excepciones.** «Webs que conservan la sesión» abre el diálogo de Firefox de las excepciones de la limpieza al cerrar
+(permiso `persist-data-on-shutdown`, solo «Permitir»): esas webs y sus subdominios conservan sus cookies y sus datos.
+En Firefox 158 es un permiso aparte: el «Permitir» de las excepciones de cookies ya no salva a una web de la limpieza
+(Firefox copió una vez los que había, `ProfileDataUpgrader`, versión 176), y una web con «Permitir para la sesión» se
+borra siempre al cerrar, con este interruptor o sin él.
+
+**Apagarlo** devuelve cada pref al valor que tenía antes de encenderlo (guardado en `aegis.sesiones.previo`), salvo
+las que se hayan cambiado después desde otro sitio (Ajustes › Historial, about:config), que se respetan. Si se
+encendió con la casilla de cookies de Firefox, se apaga como la apaga ella.
+
+**Lo que protege:** que alguien que **copie tu perfil** (una copia de seguridad, el disco de un equipo robado o
+prestado, la carpeta en la nube) entre en tus cuentas con tus cookies: al cerrar Aegis ya no están, ni en el perfil ni
+en la sesión guardada.
+
+**Lo que no protege:**
+- **Un programa malicioso mientras Aegis está abierto**: las sesiones están en el equipo hasta que cierras, y un
+  programa así puede leerlas o leer lo que tecleas.
+- **Un cierre a la fuerza** (un fallo, un apagón, matar el proceso): no hay limpieza en ese momento. Firefox la deja
+  apuntada (`privacy.sanitize.pending`) y la hace en el siguiente arranque; hasta entonces, las cookies siguen en el
+  disco.
+- **Lo que las webs guardan en sus servidores**: cerrar la sesión en el navegador no la cierra en el servidor; para
+  eso, «Cerrar sesión» en la web.
+- **Los datos que las webs con excepción** conservan, a propósito.
+
+Mientras está encendido, el desplegable «Historial» de Firefox pasa a «Usar una configuración personalizada» (con
+`sanitizeOnShutdown` encendida, Firefox ya no lo considera «Recordar historial»); elegir otra vez «Recordar historial»
+apaga la limpieza al cerrar y, con ella, este interruptor.
+
+## Perfiles
+
+Borrar otro perfil desde la ventana de perfiles (`perfiles.sys.mjs`) quita su carpeta, la de `%LOCALAPPDATA%` (caché),
+su acceso directo del escritorio si lo tenía y su imagen de avatar propia si ningún otro perfil la usa. **Lo que no se
+borra:** al borrar el perfil **en uso** (por `about:deleteprofile`, el camino de Firefox, que cierra Aegis) una imagen
+de avatar propia se queda en `%APPDATA%\Aegis\Profile Groups\avatars\` hasta que la borres a mano. Nunca sale del
+equipo.
+
 ## Ventana privada con Tor
 
-Menú ☰ › «Nueva ventana privada con Tor» (Mayús+Alt+N), como en Brave. Opcional: tor no viene con Aegis y se descarga
+Menú ☰ › «Nueva ventana privada con Tor» (Ctrl+Mayús+U), como en Brave. Opcional: tor no viene con Aegis y se descarga
 aparte, solo si lo pides (Ajustes › Privacidad › Tor), del Tor Project y comprobado con un sha256 fijado en Aegis.
 Código: `overlay/browser/components/aegis/tor/`; conexiones: `docs/CONEXIONES.md`, «Tor».
 

@@ -16,7 +16,9 @@
  * - **Recibir** (Ajustes › «Recibir de otro Aegis» y la página de las contraseñas del asistente de importar,
  *   migracion/asistente.sys.mjs; dialogos/transferencia-recibir.*): archivo y código → se descifra, se comprueba que no
  *   ha caducado ni se ha importado ya aquí, y entra por LoginHelper.maybeImportLogins, que no duplica lo que ya hay y
- *   llama a addLoginAsync, que contrasenas.sys.mjs envuelve (contraseña principal obligatoria). El identificador del
+ *   llama a addLoginAsync. Pasar y recibir piden siempre la contraseña principal (AegisContrasenas.pedirPrincipal),
+ *   aunque guardar una contraseña ya no la exija: el archivo lleva todas, y casi siempre sus códigos de verificación
+ *   (los dos pasos de cada cuenta), así que tampoco se dejan, al recibirlos, en un perfil sin ella. El identificador del
  *   paquete se apunta en una pref del perfil (aegis.contrasenas.transferencia.usados) con su hora, y se olvida cuando
  *   el paquete ya habría caducado.
  * - **Copiar el código**: como dato sensible (fuera del historial del portapapeles de Windows) y, si sigue ahí, se
@@ -53,7 +55,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /** Paquetes ya importados en este perfil: JSON con [id, creado] de las últimas 24 h (formato.sys.mjs, usosVigentes). */
 const PREF_USADOS = "aegis.contrasenas.transferencia.usados";
 const PREF_PORTAPAPELES = "aegis.contrasenas.transferencia.portapapeles_segundos";
-const PREF_OBLIGATORIA = "aegis.contrasenas.principal_obligatoria";
 /** Tras verificar la identidad, el tiempo para elegir dónde guardar (y ni una exportación más sin volver a pedirla). */
 const AUTORIZACION_MS = 2 * 60 * 1000;
 
@@ -136,14 +137,18 @@ let autorizadoHasta = 0;
 
 /**
  * Windows Hello o la contraseña principal (con la bóveda cerrada, o sin autenticación del sistema), siempre: sin la
- * gracia de 5 minutos de about:logins. Sin contraseña principal ni autenticación del sistema, Firefox no tiene nada
- * que pedir y deja pasar (como su exportación).
+ * gracia de 5 minutos de about:logins. Sin contraseña principal, no: pasar la exige (abrirPasar la pide antes de abrir
+ * el diálogo), y sin ella requestReauth se conformaría con el PIN de Windows o, con la autenticación del sistema
+ * apagada, con nada. Así no basta con abrir el diálogo escribiendo su dirección.
  *
  * @param {Window} win
  * @returns {Promise<boolean>}
  */
 async function verificarIdentidad(win) {
   autorizadoHasta = 0;
+  if (!token().hasPassword) {
+    return false;
+  }
   const { isAuthorized } = await lazy.LoginHelper.requestReauth(
     { documentGlobal: ventanaDe(win) },
     0,
@@ -200,6 +205,12 @@ function serializar(login) {
  * @returns {Promise<{palabras: string[], contrasenas: number, codigos: number}>}
  */
 async function pasar({ ruta, incluirCodigos }) {
+  // Sin contraseña principal no se crea ningún paquete, se llegue por donde se llegue (abrirPasar, el diálogo abierto
+  // a mano o una llamada directa).
+  if (!token().hasPassword) {
+    autorizadoHasta = 0;
+    throw new ErrorTransferencia("sin-principal");
+  }
   if (Date.now() >= autorizadoHasta) {
     throw new ErrorTransferencia("autenticacion");
   }
@@ -318,11 +329,11 @@ async function recibir({ ruta, codigo }) {
     const datos = await descifrar(await leerArchivo(ruta), codigo, { ahora: Date.now() });
     comprobarUso(usosVigentes(usados(), Date.now()), datos.id);
 
-    // Sin contraseña principal no se guarda nada (contrasenas.sys.mjs); quien abre el diálogo ya la ha pedido, y desde
-    // aquí no se puede abrir el suyo (gDialogBox lo dejaría en cola detrás de este). La bóveda, abierta: NSS pide aquí
-    // la contraseña principal una sola vez, no una por inicio de sesión.
+    // Sin contraseña principal no se recibe nada; quien abre el diálogo ya la ha pedido (abrirRecibir), y desde aquí no
+    // se puede abrir el suyo (gDialogBox lo dejaría en cola detrás de este). La bóveda, abierta: NSS pide aquí la
+    // contraseña principal una sola vez, no una por inicio de sesión.
     const t = token();
-    if (Services.prefs.getBoolPref(PREF_OBLIGATORIA, true) && !t.hasPassword) {
+    if (!t.hasPassword) {
       throw new ErrorTransferencia("sin-principal");
     }
     if (t.hasPassword && !t.isLoggedIn) {
@@ -455,18 +466,17 @@ function copiarCodigo(palabras) {
 /* ───────── Abrir los diálogos ───────── */
 
 /**
- * Ajustes › «Pasar a otro Aegis». Sin contraseña principal (y sin autenticación del sistema) requestReauth no tendría
- * nada que pedir y cualquiera ante el equipo podría sacar las contraseñas: antes, se pide crearla.
+ * Ajustes › «Pasar a otro Aegis». Pide siempre la contraseña principal, también ahora que guardar no la exige: saca
+ * todas las contraseñas del equipo de una vez, y sin ella requestReauth se conformaría con la autenticación de Windows
+ * (un PIN) o, si está apagada, con nada.
  */
 async function abrirPasar(win) {
   const destino = ventanaDe(win);
   if (!destino) {
     return;
   }
-  if (Services.prefs.getBoolPref(PREF_OBLIGATORIA, true) && !token().hasPassword) {
-    if (!(await AegisContrasenas.crearPrincipal(destino, "guardar"))) {
-      return;
-    }
+  if (!(await AegisContrasenas.pedirPrincipal(destino))) {
+    return;
   }
   await abrirDialogo(destino, DIALOGO_PASAR, bolsa());
 }
@@ -484,10 +494,8 @@ async function abrirRecibir(win, ruta = "") {
   if (!destino) {
     return false;
   }
-  if (Services.prefs.getBoolPref(PREF_OBLIGATORIA, true) && !token().hasPassword) {
-    if (!(await AegisContrasenas.crearPrincipal(destino, "guardar"))) {
-      return false;
-    }
+  if (!(await AegisContrasenas.pedirPrincipal(destino))) {
+    return false;
   }
   const args = bolsa();
   args.setPropertyAsAString("aegis-ruta", ruta);

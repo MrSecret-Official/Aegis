@@ -116,6 +116,11 @@ function aplicar() {
   def.setBoolPref("browser.safebrowsing.update.enabled", on.listas || on.safebrowsing);
   def.setBoolPref("browser.safebrowsing.malware.enabled", on.safebrowsing);
   def.setBoolPref("browser.safebrowsing.phishing.enabled", on.safebrowsing);
+  // Ajustes › Privacidad avisa de que «el contenido peligroso no se bloquea» cuando Safe Browsing está apagado, con un
+  // «Restablecer» que aquí no puede hacer nada (Safe Browsing lo enciende Conexiones, y sin la clave de Google no hay
+  // servicio). Mientras no esté activo en Conexiones, el aviso sale como descartado; si el usuario lo apaga a mano con
+  // el grupo activo, vuelve a salir y «Restablecer» sí lo arregla. Solo es la pref de «descartado»: no conecta nada.
+  def.setBoolPref("browser.preferences.config_warning.warningSafeBrowsing.dismissed", !on.safebrowsing);
   def.setBoolPref("dom.push.connection.enabled", on.push);
   // Traducción: sin el grupo, la función no aparece (ni el botón de traducir ni los idiomas en Ajustes).
   def.setBoolPref("browser.translations.enable", on.traduccion);

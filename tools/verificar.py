@@ -20,7 +20,7 @@ import sys
 import tomllib
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IGNORAR_DIRS = {".git", "work", "out", "__pycache__", ".cache", "estado"}
+IGNORAR_DIRS = {".git", "work", "out", "__pycache__", ".cache", "estado", "graphify-out", ".obsidian"}
 TEXTO_EXT = {".py", ".sh", ".md", ".json", ".js", ".mjs", ".css", ".ftl", ".html", ".xhtml", ".svg", ".txt", ".patch",
              ".yml", ".yaml", ".toml", ".ini", ".mn", ".build", ".conf", ".cfg", ".ps1", ".cmd", ""}
 IDIOMAS = ("es-ES", "pt-BR", "fr", "de", "it")
@@ -467,20 +467,68 @@ def idiomas(v, rapido):
         except (OSError, ValueError) as e:
             mal(f"idiomas: no se puede leer l10n-changesets.json de Firefox {v}: {e}")
     # Los cambios de Aegis a las traducciones de Firefox (tools/l10n-cambios.json; los aplica `aegis.py fetch`).
+    # .ftl, o (solo en los reemplazos) un .properties de los prefijos de PROPERTIES_L10N de aegis.py: prefijo ->
+    # (carpeta de en-US en el árbol, carpeta en el paquete con {i} = idioma).
+    props = {"browser/chrome/": ("browser/locales/en-US/chrome/", "chrome/{i}/locale/"),
+             "security/manager/chrome/": ("security/manager/locales/en-US/chrome/", "chrome/{i}/locale/{i}/"),
+             "toolkit/chrome/": ("toolkit/locales/en-US/chrome/", "chrome/{i}/locale/{i}/")}
+
+    def prefijo(a):
+        return next((p for p in props if a.startswith(p) and a.endswith(".properties")), None)
+
+    def en_us(a):
+        p = prefijo(a)
+        if p:
+            return os.path.join(src, *(props[p][0] + a[len(p):]).split("/"))
+        modulo, resto = a.split("/", 1)
+        return os.path.join(src, modulo, "locales", "en-US", *resto.split("/"))
+
     cambios = []
     try:
         c = json.loads(leer_bytes("tools/l10n-cambios.json").decode("utf-8"))
-        for clave in ("sustituciones", "anadidos"):
+        por_mensaje = {}
+        textos_en_us = {}
+        for clave in ("sustituciones", "correcciones", "anadidos"):
             for e in c.get(clave, []):
                 cambios.append((clave, e))
-                if e.get("idioma") not in IDIOMAS or not re.fullmatch(r"[a-z]+/[\w/.-]+\.ftl", e.get("archivo", "")):
+                a = e.get("archivo", "")
+                if e.get("idioma") not in IDIOMAS or ".." in a.split("/") or not (
+                        re.fullmatch(r"[a-z]+/[\w/.-]+\.ftl", a)
+                        or (clave != "anadidos" and prefijo(a) and re.fullmatch(r"[\w/.-]+", a))):
                     mal(f"idiomas: tools/l10n-cambios.json › {clave}: idioma o archivo no válido ({e.get('id')})")
+                    continue
                 if clave == "sustituciones" and (not MARCAS.search(e.get("antes", ""))
                                                  or MARCAS.search(e.get("despues", "x"))):
                     mal(f"idiomas: tools/l10n-cambios.json › {e.get('id')}: una sustitución quita «Firefox» o "
                         "«Mozilla» («antes» lo lleva y «después» no)")
+                if clave == "correcciones" and MARCAS.search(e.get("antes", "") + "\n" + e.get("despues", "")):
+                    mal(f"idiomas: tools/l10n-cambios.json › {e.get('id')}: una corrección no lleva la marca (si "
+                        "la quita, es una sustitución)")
+                if clave == "anadidos" and MARCAS.search(e.get("texto", "")):
+                    mal(f"idiomas: tools/l10n-cambios.json › añadido {e.get('id')}: lleva «Firefox» o «Mozilla»")
                 if clave == "anadidos" and not e.get("texto", "").startswith(f"{e.get('id')} ="):
                     mal(f"idiomas: tools/l10n-cambios.json › añadido {e.get('id')}: el texto empieza por su id")
+                if clave != "anadidos":
+                    if e.get("antes", "") in e.get("despues", ""):
+                        mal(f"idiomas: tools/l10n-cambios.json › {e.get('id')}: el «antes» queda dentro del «después»")
+                    por_mensaje.setdefault((e.get("idioma"), a, e.get("id")), []).append(e)
+                # El mensaje sigue en el en-US de esta versión de Firefox (si no, `fetch` falla con código 3).
+                if src:
+                    if a not in textos_en_us:
+                        try:
+                            with open(en_us(a), encoding="utf-8") as f:
+                                textos_en_us[a] = f.read()
+                        except OSError:
+                            textos_en_us[a] = None
+                    if textos_en_us[a] is None:
+                        mal(f"idiomas: tools/l10n-cambios.json › {e.get('id')}: Firefox {v} no tiene {a} en en-US")
+                    elif not re.search(rf"^{re.escape(e.get('id', ''))}\s*=", textos_en_us[a], re.M):
+                        mal(f"idiomas: tools/l10n-cambios.json › {e.get('id')}: Firefox {v} ya no tiene ese mensaje "
+                            f"en en-US ({a})")
+        for (_, _, ident), lista in por_mensaje.items():
+            if any(x is not y and x.get("antes", "") in y.get("despues", "") for x in lista for y in lista):
+                mal(f"idiomas: tools/l10n-cambios.json › {ident}: reemplazos encadenados (el «antes» de uno está en "
+                    "el «después» de otro): júntalos en una sola entrada")
     except (OSError, ValueError) as e:
         mal(f"idiomas: tools/l10n-cambios.json: {e}")
     pkg = None if rapido else paquetes_windows(v)
@@ -497,12 +545,14 @@ def idiomas(v, rapido):
                 mal(f"idiomas: el paquete {os.path.basename(pkg)} trae {', '.join(sorted(multi))} "
                     "(res/multilocale.txt): `aegis.py package` después de `build`")
             for clave, e in cambios:
-                nombre = f"localization/{e['idioma']}/{e['archivo'].split('/', 1)[1]}"
+                i, a = e["idioma"], e["archivo"]
+                p = prefijo(a)
+                nombre = (props[p][1].format(i=i) + a[len(p):]) if p else f"localization/{i}/{a.split('/', 1)[1]}"
                 z = nav if nombre in nav.namelist() else gre
                 texto = z.read(nombre).decode("utf-8") if nombre in z.namelist() else ""
                 m = re.search(rf"^{re.escape(e['id'])}\s*=.*?(?=^\S|\Z)", texto, re.M | re.S)
                 bloque = m.group(0) if m else ""
-                if not bloque or (clave == "sustituciones" and (e["antes"] in bloque or e["despues"] not in bloque)):
+                if not bloque or (clave != "anadidos" and (e["antes"] in bloque or e["despues"] not in bloque)):
                     mal(f"idiomas: el paquete no lleva el cambio de Aegis de {e['idioma']} {e['id']} "
                         "(tools/l10n-cambios.json): `aegis.py fetch` y `package`")
         except (OSError, KeyError, zipfile.BadZipFile) as e:
@@ -514,12 +564,140 @@ def idiomas(v, rapido):
            + ("" if not pkg else "; el paquete los trae"))
 
 
+DICC_LO_URL = "https://raw.githubusercontent.com/LibreOffice/dictionaries/{commit}/"
+DICC_MOZ_BUILD = "overlay/browser/components/aegis/diccionarios/moz.build"
+DICC_NOMBRE = re.compile(r"^[A-Za-z]{2,3}(-[A-Za-z0-9]+)?(\.(aff|dic)|-[\w.-]+\.(txt|md))$")
+# Lo de Firefox de lo que depende que los diccionarios de la build se registren y se elijan solos (cambio de base).
+DICC_FIREFOX = (
+    ("toolkit/mozapps/extensions/gen_built_in_addons.py", 'registry.match("dictionaries/*.dic")',
+     "built_in_addons.json ya no lista los diccionarios de dist/bin/dictionaries"),
+    ("toolkit/mozapps/extensions/internal/XPIProvider.sys.mjs", "Services.io.newURI(`resource://gre/${path}`)",
+     "XPIProvider ya no registra los diccionarios de la build desde resource://gre/"),
+    ("python/mozbuild/mozbuild/action/l10n_stage.py", 'if state.mode == "langpack":',
+     "package-multi-locale quizá ya pone los diccionarios de las traducciones: revisar si sobran los de Aegis"),
+    # El registro de la «Priority 4» (GetAppLocaleAsBCP47 sale dos veces en el archivo: no vale de centinela).
+    ("editor/spellchecker/EditorSpellCheck.cpp", '"SetFallbackDictionary, Trying application locale',
+     "el corrector ya no elige de serie el diccionario del idioma de la app"),
+)
+
+
+def diccionarios(v, rapido):
+    """Diccionarios de ortografía de la build (upstream.json › diccionarios): uno por idioma de la interfaz, con el
+    código del idioma por nombre, sha256 de cada archivo y su licencia; el moz.build que los instala casa con la lista;
+    aegis.py los baja, los copia y los comprueba en el paquete; y, si hay paquete, van dentro y registrados."""
+    antes = len(fallos)
+    try:
+        d = json.loads(leer_bytes("upstream.json").decode("utf-8"))["diccionarios"]
+    except (OSError, ValueError, KeyError):
+        mal("diccionarios: upstream.json no tiene la sección «diccionarios»")
+        return
+    lo = d.get("libreoffice") or {}
+    if not re.fullmatch(r"[0-9a-f]{40}", lo.get("commit", "")) or lo.get("url") != DICC_LO_URL.format(commit=lo["commit"]):
+        mal(f"diccionarios: upstream.json › diccionarios › libreoffice: commit completo y url {DICC_LO_URL}")
+    idiomas_d = d.get("idiomas") or {}
+    if sorted(idiomas_d) != sorted(IDIOMAS):
+        mal(f"diccionarios: upstream.json › diccionarios › idiomas ({', '.join(sorted(idiomas_d))}) no son "
+            f"{', '.join(IDIOMAS)}")
+    archivos = {}
+    for idioma, e in idiomas_d.items():
+        arch = e.get("archivos") or {}
+        if e.get("fuente") not in ("l10n", "libreoffice") or not e.get("licencia") or not e.get("nombre"):
+            mal(f"diccionarios: {idioma}: fuente (l10n o libreoffice), nombre y licencia")
+        if f"{idioma}.dic" not in arch or f"{idioma}.aff" not in arch:
+            mal(f"diccionarios: {idioma}: faltan {idioma}.dic o {idioma}.aff (el nombre es el código del idioma de la "
+                "interfaz: así el corrector lo elige de serie)")
+        for nombre, f in arch.items():
+            ruta = f.get("ruta", "")
+            if (not nombre.startswith((f"{idioma}.", f"{idioma}-")) or not DICC_NOMBRE.match(nombre)
+                    or not re.fullmatch(r"[\w.-]+(/[\w.-]+)*", ruta) or ".." in ruta.split("/")
+                    or (e.get("fuente") == "l10n" and not ruta.startswith(f"{idioma}/"))):
+                mal(f"diccionarios: {idioma}: nombre o ruta no válidos ({nombre}: {ruta})")
+            if not re.fullmatch(r"[0-9a-f]{64}", f.get("sha256", "")):
+                mal(f"diccionarios: {idioma} › {nombre}: sha256 no válido")
+            archivos[nombre] = f.get("sha256", "")
+    # El moz.build que los instala en dist/bin/dictionaries: la misma lista, y Aegis lo incluye.
+    texto = leer_bytes(DICC_MOZ_BUILD).decode("utf-8") if os.path.isfile(os.path.join(REPO, DICC_MOZ_BUILD)) else ""
+    m = re.search(r"^FINAL_TARGET_FILES\.dictionaries \+= \[\n(.*?)\n\]", texto, re.M | re.S)
+    if not re.search(r'^FINAL_TARGET = "dist/bin"$', texto, re.M) or not m:
+        mal(f"diccionarios: {DICC_MOZ_BUILD} tiene que instalarlos en dist/bin/dictionaries (FINAL_TARGET = \"dist/bin\" "
+            "y FINAL_TARGET_FILES.dictionaries)")
+    elif sorted(re.findall(r'"([^"]+)"', m.group(1))) != sorted(archivos):
+        mal(f"diccionarios: la lista de {DICC_MOZ_BUILD} no es la de upstream.json › diccionarios")
+    if 'DIRS += ["diccionarios"]' not in leer_bytes("overlay/browser/components/aegis/moz.build").decode("utf-8"):
+        mal('diccionarios: overlay/browser/components/aegis/moz.build no lleva DIRS += ["diccionarios"]')
+    herramienta = leer_bytes("tools/aegis.py").decode("utf-8")
+    for trozo, que, n in (("    fetch_diccionarios()\n    return 0", "fetch baja y comprueba los diccionarios", 1),
+                          ("origenes.append((DICC_DIR, DICC_DESTINO", "overlay copia los diccionarios al árbol", 1),
+                          ("comprobar_diccionarios_paquete(pkg)\n", "package, mar y msix comprueban los diccionarios",
+                           3)):
+        if herramienta.count(trozo) < n:
+            mal(f"diccionarios: tools/aegis.py ya no hace «{que}»")
+    # El corrector elige de serie el del idioma de la app: ninguna pref de Aegis fija otro.
+    for rel in archivos_prefs():
+        if re.search(r'^\s*pref\("spellchecker\.dictionary"', leer_bytes(rel).decode("utf-8"), re.M):
+            mal(f"diccionarios: {rel} fija spellchecker.dictionary; de serie tiene que ser el del idioma de la app")
+    if "Diccionarios de ortografía" not in leer_bytes("NOTICE.md").decode("utf-8"):
+        mal("diccionarios: NOTICE.md no apunta los diccionarios de ortografía (licencia y origen)")
+    src = None if rapido else arbol(v)
+    if src:
+        for rel, trozo, que in DICC_FIREFOX:
+            try:
+                with open(os.path.join(src, rel), encoding="utf-8") as f:
+                    if trozo not in f.read():
+                        mal(f"diccionarios: en Firefox {v}, {que} ({rel}): revisar")
+            except OSError as e:
+                mal(f"diccionarios: no se puede leer {rel} de Firefox {v}: {e}")
+    pkg = None if rapido else paquetes_windows(v)
+    if pkg:
+        import io
+        import zipfile
+        try:
+            with zipfile.ZipFile(pkg) as z:
+                raiz = z.namelist()[0].split("/", 1)[0]
+                gre = zipfile.ZipFile(io.BytesIO(z.read(f"{raiz}/omni.ja")))
+                nav = zipfile.ZipFile(io.BytesIO(z.read(f"{raiz}/browser/omni.ja")))
+            dentro = set(gre.namelist())
+            for nombre, suma in sorted(archivos.items()):
+                ruta = f"dictionaries/{nombre}"
+                if ruta not in dentro or hashlib.sha256(gre.read(ruta)).hexdigest() != suma:
+                    mal(f"diccionarios: el paquete {os.path.basename(pkg)} no lleva {ruta} de upstream.json: "
+                        "`aegis.py fetch`, `overlay`, `build` y `package`")
+                    break
+            registrados = json.loads(nav.read("chrome/browser/content/browser/built_in_addons.json"))["dictionaries"]
+            esperados = {i: f"dictionaries/{i}.dic" for i in ("en-US", *IDIOMAS)}
+            if registrados != esperados:
+                mal(f"diccionarios: built_in_addons.json del paquete registra {', '.join(sorted(registrados))}; se "
+                    f"esperaba {', '.join(sorted(esperados))}")
+        except (OSError, KeyError, ValueError, zipfile.BadZipFile) as e:
+            mal(f"diccionarios: no se puede leer {pkg}: {e}")
+    if len(fallos) == antes:
+        ok(f"diccionarios: {', '.join(sorted(idiomas_d))} ({len(archivos)} archivos con sha256) en upstream.json, en el "
+           "moz.build y en aegis.py" + ("" if not src else f"; Firefox {v} los registra y los elige igual")
+           + ("" if not pkg else "; el paquete los trae y los registra"))
+
+
+def archivos_prefs():
+    return [rel for rel in archivos() if rel.startswith("settings/prefs/") and rel.endswith(".js")]
+
+
+ENFASIS_DE_SERIE = "overlay/toolkit/themes/shared/design-system/src/aegis-enfasis.css"
+
+
 def tokens():
     n = 0
+    # El énfasis de serie en los tokens de Firefox (parche 0500-ui/0003) se carga sin tokens.css: lleva sus colores
+    # escritos, pero solo los de tokens.css (mismo texto, sin contar espacios).
+    def colores(rel):
+        return {re.sub(r"\s+", " ", c.lower()) for c in re.findall(r"#[0-9a-fA-F]{3,8}\b|\brgba?\([^)]*\)",
+                                                                   leer_bytes(rel).decode("utf-8"))}
+    if os.path.isfile(os.path.join(REPO, ENFASIS_DE_SERIE)):
+        ajenos = colores(ENFASIS_DE_SERIE) - colores("overlay/browser/components/aegis/estilos/tokens.css")
+        for c in sorted(ajenos):
+            mal(f"{ENFASIS_DE_SERIE}: {c} no es un color de tokens.css (ver docs/DISENO.md)")
     for rel in archivos():
         # La marca (browser/branding/aegis) parte de la de Firefox y se rehace con el icono de Aegis.
         if (not (rel.startswith("overlay/") and ext(rel) == ".css") or rel.endswith("/aegis/estilos/tokens.css")
-                or rel.startswith("overlay/browser/branding/")):
+                or rel.startswith("overlay/browser/branding/") or rel == ENFASIS_DE_SERIE):
             continue
         n += 1
         for i, l in enumerate(leer_bytes(rel).decode("utf-8").splitlines(), 1):
@@ -1934,6 +2112,171 @@ def restos_firefox(v, rapido):
            + ("" if not src else f"; los puntos de Firefox {v} siguen igual"))
 
 
+# Una sola cara: los Escudos (decisión del usuario, 2026-10-20; docs/CONEXIONES.md). Cada pieza de Firefox de la que
+# depende: (archivo de Firefox, centinela que tiene que salir UNA sola vez en él, {archivo de Aegis: lo que tiene que
+# seguir nombrando}). Si Firefox la cambia, su protección contra rastreo volvería a verse como otra protección (o
+# about:protections, con su contador aparte) sin más aviso.
+_A = "overlay/browser/components/aegis/"
+_PANEL = "browser/components/controlcenter/content/trustPanel.inc.xhtml"
+_CSS_ESCUDOS = _A + "estilos/escudos.css"
+_AJUSTES = _A + "ajustes.sys.mjs"
+_CSS_AJUSTES = _A + "estilos/ajustes.css"
+ESCUDOS_UNICA = [
+    # Panel del candado: escudos.css oculta la tarjeta, el contador, el interruptor y el aviso de Monitor; escudos.sys.mjs
+    # pone su fila detrás de la tarjeta y la repinta con el panel abierto.
+    (_PANEL, 'id="trustpanel-popup"', {_A + "escudos.sys.mjs": ['"trustpanel-popup"']}),
+    (_PANEL, 'id="trustpanel-graphic-section"',
+     {_CSS_ESCUDOS: ["#trustpanel-graphic-section"], _A + "escudos.sys.mjs": ['"trustpanel-graphic-section"']}),
+    (_PANEL, 'class="trustpanel-card-main"', {_CSS_ESCUDOS: [".trustpanel-card-main"]}),
+    (_PANEL, 'id="trustpanel-blocker-section"', {_CSS_ESCUDOS: ["#trustpanel-blocker-section"]}),
+    (_PANEL, 'id="trustpanel-toggle-section"', {_CSS_ESCUDOS: ["#trustpanel-toggle-section"]}),
+    (_PANEL, 'id="trustpanel-breach-alert-section"', {_CSS_ESCUDOS: ["#trustpanel-breach-alert-section"]}),
+    (_PANEL, 'id="trustpanel-insecure-section"', {_CSS_ESCUDOS: ["#trustpanel-insecure-section"]}),
+    # En una conexión sin cifrar solo queda el aviso «no es segura»: lo marca connection="not-secure" en el panel.
+    (_PANEL, 'class="trustpanel-card-content trustpanel-card-divided trustpanel-graphic-inner" '
+             'when-connection="not-secure">',
+     {_CSS_ESCUDOS: ['#trustpanel-popup:not([connection="not-secure"])']}),
+    ("browser/base/content/browser-trustPanel.js", 'this.#popup.setAttribute("connection", this.#connectionState());',
+     {_CSS_ESCUDOS: ['[connection="not-secure"]']}),
+    ("browser/base/content/browser-trustPanel.js", 'let connection = "not-secure";',
+     {_CSS_ESCUDOS: ['[connection="not-secure"]']}),
+    # Ajustes › Privacidad: la tarjeta de estado y el grupo de rastreo, ocultos; la sección «Escudos», detrás del grupo.
+    ("browser/components/preferences/privacy.inc.xhtml",
+     '<html:setting-group hidden="true" groupid="securityPrivacyStatus"',
+     {_CSS_AJUSTES: ['[groupid="securityPrivacyStatus"]'], _AJUSTES: ['[groupid="securityPrivacyStatus"]']}),
+    ("browser/components/preferences/privacy.inc.xhtml", '<html:setting-group groupid="etpStatus"',
+     {_CSS_AJUSTES: ['[groupid="etpStatus"]'], _AJUSTES: ['setting-group[groupid="etpStatus"]']}),
+    # Las subpáginas #etp y #etpCustomize: sus grupos, ocultos, y ellas llevan a Ajustes › Escudos (paneEtp…).
+    ("browser/components/preferences/preferences.js", "  etp: {", {_AJUSTES: ['"paneEtp"']}),
+    ("browser/components/preferences/preferences.js", 'groupIds: ["etpBanner", "etpAdvanced"],',
+     {_CSS_AJUSTES: ['[groupid="etpBanner"]', '[groupid="etpAdvanced"]'], _AJUSTES: ['[groupid^="etp"]']}),
+    ("browser/components/preferences/preferences.js", "  etpCustomize: {", {_AJUSTES: ['"paneEtpCustomize"']}),
+    ("browser/components/preferences/preferences.js", 'groupIds: ["etpCustomize", "etpReset"],',
+     {_CSS_AJUSTES: ['[groupid="etpCustomize"]', '[groupid="etpReset"]'], _AJUSTES: ['[groupid^="etp"]']}),
+    ("browser/components/preferences/preferences.js",
+     " * @typedef {object} PaneShownEventDetail\n * @property {string} category\n",
+     {_AJUSTES: ['"paneshown"', "e.detail?.category"]}),
+    ("browser/components/preferences/config/SettingPaneManager.mjs",
+     '"pane" + categoryName.substring(0, 1).toUpperCase() + categoryName.substr(1)',
+     {_AJUSTES: ['"paneEtp"', '"paneEtpCustomize"']}),
+    # Los grupos ocultos, fuera de la búsqueda de Ajustes (si no, su burbuja amarilla flota sin nada debajo).
+    ("browser/components/preferences/findInPage.js",
+     '"setting-group:not([data-hidden-from-search]):not([hidden]):not([data-hidden-by-setting-group])";',
+     {_AJUSTES: ['"data-hidden-from-search"']}),
+    # Aviso de Safe Browsing descartado mientras Conexiones no lo activa.
+    ("browser/components/preferences/config/privacy.mjs",
+     'id: "browser.preferences.config_warning.warningSafeBrowsing.dismissed",',
+     {_A + "conexiones.sys.mjs": ['"browser.preferences.config_warning.warningSafeBrowsing.dismissed"']}),
+    ("browser/components/preferences/config/privacy.mjs",
+     "this.dismissedPrefId = `browser.preferences.config_warning.${this.id}.dismissed`;",
+     {_A + "conexiones.sys.mjs": ['"browser.preferences.config_warning.warningSafeBrowsing.dismissed"']}),
+    # about:protections: Aegis pisa su contrato en el proceso padre (escudos-ayuda.sys.mjs).
+    ("browser/components/about/AboutRedirector.cpp", '{"protections", "chrome://browser/content/protections.html",',
+     {_A + "escudos-ayuda.sys.mjs": ['"@mozilla.org/network/protocol/about;1?what=protections"']}),
+]
+
+
+def escudos_unica(v, rapido):
+    """Una sola cara para la protección: que el código de Aegis siga nombrando cada pieza de Firefox que oculta o usa y,
+    contra el árbol fijado, que cada pieza siga en Firefox una sola vez (un centinela repetido no avisaría si se borra
+    uno de los dos)."""
+    antes = len(fallos)
+    for _rel, _centinela, propios in ESCUDOS_UNICA:
+        for aegis, nombres in propios.items():
+            texto = leer_bytes(aegis).decode("utf-8")
+            for n in nombres:
+                if n not in texto:
+                    mal(f"una sola cara: {aegis} ya no nombra «{n}»")
+    src = None if rapido else arbol(v)
+    if not src:
+        aviso(f"una sola cara: sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
+    else:
+        cache = {}
+        for rel, centinela, propios in ESCUDOS_UNICA:
+            try:
+                if rel not in cache:
+                    with open(os.path.join(src, *rel.split("/")), encoding="utf-8", errors="replace") as h:
+                        cache[rel] = h.read()
+            except OSError:
+                mal(f"una sola cara: Firefox {v} ya no tiene {rel}: revisar {', '.join(propios)}")
+                cache[rel] = None
+            if cache[rel] is None:
+                continue
+            n = cache[rel].count(centinela)
+            if n != 1:
+                mal(f"una sola cara: en Firefox {v}, {rel} tiene {n} veces «{centinela.strip()}» (tiene que salir una): "
+                    f"revisar {', '.join(propios)}")
+    if len(fallos) == antes:
+        ok(f"una sola cara: {len(ESCUDOS_UNICA)} piezas de Firefox (panel del candado, Ajustes › Privacidad, "
+           "about:protections)" + ("" if not src else f", cada una una sola vez en Firefox {v}"))
+
+
+# Aviso de filtraciones del panel del candado (parche 0400-privacidad/0006, settings/prefs/61-contrasenas.js): con
+# browser.urlbar.trustPanel.breachAlerts en false, las dos funciones que consultan salen enseguida. Cada consulta tiene
+# que seguir saliendo UNA sola vez en browser-trustPanel.js y dentro de su función con la salida: una llamada nueva
+# fuera de ellas volvería a consultar Remote Settings o a contar las contraseñas en cada página, sin más aviso.
+_PANEL_JS = "browser/base/content/browser-trustPanel.js"
+_SALIDA_FILTRACIONES = '    if (!UrlbarPrefs.get("trustPanel.breachAlerts")) {\n'
+FILTRACIONES = [
+    # (función con la salida temprana, llamadas que solo pueden estar dentro de ella)
+    ("  async #getApplicableBreaches(site) {\n", ["this.#breachAlertsData.getAllBreaches()"]),
+    ("  async #hasMonitorAccountOrStoredPasswords() {\n", ["this.#hasMonitorAccount()", "this.#hasStoredPasswords()"]),
+]
+# Lo que consultan esas llamadas: una sola vez en el archivo (en #hasMonitorAccount y #hasStoredPasswords).
+FILTRACIONES_UNICAS = ["fxAccounts.listAttachedOAuthClients(", "Services.logins.countLoginsAsync(",
+                       "this.#breachAlertsData."]
+PARCHE_FILTRACIONES = "0400-privacidad/0006-sin-consulta-de-filtraciones.patch"
+
+
+def filtraciones(v, rapido):
+    """Aviso de filtraciones apagado sin consultas: las dos prefs en false y, contra el árbol (con la serie aplicada),
+    que las consultas sigan solo dentro de las funciones con la salida temprana del parche."""
+    antes = len(fallos)
+    valores = {}
+    for rel in archivos_prefs():
+        for m in re.finditer(r'^\s*pref\(\s*"([^"]+)"\s*,\s*([^)]+?)\s*\)\s*;', leer_bytes(rel).decode("utf-8"), re.M):
+            valores[m.group(1)] = m.group(2)
+    for n in ("browser.urlbar.trustPanel.breachAlerts", "browser.urlbar.trustPanel.breachAlerts.featureGate"):
+        if valores.get(n) != "false":
+            mal(f"filtraciones: settings/prefs tiene que llevar {n} = false (ahora: {valores.get(n, 'nada')})")
+    with open(os.path.join(REPO, "patches", "series"), encoding="utf-8") as f:
+        serie = [linea.strip() for linea in f if linea.strip() and not linea.startswith("#")]
+    if PARCHE_FILTRACIONES not in serie:
+        mal(f"filtraciones: falta {PARCHE_FILTRACIONES} en patches/series")
+    src = None if rapido else arbol(v)
+    if not src:
+        aviso(f"filtraciones: sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
+    else:
+        try:
+            with open(os.path.join(src, *_PANEL_JS.split("/")), encoding="utf-8", errors="replace") as h:
+                js = h.read()
+        except OSError:
+            js = None
+            mal(f"filtraciones: Firefox {v} ya no tiene {_PANEL_JS}: revisar {PARCHE_FILTRACIONES}")
+        if js is not None:
+            for cabecera, llamadas in FILTRACIONES:
+                if js.count(cabecera) != 1:
+                    mal(f"filtraciones: en Firefox {v}, {_PANEL_JS} tiene {js.count(cabecera)} veces "
+                        f"«{cabecera.strip()}» (tiene que salir una): revisar {PARCHE_FILTRACIONES}")
+                    continue
+                inicio = js.index(cabecera) + len(cabecera)
+                cuerpo = js[inicio:js.find("\n  }\n", inicio)]
+                if _SALIDA_FILTRACIONES not in cuerpo[:200]:
+                    mal(f"filtraciones: {cabecera.strip()} no empieza por la salida de {PARCHE_FILTRACIONES} "
+                        "(¿árbol sin la serie aplicada?)")
+                for llamada in llamadas:
+                    if js.count(llamada) != 1 or llamada not in cuerpo:
+                        mal(f"filtraciones: en Firefox {v}, «{llamada}» sale {js.count(llamada)} veces en {_PANEL_JS} "
+                            f"o fuera de {cabecera.strip()}: revisar {PARCHE_FILTRACIONES}")
+            for llamada in FILTRACIONES_UNICAS:
+                if js.count(llamada) != 1:
+                    mal(f"filtraciones: en Firefox {v}, {_PANEL_JS} tiene {js.count(llamada)} veces «{llamada}» "
+                        f"(tiene que salir una): revisar {PARCHE_FILTRACIONES}")
+    if len(fallos) == antes:
+        ok("filtraciones: aviso del candado apagado (2 prefs)"
+           + ("" if not src else f"; en Firefox {v} solo consultan las dos funciones con la salida de {PARCHE_FILTRACIONES}"))
+
+
 def sin_dev():
     """El cargador de desarrollo (autoconfig) solo vive en tools/dev: nunca en lo que entra en una build."""
     for rel in archivos():
@@ -1963,6 +2306,127 @@ def listas_moz_build():
     ok(f"listas de moz.build ordenadas ({n})")
 
 
+def enfasis_firefox(v, rapido):
+    """El énfasis de Aegis en lo de Firefox: las hojas que redefinen tokens de Firefox solo sirven si Firefox los sigue
+    definiendo donde se miran. Contra el árbol de Firefox:
+    - aegis-enfasis.css (parche 0500-ui/0003, en los documentos de elegir perfil): cada token suyo, en los tokens del
+      design system (dist/tokens-shared.css, tokens-platform.css o tokens-brand.css);
+    - sombra-firefox.css: los tokens propios de moz-promo, moz-input-color y el antifaz de la navegación privada;
+    - lector.css: los de aboutReader.css y sus temas «Contraste» y «Personalizado» (que se dejan como están)."""
+    antes = len(fallos)
+    src = None if rapido else arbol(v)
+    if not src:
+        aviso(f"énfasis de Firefox: sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
+        return
+
+    def leer(rel):
+        try:
+            with open(os.path.join(src, *rel.split("/")), encoding="utf-8", errors="replace") as h:
+                return h.read()
+        except OSError:
+            return None
+
+    def propios(rel):
+        """Los tokens que declara una hoja de Aegis (sin los --aegis-*)."""
+        return sorted({t for t in re.findall(r"^\s*(--[a-z0-9-]+)\s*:", leer_bytes(rel).decode("utf-8"), re.M)
+                       if not t.startswith("--aegis-")})
+
+    def definido(token, textos):
+        return any(t and re.search(r"^\s*" + re.escape(token) + r"\s*:", t, re.M) for t in textos)
+
+    ds = "toolkit/themes/shared/design-system/dist/"
+    comprobar = [
+        (ENFASIS_DE_SERIE, [ds + "tokens-shared.css", ds + "tokens-platform.css", ds + "tokens-brand.css"],
+         "parche 0500-ui/0003"),
+        ("overlay/browser/components/aegis/estilos/sombra-firefox.css",
+         ["toolkit/content/widgets/moz-promo/moz-promo.tokens.css",
+          "toolkit/content/widgets/moz-input-color/moz-input-color.tokens.css",
+          "browser/components/privatebrowsing/content/private-browsing-mask-intro.css"], "shadow DOM"),
+        ("overlay/browser/components/aegis/paginas/lector.css", ["toolkit/themes/shared/aboutReader.css"],
+         "vista de lectura"),
+    ]
+    for hoja, origenes, que in comprobar:
+        textos = [leer(o) for o in origenes]
+        for o, t in zip(origenes, textos):
+            if t is None:
+                mal(f"énfasis de Firefox ({que}): no existe {o} en Firefox {v}; revisar {hoja}")
+        for token in propios(hoja):
+            if not definido(token, textos):
+                mal(f"énfasis de Firefox ({que}): Firefox {v} ya no define {token} en " + ", ".join(
+                    os.path.basename(o) for o in origenes) + f"; revisar {hoja}")
+    # Los documentos de elegir perfil enlazan la hoja (parche 0500-ui/0003) y el skin de mozapps la lleva.
+    hoja_de_serie = "chrome://mozapps/skin/aegis-enfasis.css"
+    # Solo los que se abren sin perfil y en el proceso principal: crear, editar y borrar un perfil van en un proceso de
+    # contenido, que no puede cargar una hoja de mozapps (no es contentaccessible); ahí manda paginas/comun.css.
+    for doc in ("browser/components/profiles/content/profiles.html",
+                "toolkit/profile/content/profileSelection.xhtml",
+                "toolkit/profile/content/createProfileWizard.xhtml",
+                "toolkit/profile/content/profileDowngrade.xhtml"):
+        if hoja_de_serie not in (leer(doc) or ""):
+            mal(f"énfasis de Firefox (parche 0500-ui/0003): {doc} no enlaza {hoja_de_serie} en el árbol de Firefox {v} "
+                f"(¿`aegis.py patch`?); revisar el parche y {ENFASIS_DE_SERIE}")
+    # Las tarjetas de perfil con un tema sin colores propios usan los tokens (profile-card.mjs, colores()): el tema de
+    # serie de Firefox tiene que seguir guardando sus colores en profile.theme y pintándolos con style.fill y stroke.
+    tarjeta = leer("browser/components/profiles/content/profile-card.mjs") or ""
+    if "this.colores()" not in tarjeta or tarjeta.count(".style.fill = themeBg;") != 2:
+        mal(f"énfasis de Firefox (parche 0500-ui/0003): profile-card.mjs de Firefox {v} ya no pinta la tarjeta con "
+            "colores() (¿`aegis.py patch`, o cambió la tarjeta?); revisar el parche")
+    if "skin/classic/mozapps/aegis-enfasis.css" not in (leer("toolkit/themes/shared/mozapps.inc.mn") or ""):
+        mal(f"énfasis de Firefox (parche 0500-ui/0003): toolkit/themes/shared/mozapps.inc.mn no empaqueta "
+            f"aegis-enfasis.css en el árbol de Firefox {v} (¿`aegis.py patch`?)")
+    lector = leer("toolkit/themes/shared/aboutReader.css") or ""
+    for tema in ("body.contrast", "body.custom", "--main-foreground"):
+        if tema not in lector:
+            mal(f"énfasis de Firefox (vista de lectura): aboutReader.css de Firefox {v} ya no tiene «{tema}»; revisar "
+                "overlay/browser/components/aegis/paginas/lector.css")
+    if len(fallos) == antes:
+        ok(f"énfasis de Firefox: los tokens que redefinen aegis-enfasis.css (0500-ui/0003), sombra-firefox.css y "
+           f"lector.css siguen en Firefox {v}")
+
+
+def contenedores(v, rapido):
+    """El cambio de contenedor de la barra (contenedores.sys.mjs) reabre la pestaña en otro contenedor: pregunta antes a
+    la web con runBeforeUnloadForTabs y, en una vista dividida, usa replaceTab marcando la pestaña con
+    _pendingPermitUnload para que Firefox no vuelva a preguntar al cerrarla. Contra Firefox: replaceTab sigue cerrando
+    con removeTab y #beginRemoveTab sigue sin preguntar con _pendingPermitUnload puesto."""
+    antes = len(fallos)
+    src = None if rapido else arbol(v)
+    if not src:
+        aviso(f"contenedores: sin comprobar contra Firefox {v} (no se encuentra el árbol preparado)")
+        return
+    tb = "browser/components/tabbrowser/"
+
+    def metodo(rel, cabecera):
+        """El cuerpo de un método (de su cabecera a la siguiente línea «  }» al mismo nivel), o None."""
+        try:
+            with open(os.path.join(src, *rel.split("/")), encoding="utf-8", errors="replace") as h:
+                texto = h.read()
+        except OSError:
+            mal(f"contenedores: no existe {rel} en Firefox {v}; revisar contenedores.sys.mjs")
+            return None
+        if texto.count(cabecera) != 1:
+            mal(f"contenedores: {rel} ya no tiene una sola vez «{cabecera.strip()}» (Firefox {v}); revisar "
+                "contenedores.sys.mjs")
+            return None
+        i = texto.index(cabecera)
+        fin = texto.find("\n  }\n", i)
+        return texto[i:fin if fin > 0 else len(texto)]
+
+    quitar = metodo(tb + "Tabbrowser.sys.mjs", "\n  #beginRemoveTab(\n")
+    if quitar is not None and "      !aTab._pendingPermitUnload &&\n" not in quitar:
+        mal(f"contenedores: #beginRemoveTab de Tabbrowser.sys.mjs ya no mira _pendingPermitUnload (Firefox {v}): al "
+            "reabrir una pestaña de una vista dividida se volvería a preguntar a la web; revisar contenedores.sys.mjs")
+    bu = metodo(tb + "Tabbrowser.sys.mjs", "\n  async runBeforeUnloadForTabs(tabs) {\n")
+    if bu is not None and "return true;" not in bu:
+        mal(f"contenedores: runBeforeUnloadForTabs ya no devuelve true al quedarse en la web (Firefox {v})")
+    cambio = metodo(tb + "content/tabsplitview.mjs", "\n  replaceTab(tabToReplace, newTab) {\n")
+    if cambio is not None and "    gBrowser.removeTab(tabToReplace);\n" not in cambio:
+        mal(f"contenedores: replaceTab de tabsplitview.mjs ya no cierra la pestaña con removeTab (Firefox {v}); "
+            "revisar _pendingPermitUnload en contenedores.sys.mjs")
+    if len(fallos) == antes:
+        ok(f"contenedores: runBeforeUnloadForTabs, replaceTab y _pendingPermitUnload siguen igual en Firefox {v}")
+
+
 def main():
     rapido = "--rapido" in sys.argv
     if hasattr(sys.stdout, "reconfigure"):
@@ -1980,6 +2444,7 @@ def main():
     tienda()
     textos()
     idiomas(v, rapido)
+    diccionarios(v, rapido)
     tokens()
     prefs(v, rapido)
     enfasis_propio(v, rapido)
@@ -1990,8 +2455,12 @@ def main():
     transferencia()
     extensiones(v, rapido)
     acciones(v, rapido)
+    enfasis_firefox(v, rapido)
+    contenedores(v, rapido)
     buscadores(v, rapido)
     restos_firefox(v, rapido)
+    escudos_unica(v, rapido)
+    filtraciones(v, rapido)
     motor(v, rapido)
     sin_dev()
     listas_moz_build()

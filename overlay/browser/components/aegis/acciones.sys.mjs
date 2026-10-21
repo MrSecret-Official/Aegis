@@ -12,8 +12,8 @@
  * - quita las que no tienen sentido en Aegis: las de Firefox (Firefox View, Firefox Labs, «Restablecer», la ayuda de
  *   la web de Mozilla, controles de IA), las que repiten otra («Ver complementos» = extensiones, «Abrir la Biblioteca»
  *   = marcadores, «Gestionar contraseñas» = la de Aegis), el editor de PDF y las de herramientas de desarrollo;
- * - añade las de Aegis (Escudos, Conexiones, modo, apariencia, Tor, contraseñas, transferencia, importar), con sus
- *   textos y palabras clave en aegis.ftl;
+ * - añade las de Aegis (Escudos, Conexiones, modo, contenedor, tutorial de Workflow, apariencia, Tor, contraseñas,
+ *   transferencia, importar), con sus textos y palabras clave en aegis.ftl;
  * - pone a todas un glifo de línea de Aegis (DISENO §8; el de la ventana privada era el violeta de Firefox) y las
  *   ordena: primero las de Aegis.
  *
@@ -36,6 +36,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AegisEscudos: new URL("escudos.sys.mjs", import.meta.url).href,
   AegisEscudosAjustes: new URL("escudos/ajustes.sys.mjs", import.meta.url).href,
   AegisModos: new URL("modos.sys.mjs", import.meta.url).href,
+  AegisBienvenida: new URL("bienvenida.sys.mjs", import.meta.url).href,
+  AegisContenedores: new URL("contenedores.sys.mjs", import.meta.url).href,
   AegisTor: new URL("tor/tor.sys.mjs", import.meta.url).href,
   AegisTransferencia: new URL("contrasenas/transferencia/transferencia.sys.mjs", import.meta.url).href,
 });
@@ -148,6 +150,31 @@ const PROPIAS = [
     },
   },
   {
+    // El selector de contenedor de la barra (contenedores.sys.mjs); en una ventana privada no hay contenedores.
+    clave: "aegis-contenedor",
+    texto: "aegis-accion-contenedor",
+    claves: "aegis-accion-contenedor-claves",
+    glifo: "contenedor",
+    isInactive: () => {
+      const win = ventanaArriba();
+      return !(win && lazy.AegisContenedores.disponible(win));
+    },
+    onPick: (_contexto, controlador) => {
+      lazy.AegisContenedores.abrirPanel(controlador.browserWindow);
+    },
+  },
+  {
+    // El tutorial de Workflow (about:bienvenida?tutorial).
+    clave: "aegis-tutorial",
+    texto: "aegis-accion-tutorial",
+    claves: "aegis-accion-tutorial-claves",
+    glifo: "modo",
+    onPick: (_contexto, controlador) => {
+      lazy.AegisBienvenida.abrirTutorial(controlador.browserWindow);
+      return enPrimerPlano;
+    },
+  },
+  {
     clave: "aegis-apariencia",
     texto: "aegis-accion-apariencia",
     claves: "aegis-accion-apariencia-claves",
@@ -250,6 +277,8 @@ async function cargarTextos() {
     "aegis-accion-conexiones",
     "aegis-accion-modo-workflow",
     "aegis-accion-modo-estandar",
+    "aegis-accion-contenedor",
+    "aegis-accion-tutorial",
     "aegis-accion-apariencia",
     "aegis-accion-tor",
     "aegis-accion-contrasenas",

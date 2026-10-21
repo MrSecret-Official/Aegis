@@ -1,0 +1,148 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · páginas de perfiles de Firefox (about:editprofile, about:newprofile, about:deleteprofile y la ventana de
+   perfiles, about:profilemanager): lo que queda fuera de sus componentes (la página, la cabecera de la ventana de
+   perfiles) y el diálogo de Aegis para borrar otro perfil (perfiles.sys.mjs). Lo de dentro de los componentes va en
+   perfiles-sombra.css. */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  :root {
+    background-color: var(--aegis-bg) !important;
+    color: var(--aegis-text);
+  }
+}
+
+/* Las tres páginas: la tarjeta de 680 (la de about:conexiones), a 48 del borde de arriba. */
+:is(edit-profile-card, new-profile-card, delete-profile-card) {
+  margin-block: 48px !important;
+}
+
+/* ---- Ventana de perfiles (about:profilemanager) ---- */
+
+/* Lo de dentro de la ventana (título, texto, lista y casilla) va en su componente: perfiles-sombra.css. */
+profile-selector {
+  padding: 48px 32px 32px !important;
+}
+/* ---- Diálogo «¿Borrar el perfil…?» (perfiles.sys.mjs) ---- */
+
+/* El marco de los diálogos de Aegis (DISENO §9, como el de la contraseña principal): 440 de ancho (nunca más que la
+   ventana menos 16 por lado), relleno 24, --aegis-dialog, borde de línea, radio 12 y sombra suave. Cabecera con el
+   avatar del perfil en un círculo de 40, título de 16 px 600 y el texto de 13 px en --aegis-sub; pie a la derecha con
+   «Cancelar» (secundario, con el foco) y «Borrar perfil» (principal, en blanco y negro: avisa el texto). */
+.aegis-perfil-borrar {
+  box-sizing: border-box;
+  width: min(440px, calc(100vw - 32px));
+  padding: var(--aegis-s-24);
+  border: 1px solid var(--aegis-line);
+  border-radius: var(--aegis-r-12);
+  background-color: var(--aegis-dialog);
+  color: var(--aegis-text);
+  box-shadow: var(--aegis-shadow);
+  font: 13px/1.5 var(--aegis-font);
+
+  &::backdrop {
+    background-color: transparent;
+  }
+}
+.aegis-perfil-borrar-cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--aegis-s-12);
+}
+.aegis-perfil-borrar-avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  -moz-context-properties: fill, stroke;
+  fill: var(--aegis-control);
+  stroke: var(--aegis-text);
+}
+.aegis-perfil-borrar-titulo {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.aegis-perfil-borrar-texto {
+  margin: var(--aegis-s-16) 0 0;
+  color: var(--aegis-sub);
+}
+.aegis-perfil-borrar-estado {
+  margin: var(--aegis-s-12) 0 0;
+  font-size: 12px;
+  color: var(--aegis-err);
+
+  &:empty {
+    display: none;
+  }
+}
+.aegis-perfil-borrar-pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--aegis-s-8);
+  margin-block-start: var(--aegis-s-24);
+}
+.aegis-perfil-borrar-pie > button {
+  min-height: 34px;
+  padding: 0 var(--aegis-s-16);
+  border: 0;
+  border-radius: var(--aegis-r-8);
+  font: 14px var(--aegis-font);
+  color: var(--aegis-text);
+  background-color: var(--aegis-control);
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease);
+
+  &:hover {
+    background-color: var(--aegis-control-hover);
+  }
+  &:hover:active {
+    background-color: var(--aegis-control-down);
+  }
+  &:active {
+    scale: 0.97;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--aegis-focus);
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.28;
+  }
+}
+.aegis-perfil-borrar-pie > .aegis-perfil-borrar-principal {
+  min-width: 112px;
+  font-weight: 600;
+  color: var(--aegis-on-prim);
+  background-color: var(--aegis-prim);
+
+  &:hover {
+    background-color: var(--aegis-prim-hover);
+  }
+  &:hover:active {
+    background-color: var(--aegis-prim-down);
+  }
+}
+@media (forced-colors: active) or (prefers-contrast: more) {
+  .aegis-perfil-borrar {
+    border-color: CanvasText;
+  }
+  .aegis-perfil-borrar-pie > button {
+    border: 1px solid ButtonText;
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aegis-perfil-borrar-pie > button {
+    transition: none;
+
+    &:active {
+      scale: none;
+    }
+  }
+}

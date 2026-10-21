@@ -1,0 +1,38 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · favicons de poco contraste (docs/DISENO.md §9). Hoja de USUARIO de la ventana y de los paneles de Historial
+   y Marcadores (la pone favicons.sys.mjs; es la única que llega a las filas de los paneles, en sombras). El atributo
+   aegis-favicon lo pone favicons.sys.mjs tras medir el favicon una vez, en el equipo:
+   - osc-inv: monocromo y oscuro (el de GitHub): en el tema oscuro, invertido (blanco);
+   - cla-inv: monocromo y claro: en el tema claro, invertido (negro);
+   - osc-placa: oscuro y de color: en el tema oscuro, una placa clara sutil detrás, con 2 px de aire (sombra sin
+     desenfoque, que no cambia el tamaño) y radio 5. Solo var(--aegis-*). */
+
+@media (prefers-color-scheme: dark) {
+  .tab-icon-image[aegis-favicon~="osc-inv"],
+  :is(toolbarbutton, menuitem, menu)[aegis-favicon~="osc-inv"] > :is(.toolbarbutton-icon, .menu-icon),
+  :is(menuitem, menu)[aegis-favicon~="osc-inv"] > .menu-iconic-left > .menu-iconic-icon,
+  .fxview-tab-row-favicon[aegis-favicon~="osc-inv"] {
+    filter: invert(1) !important;
+  }
+
+  .tab-icon-image[aegis-favicon~="osc-placa"],
+  :is(toolbarbutton, menuitem, menu)[aegis-favicon~="osc-placa"] > :is(.toolbarbutton-icon, .menu-icon),
+  :is(menuitem, menu)[aegis-favicon~="osc-placa"] > .menu-iconic-left > .menu-iconic-icon,
+  .fxview-tab-row-favicon[aegis-favicon~="osc-placa"] {
+    background-color: var(--aegis-favicon-placa) !important;
+    box-shadow: 0 0 0 2px var(--aegis-favicon-placa) !important;
+    border-radius: var(--aegis-r-5) !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .tab-icon-image[aegis-favicon~="cla-inv"],
+  :is(toolbarbutton, menuitem, menu)[aegis-favicon~="cla-inv"] > :is(.toolbarbutton-icon, .menu-icon),
+  :is(menuitem, menu)[aegis-favicon~="cla-inv"] > .menu-iconic-left > .menu-iconic-icon,
+  .fxview-tab-row-favicon[aegis-favicon~="cla-inv"] {
+    filter: invert(1) !important;
+  }
+}

@@ -11,12 +11,21 @@
  */
 
 import { aspecto } from "./personalizar.sys.mjs";
+import { correo } from "./correo.sys.mjs";
 import { logos } from "./logos.sys.mjs";
 
 /** Páginas de error de Firefox que llevan las hojas de Aegis (el actor las registra en AegisArranque.registrarPaginas). */
 const ERRORES = ["about:neterror", "about:certerror", "about:httpsonlyerror", "about:tabcrashed", "about:restartrequired"];
 /** Hojas de todas las páginas propias: los tokens y el mapeo de los colores de Firefox. */
 const COMUNES = ["../estilos/tokens.css", "comun.css"];
+/** Hoja de usuario de todas: el énfasis dentro de los componentes de Firefox que traen su violeta (shadow DOM). */
+const COMUNES_SOMBRA = ["../estilos/sombra-firefox.css"];
+/**
+ * Páginas que solo llevan su hoja (ni tokens.css, ni comun.css, ni Inter, ni el énfasis): la vista de lectura, en el
+ * proceso de la web, tiene sus colores y su letra (los temas que elige el usuario en ella); solo se cambian sus enlaces,
+ * su foco y su selección (lector.css).
+ */
+const SIN_COMUN = ["about:reader"];
 /** Hojas de cada página, por el principio de su dirección. */
 const POR_PAGINA = [
   // Con el selector del énfasis personalizado (Personalizar › Énfasis).
@@ -24,6 +33,12 @@ const POR_PAGINA = [
   ["about:home", ["nueva-pestana.css", "../estilos/selector-enfasis.css"]],
   ["about:logins", ["contrasenas.css"]],
   ["about:privatebrowsing", ["privada.css"]],
+  // Vista de lectura: enlaces y selección sin el cian, el azul y el magenta de Firefox.
+  ["about:reader", ["lector.css"]],
+  // Editar, crear y borrar un perfil.
+  ["about:editprofile", ["perfiles.css"]],
+  ["about:newprofile", ["perfiles.css"]],
+  ["about:deleteprofile", ["perfiles.css"]],
   // Páginas de error (red, certificado, Solo HTTPS, pestaña caída, reinicio necesario).
   ...ERRORES.map(direccion => [direccion, ["errores.css"]]),
 ];
@@ -34,6 +49,10 @@ const SOMBRA_POR_PAGINA = [
   ["about:newtab", ["busqueda-sombra.css"]],
   ["about:home", ["busqueda-sombra.css"]],
   ["about:privatebrowsing", ["busqueda-sombra.css"]],
+  // Las tarjetas de editar, crear y borrar un perfil.
+  ["about:editprofile", ["perfiles-sombra.css"]],
+  ["about:newprofile", ["perfiles-sombra.css"]],
+  ["about:deleteprofile", ["perfiles-sombra.css"]],
   // La tarjeta de error nueva (net-error-card) y sus botones van en shadow DOM.
   ...ERRORES.map(direccion => [direccion, ["errores-sombra.css"]]),
 ];
@@ -71,9 +90,10 @@ export class AegisPaginasChild extends JSWindowActorChild {
     const deEstaPagina = tabla => tabla.filter(([prefijo]) => direccion.startsWith(prefijo)).flatMap(([, v]) => v);
     const win = this.contentWindow;
     const utils = win.windowUtils;
+    const sinComun = SIN_COMUN.some(prefijo => direccion.startsWith(prefijo));
     for (const [hojas, tipo] of [
-      [[...COMUNES, ...deEstaPagina(POR_PAGINA)], utils.AUTHOR_SHEET],
-      [deEstaPagina(SOMBRA_POR_PAGINA), utils.USER_SHEET],
+      [[...(sinComun ? [] : COMUNES), ...deEstaPagina(POR_PAGINA)], utils.AUTHOR_SHEET],
+      [[...(sinComun ? [] : COMUNES_SOMBRA), ...deEstaPagina(SOMBRA_POR_PAGINA)], utils.USER_SHEET],
     ]) {
       for (const hoja of hojas) {
         try {
@@ -86,6 +106,11 @@ export class AegisPaginasChild extends JSWindowActorChild {
           }
         }
       }
+    }
+    // La vista de lectura (en el proceso de la web) solo lleva lector.css: ni Inter ni el énfasis, que no usa; así no se
+    // escribe en ese proceso el énfasis, el color de Windows ni el del fondo de escritorio.
+    if (sinComun) {
+      return;
     }
     this.ponerInter(win);
     // Énfasis (todas) y nueva pestaña (fondo, orden, «Personalizar»): antes de la primera pintura.
@@ -100,6 +125,21 @@ export class AegisPaginasChild extends JSWindowActorChild {
         this.deshacerLogos = logos(win, (nombre, datos) => this.sendQuery(nombre, datos));
       } catch (e) {
         console.error("Aegis: logos de los accesos", e);
+      }
+      // El sobre del correo junto a Personalizar (paginas/correo.sys.mjs): guardar y abrir, en AegisPaginasParent.
+      try {
+        this.deshacerCorreo = correo(win, (nombre, datos) => this.sendQuery(nombre, datos));
+      } catch (e) {
+        console.error("Aegis: correo de la nueva pestaña", e);
+      }
+    }
+    // Editar y crear un perfil: sin cambios de tema desde la página (paginas/perfiles.sys.mjs), desde antes de que se
+    // monte su tarjeta.
+    if (direccion.startsWith("about:editprofile") || direccion.startsWith("about:newprofile")) {
+      try {
+        ChromeUtils.importESModule(new URL("perfiles.sys.mjs", import.meta.url).href).proteger(win);
+      } catch (e) {
+        console.error("Aegis: perfiles", e);
       }
     }
     for (const modulo of deEstaPagina(MODULO_POR_PAGINA)) {
@@ -121,6 +161,7 @@ export class AegisPaginasChild extends JSWindowActorChild {
   didDestroy() {
     this.deshacerAspecto?.();
     this.deshacerLogos?.();
+    this.deshacerCorreo?.();
   }
 
   /**

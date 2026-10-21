@@ -149,17 +149,10 @@ export component MiniNavegador inherits Rectangle {
             }
         }
 
-        for i in 3: Rectangle {
-            x: 5px + i * ((lat.lado - 18px) / 3 + 4px);
-            y: 19px;
-            width: (lat.lado - 18px) / 3;
-            height: 9px;
-            border-radius: 3px;
-            background: root.f(0.08);
-        }
-        for i in 5: Rectangle {
+        // Solo lo que existe: las pestañas verticales (los espacios y los esenciales de Workflow aún no existen).
+        for i in 6: Rectangle {
             x: 4px;
-            y: 34px + i * 11px;
+            y: 19px + i * 11px;
             width: lat.lado - 8px;
             height: 9px;
             border-radius: 3px;
@@ -179,14 +172,6 @@ export component MiniNavegador inherits Rectangle {
             }
         }
 
-        for i in 3: Rectangle {
-            x: lat.lado / 2 - 11.5px + i * 9px;
-            y: root.height - 11px;
-            width: 5px;
-            height: 5px;
-            border-radius: 2.5px;
-            background: i == 0 ? root.f(0.45) : root.f(0.18);
-        }
         Rectangle {
             x: lat.lado;
             y: 4px;

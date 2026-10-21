@@ -63,6 +63,28 @@
   list-style-image: url("iconos/escudo-https-tachado.svg") !important;
 }
 
+/* Panel del candado: una sola protección a la vista, los Escudos (decisión del usuario, 2026-10-20). Fuera la tarjeta de
+   Firefox con su escudo de colores («… está en guardia», su contador de rastreadores y «Ver todo»), el interruptor de su
+   protección contra rastreo (el de los Escudos es el del sitio) y el aviso de filtraciones de Mozilla Monitor (sus datos
+   nunca llegan: Remote Settings no sincroniza esa colección, CONEXIONES.md). En su lugar, la fila de los Escudos
+   (escudos.sys.mjs, pintarConfianza). Se quedan la conexión, el certificado, limpiar los datos y Ajustes de privacidad.
+   En una conexión sin cifrar, de la tarjeta solo queda su aviso «Tu conexión no es segura» (es un hecho, no una
+   protección), sin la raya de encima. */
+#trustpanel-popup:not([connection="not-secure"]) #trustpanel-graphic-section,
+#trustpanel-graphic-section > .trustpanel-card-main,
+#trustpanel-blocker-section,
+#trustpanel-toggle-section,
+#trustpanel-breach-alert-section {
+  display: none !important;
+}
+#trustpanel-insecure-section {
+  border: none !important;
+  padding-block-start: 0 !important;
+}
+#aegis-escudos-confianza[hidden] {
+  display: none;
+}
+
 /* ── Panel ──────────────────────────────────────────────────────────────────────────────────────────────────── */
 
 #aegis-escudos-panel {

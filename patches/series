@@ -15,3 +15,5 @@
 0400-privacidad/0005-sin-atribucion-msix.patch
 0900-migracion/0001-migradores-firefox-y-aegis.patch
 0200-branding/0002-propiedades-del-exe.patch
+0500-ui/0003-enfasis-de-serie.patch
+0400-privacidad/0006-sin-consulta-de-filtraciones.patch

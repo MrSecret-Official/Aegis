@@ -58,9 +58,10 @@ en el plan:
 - **Búsqueda limpia:** DuckDuckGo de serie (`noai`), Google limpio (solo resultados web; sin telemetría ni anuncios
   en Google y YouTube), Bing, Startpage, Qwant, Ecosia y Wikipedia; sugerencias apagadas.
 - **Huella digital:** Básica, Equilibrada (de serie), Estricta y Caja fuerte, con permiso por sitio.
-- **Contraseñas:** principal obligatoria, bloqueo a los 10 minutos y al cerrar, ver y copiar con las credenciales de
-  Windows, sin exportar en claro, sin autorrelleno, códigos de verificación (TOTP con lector de QR), transferencia con
-  archivo cifrado y código de 6 palabras (caduca en 24 h) y passkeys de Windows Hello.
+- **Contraseñas:** principal recomendada (obligatoria para pasar, recibir y añadir códigos; con ella, bloqueo a los
+  10 minutos y al cerrar), ver y copiar con las credenciales de Windows, sin exportar en claro, sin autorrelleno,
+  códigos de verificación (TOTP con lector de QR), transferencia con archivo cifrado y código de 6 palabras (caduca en
+  24 h) y passkeys de Windows Hello.
 - **Importar:** marcadores e historial de Chrome, Edge, Brave, Firefox y otro perfil de Aegis; contraseñas por CSV o
   por la transferencia.
 - **Tor:** ventana privada con Tor, descargado solo bajo demanda y comprobado con su sha256; puentes obfs4 y
@@ -91,18 +92,18 @@ se cambia en los seis.
 
 | Idioma | Descripción | Novedades | Característica más larga | Corta | Término más largo · palabras | Copyright |
 |---|---|---|---|---|---|---|
-| es-ES | 5293 | 1151 | 142 | 213 | 22 · 11 | 172 |
-| en-US | 5115 | 1104 | 147 | 202 | 16 · 10 | 186 |
-| de | 5784 | 1239 | 144 | 228 | 18 · 9 | 184 |
-| fr | 6012 | 1316 | 148 | 236 | 29 · 13 | 183 |
-| it | 5419 | 1183 | 158 | 216 | 17 · 11 | 179 |
-| pt-BR | 5398 | 1158 | 143 | 215 | 26 · 11 | 169 |
+| es-ES | 5414 | 1151 | 142 | 227 | 22 · 11 | 172 |
+| en-US | 5225 | 1104 | 147 | 210 | 16 · 10 | 186 |
+| de | 5946 | 1239 | 144 | 227 | 18 · 9 | 184 |
+| fr | 6168 | 1316 | 148 | 253 | 29 · 13 | 183 |
+| it | 5545 | 1183 | 158 | 236 | 17 · 11 | 179 |
+| pt-BR | 5524 | 1158 | 143 | 230 | 26 · 11 | 169 |
 
 ## es-ES · Español (España)
 
-### Descripción · 5293 / 10 000
+### Descripción · 5414 / 10 000
 
-5341 si Partner Center cuenta cada salto de línea como dos caracteres.
+5462 si Partner Center cuenta cada salto de línea como dos caracteres.
 
 ```text
 Aegis es un navegador para usar internet sin que te sigan. Bloquea anuncios y rastreadores desde el primer minuto, no envía telemetría y no se conecta a nada por su cuenta hasta que tú lo decides. No hay cuentas ni servidores de Aegis: lo que haces se queda en tu equipo.
@@ -123,8 +124,8 @@ DuckDuckGo es el buscador de serie, en su versión sin IA. También puedes elegi
 HUELLA DIGITAL
 Cuatro niveles de protección frente a la huella digital: Básica, Equilibrada (la de serie), Estricta y Caja fuerte. Si una web falla, puedes permitirla solo en ese sitio.
 
-CONTRASEÑAS CERRADAS
-• Aegis cifra tus contraseñas con una contraseña principal, que te pide crear al guardar la primera. Se bloquean al cerrar y tras 10 minutos sin usar el equipo.
+CONTRASEÑAS EN TU EQUIPO
+• Aegis guarda tus contraseñas cifradas en tu equipo y te recomienda una contraseña principal: sin ella, quien copie tu perfil puede leerlas. Con ella, se bloquean al cerrar y tras 10 minutos sin usar el equipo. Para pasarlas a otro Aegis o añadir códigos de verificación, es obligatoria.
 • Para ver o copiar una contraseña, te pide tus credenciales de Windows. No se pueden exportar en claro.
 • No se rellenan solas: las eliges tú, y solo en la web exacta donde las guardaste.
 • Códigos de verificación en dos pasos: lee el código QR de la web y Aegis calcula los códigos en tu equipo. Así los dos pasos quedan en el mismo sitio: tú decides si te compensa.
@@ -132,7 +133,7 @@ CONTRASEÑAS CERRADAS
 • Las passkeys las guarda Windows Hello.
 
 IMPORTAR
-Trae marcadores e historial de Chrome, Edge, Brave y otros navegadores, o de otro perfil de Aegis. Las contraseñas entran con un archivo que exportas del otro navegador (Aegis te explica cómo) y quedan protegidas con tu contraseña principal.
+Trae marcadores e historial de Chrome, Edge, Brave y otros navegadores, o de otro perfil de Aegis. Las contraseñas entran con un archivo que exportas del otro navegador (Aegis te explica cómo) y se guardan cifradas como las demás.
 
 VENTANA PRIVADA CON TOR
 Abre una ventana privada que va por la red de Tor: las webs ven una IP de Tor, no la tuya. Tor no viene con Aegis: se descarga del Tor Project solo si lo pides y se comprueba antes de instalarlo. La ventana tiene su propio perfil, que se borra al cerrarla, y admite puentes (obfs4 y Snowflake) y «Nueva identidad». Aegis con Tor no es Tor Browser: Tor Browser hace que todos sus usuarios parezcan iguales, y a Aegis se le distingue más. Si tu seguridad depende del anonimato, usa Tor Browser.
@@ -219,10 +220,10 @@ Búsqueda limpia: DuckDuckGo sin IA de serie; Google, Bing, Startpage, Qwant, Ec
 Protección frente a la huella digital en cuatro niveles, de Básica a Caja fuerte
 ```
 
-**Característica 8** · 111 / 200
+**Característica 8** · 124 / 200
 
 ```text
-Contraseñas cifradas con contraseña principal, sin exportación en claro, y códigos de verificación en dos pasos
+Contraseñas cifradas, con contraseña principal recomendada, sin exportación en claro, y códigos de verificación en dos pasos
 ```
 
 **Característica 9** · 82 / 200
@@ -249,10 +250,10 @@ Ventana privada con Tor; Tor se descarga solo si lo pides
 Modos Estándar y Workflow, temas, énfasis a medida, webs en oscuro y seis idiomas
 ```
 
-### Descripción corta · 213 / 1000 (se ve entera por debajo de 270)
+### Descripción corta · 227 / 1000 (se ve entera por debajo de 270)
 
 ```text
-Navegador privado con bloqueador de anuncios y rastreadores integrado. Sin telemetría y sin conectarse a nada por su cuenta hasta que tú lo decides. Búsqueda limpia, contraseñas cerradas y ventana privada con Tor.
+Navegador privado con bloqueador de anuncios y rastreadores integrado. Sin telemetría y sin conectarse a nada por su cuenta hasta que tú lo decides. Búsqueda limpia, contraseñas guardadas en tu equipo y ventana privada con Tor.
 ```
 
 ### Términos de búsqueda · 7 de 7 · 11 palabras distintas de 21
@@ -325,9 +326,9 @@ Unos 400 MB libres en disco
 
 ## en-US · English (United States)
 
-### Descripción · 5115 / 10 000
+### Descripción · 5225 / 10 000
 
-5163 si Partner Center cuenta cada salto de línea como dos caracteres.
+5273 si Partner Center cuenta cada salto de línea como dos caracteres.
 
 ```text
 Aegis is a browser for using the internet without being followed. It blocks ads and trackers from the first minute, sends no telemetry and doesn’t connect to anything on its own until you decide. There are no Aegis accounts or servers: what you do stays on your computer.
@@ -348,8 +349,8 @@ DuckDuckGo is the default search engine, in its no-AI version. You can also choo
 FINGERPRINTING
 Four levels of fingerprinting protection: Basic, Balanced (the default), Strict and Vault. If a site breaks, you can allow it on that site only.
 
-LOCKED-DOWN PASSWORDS
-• Aegis encrypts your passwords with a primary password, which it asks you to create when you save the first one. They lock when you close Aegis and after 10 minutes without using the computer.
+PASSWORDS ON YOUR DEVICE
+• Aegis stores your passwords encrypted on your device and recommends a primary password: without one, anyone who copies your profile can read them. With one, they lock when you close Aegis and after 10 minutes without using the computer. Moving them to another Aegis or adding verification codes requires it.
 • To see or copy a password, it asks for your Windows credentials. Passwords can’t be exported in plain text.
 • They aren’t filled in on their own: you pick them, and only on the exact site where you saved them.
 • Two-step verification codes: scan the site’s QR code and Aegis calculates the codes on your computer. That puts both steps in the same place, so it’s your call.
@@ -357,7 +358,7 @@ LOCKED-DOWN PASSWORDS
 • Passkeys are stored by Windows Hello.
 
 IMPORT
-Bring bookmarks and history from Chrome, Edge, Brave and other browsers, or from another Aegis profile. Passwords come in through a file you export from the other browser (Aegis shows you how) and are then protected by your primary password.
+Bring bookmarks and history from Chrome, Edge, Brave and other browsers, or from another Aegis profile. Passwords come in through a file you export from the other browser (Aegis shows you how) and are stored encrypted like the rest.
 
 PRIVATE WINDOW WITH TOR
 Open a private window that goes through the Tor network: sites see a Tor IP address, not yours. Tor doesn’t come with Aegis: it’s downloaded from the Tor Project only if you ask, and checked before it’s installed. The window has its own profile, deleted when you close it, and supports bridges (obfs4 and Snowflake) and “New identity”. Aegis with Tor is not Tor Browser: Tor Browser makes all its users look alike, while Aegis is easier to tell apart. If your safety depends on anonymity, use Tor Browser.
@@ -444,10 +445,10 @@ Clean search: DuckDuckGo without AI by default; Google, Bing, Startpage, Qwant, 
 Fingerprinting protection in four levels, from Basic to Vault
 ```
 
-**Característica 8** · 99 / 200
+**Característica 8** · 111 / 200
 
 ```text
-Passwords encrypted with a primary password, no plain-text export, plus two-step verification codes
+Encrypted passwords with a recommended primary password, no plain-text export, plus two-step verification codes
 ```
 
 **Característica 9** · 77 / 200
@@ -474,10 +475,10 @@ Private window with Tor; Tor is downloaded only if you ask
 Standard and Workflow modes, themes, custom accents, dark websites and six languages
 ```
 
-### Descripción corta · 202 / 1000 (se ve entera por debajo de 270)
+### Descripción corta · 210 / 1000 (se ve entera por debajo de 270)
 
 ```text
-A private browser with a built-in ad and tracker blocker. No telemetry, and it doesn’t connect to anything on its own until you decide. Clean search, locked-down passwords and a private window with Tor.
+A private browser with a built-in ad and tracker blocker. No telemetry, and it doesn’t connect to anything on its own until you decide. Clean search, passwords kept on your device and a private window with Tor.
 ```
 
 ### Términos de búsqueda · 7 de 7 · 10 palabras distintas de 21
@@ -550,9 +551,9 @@ About 400 MB of free disk space
 
 ## de · Deutsch
 
-### Descripción · 5784 / 10 000
+### Descripción · 5946 / 10 000
 
-5832 si Partner Center cuenta cada salto de línea como dos caracteres.
+5994 si Partner Center cuenta cada salto de línea como dos caracteres.
 
 ```text
 Aegis ist ein Browser, mit dem du im Internet unterwegs bist, ohne verfolgt zu werden. Er blockiert Werbung und Tracker ab der ersten Minute, sendet keine Telemetrie und verbindet sich von sich aus mit nichts, bis du es erlaubst. Es gibt keine Aegis-Konten und keine Aegis-Server: Was du tust, bleibt auf deinem Computer.
@@ -573,8 +574,8 @@ DuckDuckGo ist die Standardsuchmaschine, in der Version ohne KI. Du kannst auch 
 FINGERPRINTING
 Vier Stufen Schutz vor Fingerprinting: Einfach, Ausgewogen (Standard), Streng und Tresor. Wenn eine Website nicht funktioniert, kannst du sie nur dort erlauben.
 
-GUT VERSCHLOSSENE PASSWÖRTER
-• Aegis verschlüsselt deine Passwörter mit einem Hauptpasswort, das du beim Speichern des ersten Passworts festlegst. Sie werden beim Schließen und nach 10 Minuten ohne Nutzung des Computers gesperrt.
+PASSWÖRTER AUF DEINEM GERÄT
+• Aegis speichert deine Passwörter verschlüsselt auf deinem Gerät und empfiehlt ein Hauptpasswort: Ohne Hauptpasswort kann jeder, der dein Profil kopiert, sie lesen. Mit Hauptpasswort werden sie beim Schließen und nach 10 Minuten ohne Nutzung des Computers gesperrt. Um sie an ein anderes Aegis zu übertragen oder Bestätigungscodes hinzuzufügen, ist es Pflicht.
 • Um ein Passwort anzuzeigen oder zu kopieren, fragt Aegis nach deinen Windows-Anmeldedaten. Ein Export im Klartext ist nicht möglich.
 • Sie werden nicht von selbst ausgefüllt: Du wählst sie aus, und nur auf genau der Website, auf der du sie gespeichert hast.
 • Bestätigungscodes für die Zwei-Schritt-Verifizierung: Scanne den QR-Code der Website, und Aegis berechnet die Codes auf deinem Computer. Damit liegen beide Schritte am selben Ort – du entscheidest, ob dir das recht ist.
@@ -582,7 +583,7 @@ GUT VERSCHLOSSENE PASSWÖRTER
 • Passkeys speichert Windows Hello.
 
 IMPORTIEREN
-Übernimm Lesezeichen und Chronik aus Chrome, Edge, Brave und anderen Browsern oder aus einem anderen Aegis-Profil. Passwörter kommen über eine Datei, die du im anderen Browser exportierst (Aegis zeigt dir, wie), und sind danach durch dein Hauptpasswort geschützt.
+Übernimm Lesezeichen und Chronik aus Chrome, Edge, Brave und anderen Browsern oder aus einem anderen Aegis-Profil. Passwörter kommen über eine Datei, die du im anderen Browser exportierst (Aegis zeigt dir, wie), und werden wie die übrigen verschlüsselt gespeichert.
 
 PRIVATES FENSTER MIT TOR
 Öffne ein privates Fenster, das über das Tor-Netzwerk läuft: Websites sehen eine IP-Adresse von Tor, nicht deine. Tor ist nicht in Aegis enthalten: Es wird nur auf deinen Wunsch vom Tor Project heruntergeladen und vor der Installation geprüft. Das Fenster hat ein eigenes Profil, das beim Schließen gelöscht wird, und unterstützt Brücken (obfs4 und Snowflake) sowie „Neue Identität“. Aegis mit Tor ist nicht Tor Browser: Bei Tor Browser sehen alle Nutzer gleich aus, Aegis ist leichter zu unterscheiden. Wenn deine Sicherheit von Anonymität abhängt, nutze Tor Browser.
@@ -669,10 +670,10 @@ Saubere Suche: DuckDuckGo ohne KI als Standard; Google, Bing, Startpage, Qwant, 
 Schutz vor Fingerprinting in vier Stufen, von Einfach bis Tresor
 ```
 
-**Característica 8** · 126 / 200
+**Característica 8** · 139 / 200
 
 ```text
-Passwörter mit Hauptpasswort verschlüsselt, kein Export im Klartext, dazu Bestätigungscodes für die Zwei-Schritt-Verifizierung
+Verschlüsselte Passwörter mit empfohlenem Hauptpasswort, kein Export im Klartext, dazu Bestätigungscodes für die Zwei-Schritt-Verifizierung
 ```
 
 **Característica 9** · 110 / 200
@@ -699,10 +700,10 @@ Privates Fenster mit Tor; Tor wird nur auf Wunsch heruntergeladen
 Modi Standard und Workflow, Themes, eigene Akzentfarben, dunkle Websites und sechs Sprachen
 ```
 
-### Descripción corta · 228 / 1000 (se ve entera por debajo de 270)
+### Descripción corta · 227 / 1000 (se ve entera por debajo de 270)
 
 ```text
-Privater Browser mit eingebautem Blocker für Werbung und Tracker. Keine Telemetrie, und er verbindet sich von sich aus mit nichts, bis du es erlaubst. Saubere Suche, gut verschlossene Passwörter und ein privates Fenster mit Tor.
+Privater Browser mit eingebautem Blocker für Werbung und Tracker. Keine Telemetrie, und er verbindet sich von sich aus mit nichts, bis du es erlaubst. Saubere Suche, Passwörter auf deinem Gerät und ein privates Fenster mit Tor.
 ```
 
 ### Términos de búsqueda · 7 de 7 · 9 palabras distintas de 21
@@ -775,9 +776,9 @@ Etwa 400 MB freier Speicherplatz
 
 ## fr · Français
 
-### Descripción · 6012 / 10 000
+### Descripción · 6168 / 10 000
 
-6060 si Partner Center cuenta cada salto de línea como dos caracteres.
+6216 si Partner Center cuenta cada salto de línea como dos caracteres.
 
 ```text
 Aegis est un navigateur pour utiliser Internet sans être suivi. Il bloque les publicités et les traqueurs dès la première minute, n’envoie aucune télémétrie et ne se connecte à rien de lui-même tant que vous ne l’avez pas décidé. Pas de compte ni de serveur Aegis : ce que vous faites reste sur votre ordinateur.
@@ -798,8 +799,8 @@ DuckDuckGo est le moteur de recherche par défaut, dans sa version sans IA. Vous
 EMPREINTE NUMÉRIQUE
 Quatre niveaux de protection contre l’empreinte numérique : Basique, Équilibrée (par défaut), Stricte et Coffre-fort. Si un site ne fonctionne plus, vous pouvez l’autoriser sur ce site uniquement.
 
-DES MOTS DE PASSE BIEN GARDÉS
-• Aegis chiffre vos mots de passe avec un mot de passe principal, qu’il vous demande de créer au premier enregistrement. Ils se verrouillent à la fermeture et après 10 minutes sans utiliser l’ordinateur.
+DES MOTS DE PASSE SUR VOTRE APPAREIL
+• Aegis enregistre vos mots de passe chiffrés sur votre appareil et vous recommande un mot de passe principal : sans lui, toute personne qui copie votre profil peut les lire. Avec lui, ils se verrouillent à la fermeture et après 10 minutes sans utiliser l’ordinateur. Il est obligatoire pour les transférer vers un autre Aegis ou ajouter des codes de vérification.
 • Pour afficher ou copier un mot de passe, Aegis vous demande vos identifiants Windows. Impossible de les exporter en clair.
 • Ils ne sont pas remplis automatiquement : vous les choisissez, et uniquement sur le site exact où vous les avez enregistrés.
 • Codes de vérification en deux étapes : lisez le code QR du site et Aegis calcule les codes sur votre ordinateur. Les deux étapes se retrouvent alors au même endroit : à vous de juger.
@@ -807,7 +808,7 @@ DES MOTS DE PASSE BIEN GARDÉS
 • Les clés d’accès sont conservées par Windows Hello.
 
 IMPORTER
-Récupérez marque-pages et historique depuis Chrome, Edge, Brave et d’autres navigateurs, ou depuis un autre profil Aegis. Les mots de passe arrivent par un fichier que vous exportez de l’autre navigateur (Aegis vous explique comment) et sont ensuite protégés par votre mot de passe principal.
+Récupérez marque-pages et historique depuis Chrome, Edge, Brave et d’autres navigateurs, ou depuis un autre profil Aegis. Les mots de passe arrivent par un fichier que vous exportez de l’autre navigateur (Aegis vous explique comment) et sont enregistrés chiffrés comme les autres.
 
 FENÊTRE PRIVÉE AVEC TOR
 Ouvrez une fenêtre privée qui passe par le réseau Tor : les sites voient une adresse IP de Tor, pas la vôtre. Tor n’est pas fourni avec Aegis : il est téléchargé depuis le Tor Project seulement si vous le demandez, et vérifié avant d’être installé. La fenêtre a son propre profil, effacé à la fermeture, et prend en charge les ponts (obfs4 et Snowflake) et « Nouvelle identité ». Aegis avec Tor n’est pas Tor Browser : Tor Browser fait se ressembler tous ses utilisateurs, alors qu’Aegis se distingue davantage. Si votre sécurité dépend de l’anonymat, utilisez Tor Browser.
@@ -894,10 +895,10 @@ Recherche propre : DuckDuckGo sans IA par défaut ; Google, Bing, Startpage, 
 Protection contre l’empreinte numérique en quatre niveaux, de Basique à Coffre-fort
 ```
 
-**Característica 8** · 115 / 200
+**Característica 8** · 120 / 200
 
 ```text
-Mots de passe chiffrés par un mot de passe principal, sans export en clair, et codes de vérification en deux étapes
+Mots de passe chiffrés, mot de passe principal recommandé, sans export en clair, et codes de vérification en deux étapes
 ```
 
 **Característica 9** · 93 / 200
@@ -924,10 +925,10 @@ Fenêtre privée avec Tor ; Tor n’est téléchargé que si vous le demandez
 Modes Standard et Workflow, thèmes, couleurs d’accent sur mesure, sites en mode sombre et six langues
 ```
 
-### Descripción corta · 236 / 1000 (se ve entera por debajo de 270)
+### Descripción corta · 253 / 1000 (se ve entera por debajo de 270)
 
 ```text
-Navigateur privé avec bloqueur de publicités et de traqueurs intégré. Aucune télémétrie, et il ne se connecte à rien de lui-même tant que vous ne l’avez pas décidé. Recherche propre, mots de passe bien gardés et fenêtre privée avec Tor.
+Navigateur privé avec bloqueur de publicités et de traqueurs intégré. Aucune télémétrie, et il ne se connecte à rien de lui-même tant que vous ne l’avez pas décidé. Recherche propre, mots de passe conservés sur votre appareil et fenêtre privée avec Tor.
 ```
 
 ### Términos de búsqueda · 7 de 7 · 13 palabras distintas de 21
@@ -1000,9 +1001,9 @@ Environ 400 Mo d’espace disque libre
 
 ## it · Italiano
 
-### Descripción · 5419 / 10 000
+### Descripción · 5545 / 10 000
 
-5467 si Partner Center cuenta cada salto de línea como dos caracteres.
+5593 si Partner Center cuenta cada salto de línea como dos caracteres.
 
 ```text
 Aegis è un browser per usare Internet senza essere seguito. Blocca pubblicità e traccianti dal primo minuto, non invia telemetria e non si collega a nulla di sua iniziativa finché non lo decidi tu. Non ci sono account né server di Aegis: quello che fai resta sul tuo computer.
@@ -1023,8 +1024,8 @@ DuckDuckGo è il motore di ricerca predefinito, nella versione senza IA. Puoi sc
 IMPRONTA DIGITALE
 Quattro livelli di protezione contro l’impronta digitale: Base, Bilanciata (predefinita), Rigorosa e Cassaforte. Se un sito non funziona, puoi consentirlo solo su quel sito.
 
-PASSWORD BEN CHIUSE
-• Aegis cifra le tue password con una password principale, che ti chiede di creare quando ne salvi una per la prima volta. Si bloccano alla chiusura e dopo 10 minuti senza usare il computer.
+PASSWORD SUL TUO DISPOSITIVO
+• Aegis salva le tue password cifrate sul tuo dispositivo e ti consiglia una password principale: senza, chi copia il tuo profilo può leggerle. Con una password principale si bloccano alla chiusura e dopo 10 minuti senza usare il computer. Per passarle a un altro Aegis o aggiungere codici di verifica è obbligatoria.
 • Per vedere o copiare una password, ti chiede le credenziali di Windows. Non si possono esportare in chiaro.
 • Non vengono compilate da sole: le scegli tu, e solo sul sito esatto in cui le hai salvate.
 • Codici di verifica in due passaggi: leggi il codice QR del sito e Aegis calcola i codici sul tuo computer. Così i due passaggi stanno nello stesso posto: valuta tu se ti va bene.
@@ -1032,7 +1033,7 @@ PASSWORD BEN CHIUSE
 • Le passkey le conserva Windows Hello.
 
 IMPORTARE
-Porta segnalibri e cronologia da Chrome, Edge, Brave e altri browser, o da un altro profilo di Aegis. Le password arrivano con un file che esporti dall’altro browser (Aegis ti spiega come) e poi sono protette dalla tua password principale.
+Porta segnalibri e cronologia da Chrome, Edge, Brave e altri browser, o da un altro profilo di Aegis. Le password arrivano con un file che esporti dall’altro browser (Aegis ti spiega come) e vengono salvate cifrate come le altre.
 
 FINESTRA ANONIMA CON TOR
 Apri una finestra anonima che passa per la rete Tor: i siti vedono un indirizzo IP di Tor, non il tuo. Tor non è incluso in Aegis: viene scaricato dal Tor Project solo se lo chiedi e verificato prima dell’installazione. La finestra ha un proprio profilo, che si cancella alla chiusura, e supporta i bridge (obfs4 e Snowflake) e «Nuova identità». Aegis con Tor non è Tor Browser: Tor Browser fa sembrare uguali tutti i suoi utenti, mentre Aegis si distingue di più. Se la tua sicurezza dipende dall’anonimato, usa Tor Browser.
@@ -1119,10 +1120,10 @@ Ricerca pulita: DuckDuckGo senza IA come predefinito; Google, Bing, Startpage, Q
 Protezione contro l’impronta digitale in quattro livelli, da Base a Cassaforte
 ```
 
-**Característica 8** · 112 / 200
+**Característica 8** · 120 / 200
 
 ```text
-Password cifrate con una password principale, niente esportazione in chiaro e codici di verifica in due passaggi
+Password cifrate con password principale consigliata, niente esportazione in chiaro e codici di verifica in due passaggi
 ```
 
 **Característica 9** · 84 / 200
@@ -1149,10 +1150,10 @@ Finestra anonima con Tor; Tor si scarica solo se lo chiedi
 Modalità Standard e Workflow, temi, colori d’accento su misura, siti in modalità scura e sei lingue
 ```
 
-### Descripción corta · 216 / 1000 (se ve entera por debajo de 270)
+### Descripción corta · 236 / 1000 (se ve entera por debajo de 270)
 
 ```text
-Browser privato con blocco integrato di pubblicità e traccianti. Nessuna telemetria, e non si collega a nulla di sua iniziativa finché non lo decidi tu. Ricerca pulita, password ben chiuse e finestra anonima con Tor.
+Browser privato con blocco integrato di pubblicità e traccianti. Nessuna telemetria, e non si collega a nulla di sua iniziativa finché non lo decidi tu. Ricerca pulita, password conservate sul tuo dispositivo e finestra anonima con Tor.
 ```
 
 ### Términos de búsqueda · 7 de 7 · 11 palabras distintas de 21
@@ -1225,9 +1226,9 @@ Circa 400 MB di spazio libero su disco
 
 ## pt-BR · Português (Brasil)
 
-### Descripción · 5398 / 10 000
+### Descripción · 5524 / 10 000
 
-5446 si Partner Center cuenta cada salto de línea como dos caracteres.
+5572 si Partner Center cuenta cada salto de línea como dos caracteres.
 
 ```text
 O Aegis é um navegador para usar a internet sem ser seguido. Ele bloqueia anúncios e rastreadores desde o primeiro minuto, não envia telemetria e não se conecta a nada por conta própria até você decidir. Não há contas nem servidores do Aegis: o que você faz fica no seu computador.
@@ -1248,8 +1249,8 @@ O DuckDuckGo é o mecanismo de pesquisa padrão, na versão sem IA. Você també
 IMPRESSÃO DIGITAL
 Quatro níveis de proteção contra impressão digital: Básica, Equilibrada (a padrão), Rigorosa e Cofre. Se um site não funcionar, você pode permiti-lo só nesse site.
 
-SENHAS BEM GUARDADAS
-• O Aegis criptografa suas senhas com uma senha principal, que ele pede para você criar ao salvar a primeira. Elas são bloqueadas ao fechar o navegador e depois de 10 minutos sem usar o computador.
+SENHAS NO SEU DISPOSITIVO
+• O Aegis salva suas senhas criptografadas no seu dispositivo e recomenda uma senha principal: sem ela, quem copiar seu perfil pode lê-las. Com ela, as senhas são bloqueadas ao fechar o navegador e depois de 10 minutos sem usar o computador. Para passá-las a outro Aegis ou adicionar códigos de verificação, ela é obrigatória.
 • Para ver ou copiar uma senha, ele pede suas credenciais do Windows. Não é possível exportá-las em texto puro.
 • Elas não são preenchidas sozinhas: você as escolhe, e só no site exato em que foram salvas.
 • Códigos de verificação em duas etapas: leia o QR code do site e o Aegis calcula os códigos no seu computador. Assim, as duas etapas ficam no mesmo lugar: você decide se vale a pena.
@@ -1257,7 +1258,7 @@ SENHAS BEM GUARDADAS
 • As chaves de acesso ficam guardadas pelo Windows Hello.
 
 IMPORTAR
-Traga favoritos e histórico do Chrome, Edge, Brave e outros navegadores, ou de outro perfil do Aegis. As senhas entram com um arquivo que você exporta do outro navegador (o Aegis mostra como) e depois ficam protegidas pela sua senha principal.
+Traga favoritos e histórico do Chrome, Edge, Brave e outros navegadores, ou de outro perfil do Aegis. As senhas entram com um arquivo que você exporta do outro navegador (o Aegis mostra como) e são salvas criptografadas como as demais.
 
 JANELA PRIVATIVA COM TOR
 Abra uma janela privativa que passa pela rede Tor: os sites veem um IP do Tor, não o seu. O Tor não vem com o Aegis: ele é baixado do Tor Project só se você pedir e é verificado antes da instalação. A janela tem seu próprio perfil, apagado ao fechá-la, e aceita pontes (obfs4 e Snowflake) e “Nova identidade”. O Aegis com Tor não é o Tor Browser: o Tor Browser faz todos os seus usuários parecerem iguais, enquanto o Aegis se distingue mais. Se sua segurança depende do anonimato, use o Tor Browser.
@@ -1344,10 +1345,10 @@ Pesquisa limpa: DuckDuckGo sem IA como padrão; Google, Bing, Startpage, Qwant, 
 Proteção contra impressão digital em quatro níveis, de Básica a Cofre
 ```
 
-**Característica 8** · 112 / 200
+**Característica 8** · 125 / 200
 
 ```text
-Senhas criptografadas com senha principal, sem exportação em texto puro, e códigos de verificação em duas etapas
+Senhas criptografadas, com senha principal recomendada, sem exportação em texto puro, e códigos de verificação em duas etapas
 ```
 
 **Característica 9** · 93 / 200
@@ -1374,10 +1375,10 @@ Janela privativa com Tor; o Tor só é baixado se você pedir
 Modos Padrão e Workflow, temas, cores de destaque sob medida, sites em modo escuro e seis idiomas
 ```
 
-### Descripción corta · 215 / 1000 (se ve entera por debajo de 270)
+### Descripción corta · 230 / 1000 (se ve entera por debajo de 270)
 
 ```text
-Navegador privado com bloqueador integrado de anúncios e rastreadores. Sem telemetria, e ele não se conecta a nada por conta própria até você decidir. Pesquisa limpa, senhas bem guardadas e janela privativa com Tor.
+Navegador privado com bloqueador integrado de anúncios e rastreadores. Sem telemetria, e ele não se conecta a nada por conta própria até você decidir. Pesquisa limpa, senhas guardadas no seu dispositivo e janela privativa com Tor.
 ```
 
 ### Términos de búsqueda · 7 de 7 · 11 palabras distintas de 21

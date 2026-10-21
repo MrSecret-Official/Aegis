@@ -10,6 +10,10 @@
  * - Accesos con la inicial: si Places tiene el favicon de una dirección equivalente (otro esquema, con o sin «www»,
  *   redirecciones), la loseta lo enseña en lugar de la letra. Solo se pinta (atributo aegis-logo y la variable
  *   --aegis-logo en la loseta, nueva-pestana.css): no cambia el acceso ni sale del equipo.
+ * - Accesos con un favicon pequeño (Firefox lo pinta si la dirección exacta del acceso solo tiene en Places uno de
+ *   16 a 95 px, como una página importada de otro navegador, y lo amplía a la caja de 40: se ve pixelado): si Places
+ *   tiene uno más grande para una dirección equivalente (el SVG o el táctil del sitio), se pinta ese, con la misma
+ *   regla del fondo claro. Vale también para los accesos ya fijados: no se guarda nada, se decide al pintar.
  * - Diálogo de añadir o editar un acceso: botón «Usar el logo de la web», junto a «Usar una imagen personalizada».
  *   Pide el logo (local o, si no hay, del sitio), lo pone como imagen personalizada del acceso y muestra la vista
  *   previa de Firefox. Se guarda con el botón «Guardar» del diálogo, como cualquier imagen personalizada.
@@ -101,10 +105,12 @@ export function esOscuro(d, lado) {
     const max = Math.max(r, g, b);
     opacos++;
     luz += (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-    color += max ? (max - Math.min(r, g, b)) / max : 0;
+    // Croma absoluto (como favicons.sys.mjs): la saturación de un gris casi negro (#0d1117) se dispara sin que se vea
+    // color.
+    color += (max - Math.min(r, g, b)) / 255;
   }
   const total = lado * lado;
-  return opacos > total * 0.05 && transparentes > total * 0.15 && luz / opacos < 0.3 && color / opacos < 0.25;
+  return opacos > total * 0.05 && transparentes > total * 0.15 && luz / opacos < 0.3 && color / opacos < 0.1;
 }
 
 /**
@@ -198,24 +204,48 @@ export function logos(win, pedir) {
     li.style.removeProperty("--aegis-logo");
   };
 
-  // ── Accesos con la inicial ──
+  /**
+   * El favicon pequeño que pinta Firefox en la loseta (de 16 a 95 px: TopSite.jsx lo pone en .default-icon, en su
+   * style), o null. Es el caso de un acceso cuya dirección exacta solo tiene en Places un favicon pequeño (una página
+   * importada de otro navegador, con sus favicons de 16 y 32) aunque el sitio tenga uno grande en otra página.
+   */
+  const faviconPequeno = li => {
+    const el = li.querySelector(".tile .top-site-icon.default-icon");
+    const src = URL_IMAGEN.exec(el?.style.backgroundImage ?? "")?.[1];
+    return src?.startsWith("data:image/") ? src : null;
+  };
+  /** ¿`dato` es más grande que `src`? null mientras se miden. */
+  const mejora = (dato, src) => {
+    const nuevo = medida(dato);
+    const actual = medida(src);
+    return nuevo && actual ? nuevo.lado > actual.lado : null;
+  };
+
+  // ── Accesos con la inicial o con un favicon pequeño ──
   const losetas = () => {
     const faltan = [];
     for (const li of doc.querySelectorAll(".top-site-outer")) {
       const url = li.querySelector("a.top-site-button")?.getAttribute("href");
       const pintada = li.getAttribute("aegis-logo-url");
       const conLetra = li.querySelector(".icon-wrapper.letter-fallback");
-      // Otro acceso en la misma loseta, o Firefox ya le pone imagen (la suya o una personalizada): fuera lo nuestro.
-      if (pintada && (pintada != url || !conLetra)) {
+      const pequeno = conLetra ? null : faviconPequeno(li);
+      // Otro acceso en la misma loseta, o Firefox ya le pone una imagen buena (grande o personalizada): fuera lo
+      // nuestro.
+      if (pintada && (pintada != url || (!conLetra && !pequeno))) {
         despintar(li);
       }
-      if (!url || !conLetra) {
+      if (!url || (!conLetra && !pequeno)) {
         continue;
       }
       if (conocidos.has(url)) {
         const dato = elegido(conocidos.get(url));
-        if (dato && li.getAttribute("aegis-logo-url") != url) {
+        // Sobre la inicial, cualquier favicon; sobre un favicon pequeño de Firefox, solo uno más grande (si no, el
+        // pequeño ampliado a la caja de 40 se ve pixelado).
+        const vale = dato && (conLetra ? true : mejora(dato, pequeno));
+        if (vale && li.getAttribute("aegis-logo-url") != url) {
           pintar(li, url, dato);
+        } else if (vale === false && pintada) {
+          despintar(li);
         }
       } else if (!pendientes.has(url)) {
         pendientes.add(url);
@@ -387,12 +417,24 @@ export function logos(win, pedir) {
     boton.addEventListener("click", () => usarLogo(form, boton, estado));
   };
 
+  // La lista de accesos lleva aria-label="Shortcuts" escrito en inglés en el código de Firefox (TopSite.jsx, sin
+  // traducción): el lector de pantalla lo diría en inglés. Se cambia por el texto de Aegis.
+  const etiquetarLista = () => {
+    const nombre = texto("aegis-accesos-titulo");
+    for (const lista of doc.querySelectorAll(".top-sites-list")) {
+      if (nombre && lista.getAttribute("aria-label") != nombre) {
+        lista.setAttribute("aria-label", nombre);
+      }
+    }
+  };
+
   const revisar = () => {
     programado = false;
     try {
       losetas();
       oscuros();
       formulario();
+      etiquetarLista();
     } catch (e) {
       console.error("Aegis: logos de los accesos", e);
     }

@@ -331,7 +331,15 @@ async function enviar(evento) {
     cerrar();
     return;
   } catch (e) {
-    console.error("Aegis: guardar el código de verificación", e);
+    // Sin contraseña principal no se cambia la clave de un código (autenticador.sys.mjs): se dice cómo crearla.
+    const sinPrincipal = e?.codigo == "sin-principal";
+    if (!sinPrincipal) {
+      console.error("Aegis: guardar el código de verificación", e);
+    }
+    document.l10n.setAttributes(
+      errorGeneral,
+      sinPrincipal ? "aegis-autenticador-error-sin-principal" : "aegis-autenticador-error-guardar"
+    );
     errorGeneral.hidden = false;
     ajustarAltura(errorGeneral);
   }

@@ -1,0 +1,402 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · páginas de perfiles de Firefox: about:editprofile, about:newprofile y about:deleteprofile (actor
+   AegisPaginas) y la ventana de perfiles, about:profilemanager (perfiles.sys.mjs). Hoja de usuario: casi todo vive
+   dentro de sus componentes (shadow DOM), adonde solo llegan las hojas de usuario; por eso los !important. Los tokens
+   y el mapeo de colores de Firefox los ponen tokens.css y comun.css; aquí, la forma de DISENO §9: tarjeta de página
+   (radio 14, relleno 24), título de 24, campo de 34, botones de 38 con el principal en --aegis-prim (también el de
+   borrar: avisa el texto, no el color) y el secundario a su izquierda, avatares en círculo y sin los temas de Firefox.
+   Con alto contraste de Windows (forced-colors) o «más contraste», mandan los valores de Firefox. */
+
+/* Sin los temas de Firefox: el tema, el énfasis y el icono de Aegis se eligen en Ajustes › Apariencia (y valen para
+   todo el perfil). Fuera también «Explorar más temas» (addons.mozilla.org) y «Saber más» (support.mozilla.org).
+   Fuera del @media: también con alto contraste, porque quitarlos cierra una conexión (docs/CONEXIONES.md). */
+#edit-profile-card :is(#themes, #more-themes),
+#edit-profile-card a[is="moz-support-link"] {
+  display: none !important;
+}
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+
+/* ---- Tarjeta de la página (editar, nuevo, borrar) ---- */
+
+:is(#edit-profile-card, #delete-profile-card) {
+  gap: var(--aegis-s-24) !important;
+  padding: 0 !important;
+}
+moz-card:has(> :is(#edit-profile-card, #delete-profile-card)) {
+  --card-padding: var(--aegis-s-24) !important;
+  --card-border-radius: var(--aegis-r-14) !important;
+  --card-border: 1px solid var(--aegis-line) !important;
+  --card-box-shadow: none !important;
+  --card-background-color: var(--aegis-surface) !important;
+}
+:is(#edit-profile-card, #delete-profile-card) #profile-content {
+  gap: var(--aegis-s-24) !important;
+  min-width: 0;
+  flex: 1;
+}
+:is(#edit-profile-card, #delete-profile-card) h1 {
+  margin: 0 !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
+  word-break: normal !important;
+  overflow-wrap: anywhere;
+}
+:is(#edit-profile-card, #delete-profile-card) h1 + p,
+#edit-profile-card #profile-content > div > p,
+#delete-profile-card .sub-header {
+  margin: var(--aegis-s-8) 0 0 !important;
+  font-size: 14px !important;
+  line-height: 1.5;
+  color: var(--aegis-sub) !important;
+}
+
+/* Avatar: círculo de 64 con el glifo del color del texto sobre --aegis-control (Firefox lo pinta con los colores del
+   tema del perfil, en línea). Una imagen propia ocupa el círculo entero. */
+#header-avatar,
+.avatar-image-container {
+  width: 64px !important;
+  height: 64px !important;
+}
+#header-avatar {
+  fill: var(--aegis-control) !important;
+  stroke: var(--aegis-text) !important;
+  border-radius: 50% !important;
+  object-fit: cover;
+}
+/* El lápiz que abre los avatares: botón de icono de 28 en un círculo de menú con borde de línea fuerte, encima del
+   borde del avatar (Firefox: un botón principal violeta). */
+#profile-avatar-selector-button {
+  --button-background-color-primary: var(--aegis-menu) !important;
+  --button-background-color-primary-hover: var(--aegis-menu) !important;
+  --button-background-color-primary-active: var(--aegis-menu) !important;
+  --button-text-color-primary: var(--aegis-text) !important;
+  --button-text-color-primary-hover: var(--aegis-text) !important;
+  --button-text-color-primary-active: var(--aegis-text) !important;
+  --button-border-color-primary: var(--aegis-line-strong) !important;
+  --button-border-color-primary-hover: var(--aegis-focus) !important;
+  --button-border-color-primary-active: var(--aegis-focus) !important;
+  --button-size-icon-small: 28px !important;
+  --button-min-height-small: 28px !important;
+  --button-border-radius: 50% !important;
+  inset-block-end: -4px !important;
+  inset-inline-end: -4px !important;
+}
+
+/* Nombre: campo de 34 (radio 7, relleno al 4 %, borde al 10 %; con foco, al 7 % y --aegis-focus). */
+#profile-name-area label {
+  margin-block-end: var(--aegis-s-8) !important;
+  font-size: 13px !important;
+}
+#profile-name {
+  box-sizing: border-box !important;
+  width: min(400px, 100%) !important;
+  height: var(--aegis-h-field) !important;
+  min-height: 0 !important;
+  padding: 0 10px !important;
+  border: 1px solid var(--aegis-field-border) !important;
+  border-radius: var(--aegis-r-7) !important;
+  background-color: var(--aegis-hover) !important;
+  color: var(--aegis-text) !important;
+  font: 14px var(--aegis-font) !important;
+  outline: none !important;
+}
+#profile-name:focus {
+  border-color: var(--aegis-focus) !important;
+  background-color: var(--aegis-control) !important;
+}
+#profile-name:invalid {
+  border-color: var(--aegis-err-fill) !important;
+}
+#profile-name::placeholder {
+  color: var(--aegis-sub) !important;
+  opacity: 1 !important;
+}
+/* Error y «Guardado»: 12 px, con su texto (DISENO §2: el color no es la única señal). */
+#profile-name-area .message {
+  padding: var(--aegis-s-8) 0 0 !important;
+  font-size: 12px !important;
+  align-items: center;
+}
+#profile-name-area .message-icon {
+  width: 16px;
+  height: 16px;
+}
+:is(#error-icon, #error-message) {
+  color: var(--aegis-err) !important;
+}
+#error-icon {
+  fill: var(--aegis-err-fill) !important;
+}
+:is(#saved-icon, #saved-message) {
+  color: var(--aegis-ok) !important;
+}
+
+
+/* Acceso directo en el escritorio: interruptor de 34 × 20 con botón de 16, encendido con el énfasis. */
+#desktop-shortcut-section moz-toggle {
+  --toggle-width: 34px !important;
+  --toggle-height: 20px !important;
+  --toggle-border-width: 0px !important;
+  --toggle-dot-margin: 2px !important;
+  --toggle-border-radius: var(--aegis-r-10) !important;
+  --toggle-background-color: var(--aegis-track) !important;
+  --toggle-background-color-hover: var(--aegis-track) !important;
+  --toggle-background-color-active: var(--aegis-track) !important;
+  --toggle-background-color-pressed: var(--aegis-accent) !important;
+  --toggle-background-color-pressed-hover: var(--aegis-accent) !important;
+  --toggle-background-color-pressed-active: var(--aegis-accent) !important;
+  --toggle-dot-background-color: var(--aegis-sub) !important;
+  --toggle-dot-background-color-hover: var(--aegis-text) !important;
+  --toggle-dot-background-color-active: var(--aegis-text) !important;
+  --toggle-dot-background-color-on-pressed: var(--aegis-on-accent) !important;
+  font-size: 14px;
+}
+
+/* ---- Selector de avatares (el lápiz) ---- */
+
+profile-avatar-selector moz-card,
+#avatar-selector {
+  --card-border-radius: var(--aegis-r-12) !important;
+  --card-border: 1px solid var(--aegis-line) !important;
+  --card-background-color: var(--aegis-menu) !important;
+  --card-box-shadow: var(--aegis-shadow) !important;
+  --card-padding: var(--aegis-s-16) !important;
+}
+#avatars moz-visual-picker-item,
+moz-visual-picker-item.avatar-item {
+  --visual-picker-item-border-radius: 50% !important;
+  --visual-picker-item-border-width: 1px !important;
+  --visual-picker-item-border-width-checked: 2px !important;
+  --visual-picker-item-border-color: transparent !important;
+  --visual-picker-item-border-color-checked: var(--aegis-accent) !important;
+  --visual-picker-item-background-color: transparent !important;
+  --visual-picker-item-background-color-hover: var(--aegis-hover) !important;
+  --visual-picker-item-background-color-checked: transparent !important;
+}
+
+/* ---- Pie: secundario a la izquierda y principal a la derecha (Firefox, en Windows, al revés) ---- */
+
+:is(#edit-profile-card, #delete-profile-card) moz-button-group {
+  gap: 10px;
+  justify-content: flex-end;
+}
+:is(#edit-profile-card, #delete-profile-card) moz-button-group > moz-button {
+  margin: 0 !important;
+  order: 1;
+  --button-min-height-large: 38px !important;
+  --button-padding-block-large: 0 !important;
+  --button-padding-inline-large: var(--aegis-s-16) !important;
+  --button-font-size-large: 14px !important;
+  --button-border-radius: var(--aegis-r-8) !important;
+}
+:is(#edit-profile-card, #delete-profile-card) moz-button-group > moz-button:is([type="primary"], [type="destructive"]) {
+  order: 2;
+  min-width: 112px;
+  --button-font-weight: 600 !important;
+}
+/* Borrar el perfil: la acción principal de esa página, en blanco y negro (DISENO §2, acciones destructivas). */
+#confirm-delete {
+  --button-background-color-destructive: var(--aegis-prim) !important;
+  --button-background-color-destructive-hover: var(--aegis-prim-hover) !important;
+  --button-background-color-destructive-active: var(--aegis-prim-down) !important;
+  --button-text-color-destructive: var(--aegis-on-prim) !important;
+  --button-text-color-destructive-hover: var(--aegis-on-prim) !important;
+  --button-text-color-destructive-active: var(--aegis-on-prim) !important;
+  --button-border-color-destructive: transparent !important;
+  --button-border-color-destructive-hover: transparent !important;
+  --button-border-color-destructive-active: transparent !important;
+}
+
+/* ---- about:deleteprofile: lo que se borra ---- */
+
+/* Filas de 44 separadas por la línea, dentro de un recuadro de borde de línea (radio 12): nombre de 14 y la cifra en
+   600 tabulares. */
+#delete-profile-card .data-list {
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 var(--aegis-s-16) !important;
+  border: 1px solid var(--aegis-line) !important;
+  border-radius: var(--aegis-r-12) !important;
+  background: none !important;
+}
+#delete-profile-card .data-list-item {
+  align-items: center;
+  gap: var(--aegis-s-16);
+  min-height: 44px;
+  padding-block: var(--aegis-s-8);
+  box-sizing: border-box;
+  font-size: 14px !important;
+}
+#delete-profile-card .data-list-item + .data-list-item {
+  border-block-start: 1px solid var(--aegis-line);
+}
+#delete-profile-card .data-list-item > b {
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- about:profilemanager ---- */
+
+/* Cabecera: el icono de 56, el título de 24 y el texto de 14 en --aegis-sub; la lista centrada, con 16 entre las
+   tarjetas. */
+profile-selector .logo,
+.logo[data-l10n-id="profile-window-logo"] {
+  width: 56px !important;
+  height: 56px !important;
+}
+h1[data-l10n-id="profile-window-heading"] {
+  margin: var(--aegis-s-16) 0 var(--aegis-s-8) !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.4px;
+}
+.profiles-body-text {
+  margin: 0 !important;
+  font-size: 14px !important;
+  line-height: 1.5;
+  color: var(--aegis-sub) !important;
+}
+.profile-list {
+  margin: var(--aegis-s-24) 0 !important;
+  gap: var(--aegis-s-16) !important;
+  justify-content: center !important;
+}
+moz-checkbox[data-l10n-id="profile-window-checkbox-label-2"] {
+  margin-block-start: var(--aegis-s-8) !important;
+}
+/* «Seleccionar un perfil al abrir»: la casilla de DISENO §2 y §4 (18, radio 5) en vez de la de Firefox, que la
+   pintaba con su relleno azulado. Sin marcar, sin relleno y con el borde de --aegis-check-border (--aegis-focus al
+   pasar el ratón); marcada, el énfasis con la marca en --aegis-on-accent. Es la única casilla de estas páginas. */
+label[part="label"] > input#input[type="checkbox"] {
+  appearance: none !important;
+  box-sizing: border-box !important;
+  width: 18px !important;
+  height: 18px !important;
+  border: 1px solid var(--aegis-check-border) !important;
+  border-radius: var(--aegis-r-5) !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease), border-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+label[part="label"] > input#input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--aegis-focus) !important;
+}
+label[part="label"] > input#input[type="checkbox"]:checked {
+  border-color: var(--aegis-accent) !important;
+  background-color: var(--aegis-accent) !important;
+  background-image: url("chrome://global/skin/icons/check.svg") !important;
+  background-size: 14px 14px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  -moz-context-properties: fill;
+  fill: var(--aegis-on-accent) !important;
+}
+label[part="label"] > input#input[type="checkbox"]:checked:hover:not(:disabled) {
+  border-color: var(--aegis-accent-hover) !important;
+  background-color: var(--aegis-accent-hover) !important;
+}
+label[part="label"] > input#input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--aegis-focus) !important;
+  outline-offset: 2px !important;
+}
+
+/* Las tarjetas de los perfiles */
+
+/* Tarjeta de superficie (radio 14) con el avatar de 56 sobre la superficie, sin los dibujos de colores de Firefox
+   (profilesBackground*.svg); el nombre en 14 px 600 y los botones de icono de 28 (radio 7). */
+.profile-card {
+  --card-border-radius: var(--aegis-r-14) !important;
+  --card-border: 1px solid var(--aegis-line) !important;
+  --card-background-color: var(--aegis-surface) !important;
+  --card-box-shadow: none !important;
+  --profile-card-radius: var(--aegis-r-14) !important;
+  height: 168px !important;
+  border-color: var(--aegis-line) !important;
+  color: var(--aegis-text) !important;
+  transition: background-color var(--aegis-t-hover) var(--aegis-ease), border-color var(--aegis-t-hover) var(--aegis-ease) !important;
+}
+.profile-card:hover {
+  background-color: var(--aegis-surface) !important;
+  background-image: linear-gradient(var(--aegis-hover), var(--aegis-hover)) !important;
+  border-color: var(--aegis-line-strong) !important;
+  color: var(--aegis-text) !important;
+}
+.profile-card:hover:active {
+  background-image: linear-gradient(var(--aegis-control), var(--aegis-control)) !important;
+}
+.profile-card:focus-visible {
+  outline: 2px solid var(--aegis-focus) !important;
+  outline-offset: 2px !important;
+}
+.profile-background-container {
+  height: 112px !important;
+}
+.profile-card:not(.new-profile-card) .profile-background-image {
+  background-image: none !important;
+}
+.profile-avatar {
+  --avatar-size: 56px !important;
+  width: 56px !important;
+  height: 56px !important;
+  fill: var(--aegis-control) !important;
+  stroke: var(--aegis-text) !important;
+  border-radius: 50%;
+}
+.profile-details {
+  height: 56px !important;
+  padding: 0 var(--aegis-s-8) 0 var(--aegis-s-16) !important;
+  border-block-start: 1px solid var(--aegis-line) !important;
+}
+.profile-details h3 {
+  margin: 0 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+.profile-details moz-button {
+  --button-size-icon: 28px !important;
+  --button-min-height: 28px !important;
+  --button-border-radius: var(--aegis-r-7) !important;
+  --button-background-color-ghost-hover: var(--aegis-hover) !important;
+  --button-background-color-ghost-active: var(--aegis-control) !important;
+  --button-border-color-ghost-hover: transparent !important;
+  --button-border-color-ghost-active: transparent !important;
+}
+.profile-details moz-button-group {
+  gap: var(--aegis-s-4);
+}
+.profile-details moz-button-group > moz-button {
+  margin: 0 !important;
+}
+/* «Crear un perfil»: la loseta vacía con el «+» de línea en --aegis-sub, con borde de línea (no discontinuo). */
+.new-profile-card {
+  /* Del mismo tamaño que las de los perfiles (moz-card mide con el borde dentro). */
+  box-sizing: border-box !important;
+  border: 1px solid var(--aegis-line) !important;
+  background-color: transparent !important;
+}
+.new-profile-card:hover {
+  border-color: var(--aegis-line-strong) !important;
+}
+.new-profile-card .profile-background-image {
+  background-size: 32px !important;
+  fill: var(--aegis-sub) !important;
+}
+.new-profile-card:hover .profile-background-image {
+  fill: var(--aegis-text) !important;
+}
+.new-profile-card .profile-details {
+  border-block-start: 1px solid var(--aegis-line) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  label[part="label"] > input#input[type="checkbox"] {
+    transition: none !important;
+  }
+}
+}

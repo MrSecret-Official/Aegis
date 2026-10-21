@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · el énfasis dentro de los componentes de Firefox (shadow DOM). Los tokens globales (--color-accent-primary,
+   --focus-outline-color, --link-color, el botón principal…) llegan heredados de la raíz, donde los cambian
+   mapeo-firefox.css (interfaz) y paginas/comun.css (páginas en un proceso de contenido). Pero unos pocos componentes
+   definen en su :host tokens propios con el violeta de Nova escrito a mano, y ahí no llega una hoja de autor del
+   documento: esta va como hoja de usuario (AegisArranque.aplicarHojas y paginas/AegisPaginasChild), que sí entra en
+   cada árbol, con !important para ganar al :host del componente. Se nombra el componente, no :host, para no tocar
+   ningún otro. Con alto contraste de Windows o «más contraste», mandan los colores de Firefox. */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  /* Tarjetas de promoción «vivas» (moz-promo.tokens.css): como la información, en gris (mapeo-firefox.css). */
+  moz-promo {
+    --promo-background-color-vibrant: var(--aegis-control) !important;
+    --promo-border-color-vibrant: var(--aegis-line) !important;
+    --promo-message-text-color-vibrant: var(--aegis-text) !important;
+  }
+
+  /* Campo de color pulsado (moz-input-color.tokens.css). */
+  moz-input-color {
+    --input-color-background-color-active: var(--aegis-control-down) !important;
+  }
+
+  /* El antifaz de la presentación de la navegación privada (private-browsing-mask-intro.css): la «destacada» de Aegis,
+     como el logotipo de paginas/privada.css. */
+  private-browsing-mask-intro {
+    --icon-mask-color: var(--aegis-prim) !important;
+  }
+}

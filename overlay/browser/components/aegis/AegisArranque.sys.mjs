@@ -25,6 +25,7 @@ import { AegisConexiones } from "./conexiones.sys.mjs";
 import { AegisBienvenida } from "./bienvenida.sys.mjs";
 import { AegisHuella } from "./huella.sys.mjs";
 import { AegisBarraLateral } from "./barra-lateral.sys.mjs";
+import { AegisContenedores } from "./contenedores.sys.mjs";
 import { AegisEnfasis } from "./enfasis.sys.mjs";
 import { AegisWebsOscuro } from "./webs-oscuro/webs-oscuro.sys.mjs";
 import { AegisTor } from "./tor/tor.sys.mjs";
@@ -39,12 +40,19 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
 });
 
-/** Hojas de toda la interfaz: cada documento chrome:// o about: del navegador con permisos de sistema. */
-const HOJAS = ["estilos/tokens.css", "estilos/mapeo-firefox.css", "estilos/interfaz.css"];
+/**
+ * Hojas de toda la interfaz: cada documento chrome:// o about: del navegador con permisos de sistema. La de los
+ * contenedores también: sus colores salen en la ventana, en sus menús, en Ajustes y en el diálogo de editar uno.
+ */
+const HOJAS = ["estilos/tokens.css", "estilos/mapeo-firefox.css", "estilos/interfaz.css", "estilos/contenedores.css"];
+/** Y como hojas de usuario, las únicas que entran en el shadow DOM: el énfasis en los componentes de Firefox. */
+const HOJAS_USUARIO = ["estilos/sombra-firefox.css"];
 /** El @font-face de Inter, aparte: solo donde la CSP lo admite (ponerInter). */
 const FUENTES = "estilos/fuentes.css";
 /** Hojas añadidas a los documentos chrome:// cuya dirección empieza por la clave. */
 const HOJAS_POR_DOCUMENTO = [
+  // La ventana del navegador: las pestañas verticales del modo Workflow.
+  ["chrome://browser/content/browser.xhtml", ["estilos/workflow.css"]],
   // Marcadores: panel de la barra lateral y la ventana Biblioteca.
   ["chrome://browser/content/places/", ["estilos/marcadores.css"]],
   ["chrome://browser/content/sidebar/", ["estilos/marcadores.css"]],
@@ -60,6 +68,8 @@ const HOJAS_POR_DOCUMENTO = [
   ["about:conexiones", ["paginas/comun.css", "paginas/conexiones.css"]],
   // La bienvenida sin el instalador (bienvenida.sys.mjs): página propia en el proceso padre.
   ["about:bienvenida", ["paginas/comun.css", "paginas/bienvenida.css"]],
+  // Ventana de perfiles de Firefox (perfiles.sys.mjs pone la hoja de sus componentes y el diálogo de borrar).
+  ["about:profilemanager", ["paginas/comun.css", "paginas/perfiles.css"]],
 ];
 const IDIOMAS = ["en-US", "es-ES", "pt-BR", "fr", "de", "it"];
 const FTL = "aegis.ftl";
@@ -97,7 +107,12 @@ function registrarFuentes() {
   const base = resource.resolveURI(Services.io.newURI(new URL("./", import.meta.url).href));
   const aom = Cc["@mozilla.org/addons/addon-manager-startup;1"].getService(Ci.amIAddonManagerStartup);
   registrosChrome.push(
-    aom.registerChrome(Services.io.newURI(base + "chrome.manifest"), [["content", "aegis-fuentes", "fuentes/"]])
+    aom.registerChrome(Services.io.newURI(base + "chrome.manifest"), [
+      ["content", "aegis-fuentes", "fuentes/"],
+      // Los glifos de línea, por la misma razón: la nueva pestaña («img-src chrome:», no resource:) pinta con ellos
+      // los botones de Personalizar y del correo (paginas/nueva-pestana.css).
+      ["content", "aegis-iconos", "estilos/iconos/"],
+    ])
   );
 }
 
@@ -339,11 +354,16 @@ function aplicarHojas(doc) {
     }
   }
   const utils = win.windowUtils;
-  for (const hoja of hojas) {
-    try {
-      utils.loadSheetUsingURIString(new URL(hoja, import.meta.url).href, utils.AUTHOR_SHEET);
-    } catch (e) {
-      console.error(`Aegis: no se pudo cargar ${hoja}`, e);
+  for (const [lista, tipo] of [
+    [hojas, utils.AUTHOR_SHEET],
+    [HOJAS_USUARIO, utils.USER_SHEET],
+  ]) {
+    for (const hoja of lista) {
+      try {
+        utils.loadSheetUsingURIString(new URL(hoja, import.meta.url).href, tipo);
+      } catch (e) {
+        console.error(`Aegis: no se pudo cargar ${hoja}`, e);
+      }
     }
   }
   // Ajustes con la forma del Centro de SecretOS: cabecera, buscador y grupos (ajustes.sys.mjs).
@@ -395,6 +415,15 @@ function aplicarHojas(doc) {
       console.error("Aegis: Acerca de", e);
     }
   }
+  // Ventana de perfiles: la hoja de sus componentes y borrar otro perfil sin entrar en él (perfiles.sys.mjs). Se importa
+  // aquí: si fallara al cargar, la ventana sigue funcionando como la de Firefox.
+  if (doc.documentURI.startsWith("about:profilemanager")) {
+    try {
+      ChromeUtils.importESModule(new URL("perfiles.sys.mjs", import.meta.url).href).AegisPerfiles.gestor(doc);
+    } catch (e) {
+      console.error("Aegis: ventana de perfiles", e);
+    }
+  }
 }
 
 /** Cada documento de la interfaz que se crea a partir de ahora recibe las hojas (sin temporizadores: un evento). */
@@ -416,7 +445,23 @@ function registrarPaginas() {
       esModuleURI: new URL("paginas/AegisPaginasChild.sys.mjs", import.meta.url).href,
       events: { DOMDocElementInserted: {} },
     },
-    matches: ["about:home*", "about:logins*", "about:newtab*", "about:welcome*", "about:privatebrowsing*"],
+    matches: [
+      "about:home*",
+      "about:logins*",
+      "about:newtab*",
+      "about:welcome*",
+      "about:privatebrowsing*",
+      // Editar, crear y borrar un perfil (paginas/perfiles.sys.mjs).
+      "about:editprofile*",
+      "about:newprofile*",
+      "about:deleteprofile*",
+      // Páginas de Firefox en un proceso de contenido sin hojas propias: solo los tokens y el énfasis (paginas/comun.css),
+      // para que no salga el violeta de Firefox.
+      "about:protections*",
+      "about:loginsimportreport*",
+      "about:pdf*",
+      "about:certificate*",
+    ],
   });
   // Páginas de error de Firefox (paginas/errores.css: tokens e Inter, sin el violeta ni la ayuda de Mozilla). Las de
   // red, certificado y Solo HTTPS se cargan en el proceso de la web que ha fallado (y también en marcos): por eso van
@@ -433,6 +478,10 @@ function registrarPaginas() {
       "about:httpsonlyerror?*",
       "about:tabcrashed*",
       "about:restartrequired*",
+      // Marco caído (dentro de una web): solo los tokens y el énfasis.
+      "about:framecrashed*",
+      // Vista de lectura (en el proceso de la web): solo sus enlaces y su selección (paginas/lector.css).
+      "about:reader*",
     ],
     allFrames: true,
     safeForUntrustedWebProcess: true,
@@ -573,6 +622,12 @@ export const AegisArranque = {
       console.error("Aegis: barra lateral", e);
     }
     try {
+      // Cambio rápido de contenedor: el botón de la barra de direcciones, su panel y Ctrl+Mayús+L.
+      AegisContenedores.ventana(win);
+    } catch (e) {
+      console.error("Aegis: contenedores", e);
+    }
+    try {
       AegisTor.ventana(win);
     } catch (e) {
       console.error("Aegis: tor", e);
@@ -593,6 +648,13 @@ export const AegisArranque = {
       AegisHuella.ventana(win);
     } catch (e) {
       console.error("Aegis: huella", e);
+    }
+    try {
+      // Favicons que no se ven sobre el tema (el negro de GitHub en el oscuro): favicons.sys.mjs. Se importa aquí: si
+      // fallara al cargar, el resto de Aegis sigue funcionando.
+      ChromeUtils.importESModule(new URL("favicons.sys.mjs", import.meta.url).href).AegisFavicons.ventana(win);
+    } catch (e) {
+      console.error("Aegis: favicons", e);
     }
     try {
       // El tema elegido en Aegis Setup, en la primera ventana de un perfil nuevo (instalador.sys.mjs).

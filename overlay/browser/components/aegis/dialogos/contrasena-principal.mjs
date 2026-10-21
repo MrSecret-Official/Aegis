@@ -11,7 +11,9 @@
  * - about:logins y el aviso de guardar de Firefox (AboutLoginsParent, LoginManagerPrompter): openDialog modal sin
  *   argumentos, y después miran LoginHelper.isPrimaryPasswordSet();
  * - contrasenas.sys.mjs: gDialogBox.open(url, bolsa) con «aegis-motivo» = «guardar» (antes de guardar la primera
- *   contraseña: los botones dicen «No guardar» y «Crear y guardar») o «crear». Al terminar, pone «aegis-creada».
+ *   contraseña, solo con aegis.contrasenas.principal_obligatoria: los botones dicen «No guardar» y «Crear y
+ *   guardar»), «accion» (antes de pasar o recibir de otro Aegis o de añadir un código de verificación, que la exigen
+ *   siempre: explica por qué) o «crear». Al terminar, pone «aegis-creada».
  * Cerrar sin crear (botón, Esc o la cruz) no cambia nada: quien lo abrió ve que sigue sin contraseña principal.
  *
  * Dos modos, según el token: crear (sin contraseña principal) o cambiar (pide la actual). Las dos cosas las hace
@@ -94,6 +96,9 @@ function prepararTextos() {
     l10n.setAttributes($("explicacion"), "aegis-principal-explicacion-guardar");
     // Los botones de serie del HTML ya son «No guardar» y «Crear y guardar».
   } else {
+    if (motivo() == "accion") {
+      l10n.setAttributes($("explicacion"), "aegis-principal-explicacion-accion");
+    }
     l10n.setAttributes(cancelar, "aegis-principal-cancelar");
     l10n.setAttributes(aceptar, "aegis-principal-crear");
   }

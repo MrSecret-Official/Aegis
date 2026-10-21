@@ -22,6 +22,11 @@
  * Qué se hace con ellos:
  * - el código se calcula en el proceso principal (totp.sys.mjs) y solo sale de él el código, nunca el secreto: el
  *   panel de contraseñas, about:logins y el autorrelleno reciben seis u ocho cifras;
+ * - añadir un código, cambiar su clave o recibirlo de otro Aegis exige la contraseña principal, aunque guardar una
+ *   contraseña ya no la exija: sin ella, quien copie el perfil tendría los dos pasos de la cuenta (guardar() y
+ *   recibir() lo comprueban; abrirDialogo pide crearla antes de abrir el diálogo para añadir). Quitar uno, no: puede
+ *   quedar uno de cuando la había, y quitarlo no debe obligar a crearla (el diálogo de uno que ya está se abre igual;
+ *   si sin ella se intenta cambiar la clave, dice cómo crearla);
  * - ver o copiar un código pide verificar la identidad (Windows Hello o la contraseña principal), como ver una
  *   contraseña, con la misma gracia de 5 minutos que about:logins;
  * - copiar lo marca como sensible (fuera del historial del portapapeles de Windows) y, a los 30 s, lo borra si sigue
@@ -37,6 +42,7 @@ import { codigo as calcularCodigo, leer as leerTotp, normalizar as normalizarTot
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  AegisContrasenas: new URL("../contrasenas.sys.mjs", import.meta.url).href,
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
@@ -147,6 +153,18 @@ async function descifrar(entrada) {
     throw Object.assign(new Error("Aegis: código ilegible"), { codigo: "ilegible" });
   }
   return JSON.parse(claro);
+}
+
+/**
+ * Sin contraseña principal no se guarda ningún secreto: lanza un error con codigo «sin-principal» (el diálogo lo
+ * explica).
+ */
+function exigirPrincipal() {
+  if (!token().hasPassword) {
+    throw Object.assign(new Error("Aegis: sin contraseña principal no se guardan códigos de verificación"), {
+      codigo: "sin-principal",
+    });
+  }
 }
 
 /* ───────── Verificar la identidad ───────── */
@@ -484,6 +502,8 @@ export const AegisAutenticador = {
     if (!login) {
       throw new Error("Aegis: el inicio de sesión ya no existe");
     }
+    // Añadir o cambiar la clave exige la contraseña principal (arriba, «Qué se hace con ellos»).
+    exigirPrincipal();
     const datos = await cargar();
     const cifrado = await cifrar(totp);
     datos.entradas = datos.entradas.filter(e => e.guid != guid);
@@ -527,6 +547,7 @@ export const AegisAutenticador = {
    * @returns {Promise<boolean>} true si se ha guardado; false si la cuenta ya tenía código
    */
   async recibir(guid, totp) {
+    exigirPrincipal();
     const normal = normalizarTotp(totp ?? {});
     const [login] = await Services.logins.searchLoginsAsync({ guid });
     if (!login) {
@@ -611,6 +632,13 @@ export const AegisAutenticador = {
     win = win && !win.closed ? win : lazy.BrowserWindowTracker.getTopWindow({ allowFromInactiveWorkspace: true });
     if (!win) {
       return;
+    }
+    // Añadir uno pide la contraseña principal (arriba, «Qué se hace con ellos»); antes de abrir este diálogo, porque
+    // gDialogBox pondría el de la contraseña en cola detrás.
+    if (!token().hasPassword && !(guid && (await this.tiene(guid)))) {
+      if (!(await lazy.AegisContrasenas.pedirPrincipal(win))) {
+        return;
+      }
     }
     const args = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag2);
     args.setPropertyAsBool("async", true);

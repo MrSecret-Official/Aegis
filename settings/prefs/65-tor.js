@@ -1,4 +1,4 @@
-// Aegis · Tor (overlay/browser/components/aegis/tor/): «Nueva ventana privada con Tor» (menú ☰ y Mayús+Alt+N), en
+// Aegis · Tor (overlay/browser/components/aegis/tor/): «Nueva ventana privada con Tor» (menú ☰ y Ctrl+Mayús.+U), en
 // una instancia aparte de Aegis con su propio perfil. tor no viene con el navegador: se descarga aparte, solo si el
 // usuario lo pide (Ajustes › Privacidad › Tor), con la versión y el sha256 fijados en tor/tor.json.
 

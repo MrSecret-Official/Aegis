@@ -27,6 +27,9 @@
   --aegis-hover: rgb(255 255 255 / 0.04);
   --aegis-sel: rgb(255 255 255 / 0.075);
   --aegis-track: rgb(255 255 255 / 0.14);
+  /* Placa detrás de un favicon oscuro y de color (favicons.sys.mjs; solo en el oscuro): sobre la barra, ~#9b9b9d, y un
+     azul marino encima, ≥ 4,5:1. */
+  --aegis-favicon-placa: rgb(244 244 245 / 0.6);
   --aegis-field-border: rgb(255 255 255 / 0.10);
   --aegis-check-border: rgb(255 255 255 / 0.35);
   --aegis-prim: #ececee;
@@ -253,6 +256,74 @@
   [aegis-enfasis-muestra="propio"][aegis-enfasis-degradado] {
     --aegis-grad-hasta: oklch(from var(--aegis-accent-2) 0.944 calc(c * 0.25) h);
     --aegis-filo-hasta: color-mix(in srgb, var(--aegis-accent-2) 40%, transparent);
+  }
+}
+
+/* ── Contenedores (DISENO §2, «Contenedores») ─────────────────────────────────────────────────────────────────────
+   Los diez colores que el usuario da a un contenedor (ContextualIdentityService: blue, cyan, green…; la clase
+   identity-color-<color> que pone Firefox) con la fórmula del énfasis: el tono de Firefox, la luminosidad en la banda
+   del esquema y poco croma. Se distinguen entre sí sin gritar y llegan a 5,2:1 (oscuro) o 4,5:1 (claro) sobre bg,
+   barra lateral, superficie y menú, como el énfasis. «gray» es el gris secundario. El color de un contenedor es
+   identidad elegida por el usuario (como el énfasis), no decoración: solo va en su glifo, su punto de la pestaña y el
+   tinte de su indicador (estilos/contenedores.css). */
+.identity-color-blue { --aegis-contenedor-base: oklch(0.76 0.10 250); }
+.identity-color-cyan { --aegis-contenedor-base: oklch(0.78 0.08 195); }
+.identity-color-green { --aegis-contenedor-base: oklch(0.78 0.09 150); }
+.identity-color-yellow { --aegis-contenedor-base: oklch(0.80 0.10 95); }
+.identity-color-orange { --aegis-contenedor-base: oklch(0.78 0.10 60); }
+.identity-color-red { --aegis-contenedor-base: oklch(0.74 0.11 25); }
+.identity-color-pink { --aegis-contenedor-base: oklch(0.76 0.10 350); }
+.identity-color-purple { --aegis-contenedor-base: oklch(0.74 0.10 320); }
+.identity-color-violet { --aegis-contenedor-base: oklch(0.74 0.09 290); }
+[class*="identity-color-"] {
+  --aegis-contenedor: oklch(from var(--aegis-contenedor-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
+}
+.identity-color-gray {
+  --aegis-contenedor: var(--aegis-sub);
+}
+@media (prefers-color-scheme: light) {
+  [class*="identity-color-"] {
+    --aegis-contenedor: oklch(from var(--aegis-contenedor-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
+  }
+  .identity-color-gray {
+    --aegis-contenedor: var(--aegis-sub);
+  }
+}
+
+/* ── Grupos de pestañas (DISENO §2, «Grupos de pestañas») ───────────────────────────────────────────────────────────
+   Los nueve colores de un grupo (azul, púrpura, cian, naranja, amarillo, rosa, verde, gris y rojo: los de Firefox) con
+   los mismos tonos que los contenedores y la fórmula del énfasis, en lugar de la paleta saturada de Firefox. Encima,
+   el texto de la acción principal (#0b0b0c en oscuro, blanco en claro: ≥ 7:1 y ≥ 5,3:1, como el énfasis).
+   mapeo-firefox.css los pasa a los tokens de Firefox (--tab-group-<color>…). El gris es el secundario. */
+:root {
+  --aegis-grupo-blue-base: oklch(0.76 0.10 250);
+  --aegis-grupo-purple-base: oklch(0.74 0.10 320);
+  --aegis-grupo-cyan-base: oklch(0.78 0.08 195);
+  --aegis-grupo-orange-base: oklch(0.78 0.10 60);
+  --aegis-grupo-yellow-base: oklch(0.80 0.10 95);
+  --aegis-grupo-pink-base: oklch(0.76 0.10 350);
+  --aegis-grupo-green-base: oklch(0.78 0.09 150);
+  --aegis-grupo-red-base: oklch(0.74 0.11 25);
+  --aegis-grupo-blue: oklch(from var(--aegis-grupo-blue-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
+  --aegis-grupo-purple: oklch(from var(--aegis-grupo-purple-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
+  --aegis-grupo-cyan: oklch(from var(--aegis-grupo-cyan-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
+  --aegis-grupo-orange: oklch(from var(--aegis-grupo-orange-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
+  --aegis-grupo-yellow: oklch(from var(--aegis-grupo-yellow-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
+  --aegis-grupo-pink: oklch(from var(--aegis-grupo-pink-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
+  --aegis-grupo-green: oklch(from var(--aegis-grupo-green-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
+  --aegis-grupo-red: oklch(from var(--aegis-grupo-red-base) clamp(0.72, l, 0.80) min(c, 0.11) h);
+  --aegis-grupo-gray: var(--aegis-sub);
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --aegis-grupo-blue: oklch(from var(--aegis-grupo-blue-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
+    --aegis-grupo-purple: oklch(from var(--aegis-grupo-purple-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
+    --aegis-grupo-cyan: oklch(from var(--aegis-grupo-cyan-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
+    --aegis-grupo-orange: oklch(from var(--aegis-grupo-orange-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
+    --aegis-grupo-yellow: oklch(from var(--aegis-grupo-yellow-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
+    --aegis-grupo-pink: oklch(from var(--aegis-grupo-pink-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
+    --aegis-grupo-green: oklch(from var(--aegis-grupo-green-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
+    --aegis-grupo-red: oklch(from var(--aegis-grupo-red-base) clamp(0.40, l, 0.48) min(c, 0.10) h);
   }
 }
 

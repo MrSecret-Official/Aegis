@@ -21,6 +21,11 @@
  *   (escudos/excepciones.sys.mjs); «Excepciones de este sitio…» abre Ajustes › Escudos (escudos/ajustes.sys.mjs);
  * - la huella digital: el nivel y el permiso por sitio de Caja fuerte, de huella.sys.mjs.
  *
+ * Una sola cara (decisión del usuario, 2026-10-20): la protección contra rastreo de Firefox sigue trabajando por debajo,
+ * pero todo lo que se ve lleva a los Escudos. En el panel del candado, una fila de los Escudos en lugar de la tarjeta
+ * y el interruptor de Firefox (pintarConfianza; escudos.css oculta los suyos). about:protections lleva a Ajustes ›
+ * Escudos (escudos-ayuda.sys.mjs) y Ajustes › Privacidad lo hace ajustes.sys.mjs.
+ *
  * Enganches: AegisEscudos.anotar(browser, categoría, origen) suma lo que cancela otro módulo (el motor propio, el
  * filtro de Google); AegisEscudos.registrarFuente() añade otra fuente de bloqueos al contador y a la lista, y
  * AegisEscudos.avisar() pide repintar. Este módulo no observa peticiones.
@@ -379,7 +384,8 @@ function crearBoton(win) {
 }
 
 /**
- * Repinta el botón (y el panel, si está abierto) con el estado de la pestaña visible.
+ * Repinta el botón (y el panel, si está abierto) con el estado de la pestaña visible. Con el panel del candado
+ * abierto, también su fila de los Escudos.
  *
  * @param {Window} win
  */
@@ -389,6 +395,9 @@ function actualizar(win) {
     return;
   }
   e.ultima = win.performance.now();
+  if (win.document.getElementById("trustpanel-popup")?.state == "open") {
+    pintarConfianza(win);
+  }
   const browser = win.gBrowser.selectedBrowser;
   if (!aplicable(browser)) {
     const conHttps = soloHttps(browser);
@@ -1287,6 +1296,53 @@ function alternarPanel(win, evento) {
   e.panel.openPopup(e.boton, { position: "bottomright topright", x, y, triggerEvent: evento });
 }
 
+// ── Una sola cara: el panel del candado y about:protections ─────────────────────────────────────────────────────
+
+/**
+ * Panel del candado (el «trust panel» de Firefox 158). Firefox enseña ahí su protección contra rastreo como algo
+ * aparte (la tarjeta con el escudo de colores, «… está en guardia», su contador y su interruptor), y en Aegis esa
+ * protección es una pieza de los Escudos: escudos.css la oculta y aquí se pone en su lugar una fila con el estado de
+ * los Escudos en el sitio (el del botón de la barra, con la misma cuenta) que abre su panel. Lo demás (conexión, certificado,
+ * limpiar los datos del sitio, Ajustes de privacidad) se queda. La fila se crea la primera vez que se abre el panel
+ * (Firefox lo saca de un <template> justo antes) y se repinta al abrirlo y, mientras está abierto, con el botón.
+ */
+const ID_CONFIANZA = "aegis-escudos-confianza";
+
+/** @param {Window} win */
+function pintarConfianza(win) {
+  const doc = win.document;
+  let fila = doc.getElementById(ID_CONFIANZA);
+  if (!fila) {
+    const grafica = doc.getElementById("trustpanel-graphic-section");
+    if (!grafica) {
+      return;
+    }
+    fila = doc.createXULElement("toolbarbutton");
+    fila.id = ID_CONFIANZA;
+    fila.className = "subviewbutton subviewbutton-iconic subviewbutton-nav";
+    fila.addEventListener("command", () => {
+      const popup = doc.getElementById("trustpanel-popup");
+      // El de Escudos se abre cuando el del candado ya se ha cerrado: dos paneles a la vez se cierran entre sí.
+      popup.addEventListener("popuphidden", () => AegisEscudos.abrirPanel(win), { once: true });
+      popup.hidePopup();
+    });
+    grafica.after(fila);
+  }
+  const browser = win.gBrowser.selectedBrowser;
+  // Fuera de una web (about:, archivos, la página de aviso de Solo HTTPS) los Escudos no tienen nada que decir.
+  fila.hidden = !aplicable(browser);
+  if (fila.hidden) {
+    return;
+  }
+  const abajo = bajados(browser);
+  // El mismo estado y la misma cuenta que el botón, con un texto más corto (el panel es estrecho).
+  const etiqueta = abajo
+    ? texto("aegis-escudos-boton-bajados").attributes.tooltiptext
+    : texto("aegis-escudos-confianza", { count: bloqueado(browser).total }).value;
+  fila.setAttribute("label", etiqueta ?? "");
+  fila.setAttribute("image", icono(abajo ? "escudo-bajado" : "escudo"));
+}
+
 // ── Ventanas ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export const AegisEscudos = {
@@ -1324,7 +1380,25 @@ export const AegisEscudos = {
       },
     };
     win.gBrowser.addProgressListener(oyente);
-    win.addEventListener("unload", () => win.gBrowser.removeProgressListener(oyente), { once: true });
+    // Panel del candado: la fila de los Escudos, cada vez que se abre.
+    const alAbrir = ev => {
+      if (ev.target.id == "trustpanel-popup") {
+        try {
+          pintarConfianza(win);
+        } catch (ex) {
+          console.error("Aegis: Escudos, panel del candado", ex);
+        }
+      }
+    };
+    doc.addEventListener("popupshowing", alAbrir);
+    win.addEventListener(
+      "unload",
+      () => {
+        win.gBrowser.removeProgressListener(oyente);
+        doc.removeEventListener("popupshowing", alAbrir);
+      },
+      { once: true }
+    );
     actualizar(win);
   },
 

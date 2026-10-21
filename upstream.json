@@ -11,7 +11,7 @@
     "clave_huella": "14F26682D0916CDD81E37B6D61B7B526D98F0353"
   },
   "aegis": {
-    "revision": 2
+    "revision": 3
   },
   "l10n": {
     "comentario": "Traducciones de la interfaz de Firefox (build multi-idioma, docs/GUIA.md): el monorepo mozilla-l10n/firefox-l10n en el commit que fija browser/locales/l10n-changesets.json de esta versión de Firefox para estos idiomas (aegis.py fetch lo comprueba). Se descargan solo al construir y se comprueban con su sha256; el navegador nunca descarga idiomas. en-US es el de base y no va en la lista. Al cambiar de versión de Firefox: el commit nuevo, sha256 vacío y `fetch` lo calcula.",
@@ -43,6 +43,69 @@
       "url": "https://codeload.github.com/brave/adblock-resources/tar.gz/6da9b247c3368baa8b4f24cd02046e18702a6527",
       "sha256": "acdef71cf77b1beb292208389c06e3adcdce2fc940c0386a4fa33b8298ff56b5",
       "licencia": "MPL-2.0"
+    }
+  },
+  "diccionarios": {
+    "comentario": "Diccionarios de ortografía (Hunspell) que van dentro de la build, uno por idioma de l10n › idiomas (el de en-US ya lo trae Firefox). Cada archivo, con su sha256: «fuente» l10n = del firefox-l10n fijado en l10n (ruta dentro de ~/.mozbuild/l10n-central; son los que Mozilla pone en sus builds de ese idioma), libreoffice = de LibreOffice/dictionaries en el commit de «libreoffice» (ruta dentro del repo). `aegis.py fetch` los baja y comprueba en cache/diccionarios; `overlay` los copia a browser/components/aegis/diccionarios, cuyo moz.build los instala en dist/bin/dictionaries (resource://gre/dictionaries, en omni.ja, registrados por built_in_addons.json). El nombre del archivo es el código del idioma de la interfaz: así el corrector usa de serie el del idioma de la app. El navegador nunca los descarga.",
+    "libreoffice": {
+      "commit": "67032ee957631908098a72edf48dc81cac27e369",
+      "url": "https://raw.githubusercontent.com/LibreOffice/dictionaries/67032ee957631908098a72edf48dc81cac27e369/"
+    },
+    "idiomas": {
+      "es-ES": {
+        "fuente": "l10n",
+        "nombre": "Diccionario de español (España) del proyecto RLA-ES, versión 2.9",
+        "licencia": "GPL-3.0-or-later OR LGPL-3.0-or-later OR MPL-1.1+ (a elegir; Aegis lo usa con la MPL)",
+        "archivos": {
+          "es-ES.aff": {"ruta": "es-ES/extensions/spellcheck/hunspell/es-ES.aff", "sha256": "e73a9bf8e1383f4986a5dc9e2fbed49371c0c61f511c626d15586bd433c1cad9"},
+          "es-ES.dic": {"ruta": "es-ES/extensions/spellcheck/hunspell/es-ES.dic", "sha256": "92992d3bd1c393cab1c66d954802466ae44964ccbd23953c22dafa0bb4e37341"},
+          "es-ES-LICENSE.md": {"ruta": "es-ES/extensions/spellcheck/hunspell/LICENSE.md", "sha256": "2b70fd5cb8d3b34cc6ae322c969557a2270b99017594addb2531ef5ffd9e1b17"},
+          "es-ES-README.txt": {"ruta": "es-ES/extensions/spellcheck/hunspell/README.txt", "sha256": "455632a3a3588573452522fb745cf28fe695b886a7e662d0a493f3237f7d46ed"}
+        }
+      },
+      "pt-BR": {
+        "fuente": "l10n",
+        "nombre": "Diccionario de portugués (Brasil), obra derivada del de pt-PT de la Universidade do Minho, versión 140.2025.142.1267",
+        "licencia": "GPL-2.0 OR LGPL-2.1 OR MPL-1.1 (a elegir; Aegis lo usa con la MPL)",
+        "archivos": {
+          "pt-BR.aff": {"ruta": "pt-BR/extensions/spellcheck/hunspell/pt-BR.aff", "sha256": "9901ba1ae95224d2f5e4abbb82aa12eb8225efa635164e53a50ecc2c4ef92d0b"},
+          "pt-BR.dic": {"ruta": "pt-BR/extensions/spellcheck/hunspell/pt-BR.dic", "sha256": "29af08fd3f82d780c50f9e19465a0dcf56d75460d07cdb684772c2930d092225"},
+          "pt-BR-README.txt": {"ruta": "pt-BR/extensions/spellcheck/hunspell/README.txt", "sha256": "316e2a069878833c03fb9ef2f86e6c7a1e488fbcbeb690c25215be836a365c1c"}
+        }
+      },
+      "fr": {
+        "fuente": "l10n",
+        "nombre": "Dictionnaire orthographique français «Toutes variantes» de Grammalecte, versión 7.7",
+        "licencia": "MPL-2.0",
+        "archivos": {
+          "fr.aff": {"ruta": "fr/extensions/spellcheck/hunspell/fr.aff", "sha256": "254756d4fd286a923b3f51dae65965bfc8619aa96db8528326bf31fcdc0840e4"},
+          "fr.dic": {"ruta": "fr/extensions/spellcheck/hunspell/fr.dic", "sha256": "140c5296b514bc55af7433f8913a73245b9b18116830a7db48e2aabfa85fcbed"},
+          "fr-README.txt": {"ruta": "fr/extensions/spellcheck/hunspell/README_fr.txt", "sha256": "4a25abf740ad6ba5e8d0cfc0d2ffadc3c13c303f8fe389f323b061a389350f83"}
+        }
+      },
+      "de": {
+        "fuente": "libreoffice",
+        "nombre": "de_DE_frami (Franz Michael Baumann, 2017-01-09) sobre igerman98 2016-12-07 (Björn Jacke), el de alemán (Alemania) de LibreOffice",
+        "licencia": "GPL-2.0 OR GPL-3.0 (obra separada que va junto a Aegis)",
+        "archivos": {
+          "de.aff": {"ruta": "de/de_DE_frami.aff", "sha256": "646bf3333ac69c23e9d794533ee5241d6f755c359e8fe10a648f87613743d594"},
+          "de.dic": {"ruta": "de/de_DE_frami.dic", "sha256": "4ca3c958b0e5545910999bc246f668840bf8ede3df8e5e6790d05edd5a586c38"},
+          "de-COPYING-GPLv2.txt": {"ruta": "de/COPYING_GPLv2", "sha256": "e7431ac20e815b6797369e802f9e4bb1b0082485060d8b096235f035d741bd89"},
+          "de-COPYING-GPLv3.txt": {"ruta": "de/COPYING_GPLv3", "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"},
+          "de-README.txt": {"ruta": "de/README_de_DE_frami.txt", "sha256": "c141f4f79c428b7348b5012836f4ad3db4d124f288f15effc22696dc876512ae"},
+          "de-README-extension.txt": {"ruta": "de/README_extension_owner.txt", "sha256": "7662cbc363fdee12bc03a5295148587bb76923c121792a401115e654fea37b5c"}
+        }
+      },
+      "it": {
+        "fuente": "libreoffice",
+        "nombre": "Dizionario italiano de LibreItalia (extensión lingüística italiana 5.1.1, 2022-11-07), el de italiano de LibreOffice",
+        "licencia": "GPL-3.0 (obra separada que va junto a Aegis)",
+        "archivos": {
+          "it.aff": {"ruta": "it_IT/it_IT.aff", "sha256": "951afaa19272f13555b8823e8bcf9ccf78f8fe1a07835bdfb912ab3e4d537c2b"},
+          "it.dic": {"ruta": "it_IT/it_IT.dic", "sha256": "bae1e3501dcd2a923669592493b3fde6c02aae7c7aab83bf5e5b49077e73dd64"},
+          "it-README.txt": {"ruta": "it_IT/README_it_IT.txt", "sha256": "34c3e93595cf3cf5f3afc9bc0d98eea12593750383f1e82ed1d3ca29f9681283"}
+        }
+      }
     }
   }
 }

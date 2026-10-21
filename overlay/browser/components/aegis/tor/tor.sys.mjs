@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Aegis · Tor: «Nueva ventana privada con Tor», como en Brave (menú ☰ y Mayús+Alt+N). Opcional y apagado mientras
+ * Aegis · Tor: «Nueva ventana privada con Tor», como en Brave (menú ☰ y Ctrl+Mayús+U). Opcional y apagado mientras
  * no se use: tor no viene con el navegador, se descarga aparte cuando el usuario lo pide (descarga.sys.mjs).
  *
  * Por qué una INSTANCIA aparte con su propio perfil y no unas ventanas privadas más (comprobado en la 157): todas
@@ -258,7 +258,7 @@ function userJs(version) {
 }
 
 /**
- * Abre una ventana privada con Tor (la entrada del menú y Mayús+Alt+N).
+ * Abre una ventana privada con Tor (la entrada del menú y Ctrl+Mayús+U).
  *
  * @param {Window} win la ventana desde la que se pide
  */
@@ -600,7 +600,7 @@ function textoDelIndicador() {
 
 /**
  * Entrada «Nueva ventana privada con Tor» (y, en la instancia, «Nueva identidad de Tor») debajo de «Nueva ventana
- * privada» del menú ☰, con Mayús+Alt+N (como en Brave). La vista del menú vive en una plantilla que se copia al
+ * privada» del menú ☰, con Ctrl+Mayús+U. La vista del menú vive en una plantilla que se copia al
  * documento la primera vez que se abre (PanelMultiView.getViewNode da el nodo de la plantilla o el ya copiado): las
  * entradas se ponen ahí al abrir la ventana, sin crear el menú antes de tiempo, y funcionan con elementos <command>
  * (una copia de la plantilla no conservaría los oyentes).
@@ -619,13 +619,18 @@ function menuYAtajo(win) {
     comando("aegis-cmd-tor-identidad", () => nuevaIdentidad(win));
   }
 
-  // Mayús+Alt+N, en un keyset propio para que la ventana lo registre al insertarlo.
+  // Ctrl+Mayús+U (Cmd+Mayús+U en macOS), en un keyset propio para que la ventana lo registre al insertarlo. Antes era
+  // Mayús+Alt+N (el de Brave), pero en Windows Alt+Mayús es el modificador de las teclas de acceso de las webs
+  // (ui.key.contentAccess = 5) y una web con accesskey="n" se lo quitaba. En Firefox 158 Ctrl+Mayús+U está libre (Ctrl+U
+  // es ver el código fuente; Ctrl+Alt+U, la barra de pestañas abiertas).
+  // SecretOS (Linux): IBus usa Ctrl+Mayús+U para escribir caracteres Unicode y se queda la tecla antes que Aegis;
+  // al llegar a Linux, elegir otro atajo allí (AppConstants.platform == "linux").
   const teclas = doc.createXULElement("keyset");
   teclas.id = "aegis-keyset-tor";
   const tecla = doc.createXULElement("key");
   tecla.id = "aegis-key-tor";
-  tecla.setAttribute("key", "N");
-  tecla.setAttribute("modifiers", "alt,shift");
+  tecla.setAttribute("key", "U");
+  tecla.setAttribute("modifiers", "accel,shift");
   tecla.setAttribute("command", "aegis-cmd-tor");
   teclas.append(tecla);
   (doc.getElementById("mainKeyset")?.parentNode ?? doc.documentElement).append(teclas);

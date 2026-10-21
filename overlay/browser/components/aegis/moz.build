@@ -18,12 +18,15 @@ EXTRA_JS_MODULES.aegis += [
     "busqueda-limpia.sys.mjs",
     "complementos.sys.mjs",
     "conexiones.sys.mjs",
+    "contenedores.sys.mjs",
     "contrasenas-panel.sys.mjs",
     "contrasenas.sys.mjs",
+    "correo.sys.mjs",
     "enfasis-propio.sys.mjs",
     "enfasis.sys.mjs",
     "escudos-ayuda.sys.mjs",
     "escudos.sys.mjs",
+    "favicons.sys.mjs",
     "google.sys.mjs",
     "huella.sys.mjs",
     "icono.sys.mjs",
@@ -31,7 +34,9 @@ EXTRA_JS_MODULES.aegis += [
     "logos.sys.mjs",
     "marcadores.sys.mjs",
     "modos.sys.mjs",
+    "perfiles.sys.mjs",
     "selector-enfasis.sys.mjs",
+    "sesiones.sys.mjs",
 ]
 
 EXTRA_JS_MODULES.aegis.estilos += [
@@ -42,17 +47,21 @@ EXTRA_JS_MODULES.aegis.estilos += [
     "estilos/codigos.css",
     "estilos/complementos-sombra.css",
     "estilos/complementos.css",
+    "estilos/contenedores.css",
     "estilos/contrasenas-panel.css",
     "estilos/escudos.css",
     "estilos/extensiones.css",
+    "estilos/favicons.css",
     "estilos/fuentes.css",
     "estilos/interfaz.css",
     "estilos/lanzador.css",
     "estilos/mapeo-firefox.css",
     "estilos/marcadores.css",
     "estilos/selector-enfasis.css",
+    "estilos/sombra-firefox.css",
     "estilos/tokens.css",
     "estilos/tor.css",
+    "estilos/workflow.css",
 ]
 
 # Códigos de verificación (TOTP): el cálculo, el almacén cifrado y el autorrelleno (sus actores se registran solo
@@ -111,6 +120,9 @@ EXTRA_JS_MODULES.aegis.escudos += [
 
 # El motor de Escudos: interfaz y registro del servicio (el código Rust lo enlaza gkrust, parche 0600-escudos/0001).
 DIRS += ["escudos/motor-nativo"]
+
+# Diccionarios de ortografía de los idiomas de la interfaz (upstream.json › diccionarios; los trae `aegis.py fetch`).
+DIRS += ["diccionarios"]
 
 EXTRA_JS_MODULES.aegis.escudos.filtros += [
     "escudos/filtros/adguard-banners-apps.txt",
@@ -181,12 +193,17 @@ EXTRA_JS_MODULES.aegis.paginas += [
     "paginas/contrasenas-sombra.css",
     "paginas/contrasenas.css",
     "paginas/contrasenas.sys.mjs",
+    "paginas/correo.sys.mjs",
     "paginas/errores-sombra.css",
     "paginas/errores.css",
     "paginas/escudos-ayuda.css",
     "paginas/escudos-ayuda.html",
+    "paginas/lector.css",
     "paginas/logos.sys.mjs",
     "paginas/nueva-pestana.css",
+    "paginas/perfiles-sombra.css",
+    "paginas/perfiles.css",
+    "paginas/perfiles.sys.mjs",
     "paginas/personalizar.sys.mjs",
     "paginas/privada.css",
     "paginas/privada.sys.mjs",
@@ -213,14 +230,20 @@ EXTRA_JS_MODULES.aegis.estilos.iconos += [
     "estilos/iconos/accion-silenciar.svg",
     "estilos/iconos/accion-temas.svg",
     "estilos/iconos/accion-traducir.svg",
+    "estilos/iconos/acciones.svg",
     "estilos/iconos/acerca.svg",
     "estilos/iconos/aegis-pequeno.svg",
     "estilos/iconos/automatizado.svg",
+    "estilos/iconos/aviso.svg",
     "estilos/iconos/bienvenida-apariencia.svg",
     "estilos/iconos/bienvenida-buscador.svg",
     "estilos/iconos/bienvenida-escudos.svg",
     "estilos/iconos/bienvenida-modo.svg",
+    "estilos/iconos/brocha.svg",
+    "estilos/iconos/contenedor-ninguno.svg",
+    "estilos/iconos/contenedor.svg",
     "estilos/iconos/copiar.svg",
+    "estilos/iconos/correo.svg",
     "estilos/iconos/editar.svg",
     "estilos/iconos/escudo-ajustes.svg",
     "estilos/iconos/escudo-antiadblock.svg",
@@ -245,12 +268,15 @@ EXTRA_JS_MODULES.aegis.estilos.iconos += [
     "estilos/iconos/fijar.svg",
     "estilos/iconos/historial.svg",
     "estilos/iconos/llave.svg",
+    "estilos/iconos/mas.svg",
     "estilos/iconos/modo.svg",
     "estilos/iconos/passkey.svg",
+    "estilos/iconos/perfiles.svg",
     "estilos/iconos/predeterminado.svg",
     "estilos/iconos/privado.svg",
     "estilos/iconos/tor.svg",
     "estilos/iconos/vista.svg",
+    "estilos/iconos/visto.svg",
 ]
 
 for idioma in ["en-US", "es-ES", "pt-BR", "fr", "de", "it"]:

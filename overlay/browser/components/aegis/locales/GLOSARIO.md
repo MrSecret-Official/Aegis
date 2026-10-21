@@ -97,7 +97,8 @@ del menú sigue el nombre que Firefox da a «Nueva ventana privada» en cada idi
 - «Huella» tiene aquí dos sentidos: la huella digital del navegador (Caja fuerte) y la huella sha256 de un archivo.
   En es se distinguen por el contexto («su huella sha256»); en los demás idiomas, con palabras distintas si hace
   falta.
-- Atajo: es «Mayús+Alt+N», en-US y pt-BR «Shift+Alt+N», fr «Maj+Alt+N», de «Umschalt+Alt+N», it «Maiusc+Alt+N».
+- Atajo: es «Ctrl+Mayús.+U» (con punto, como `platformKeys.properties`), en-US y pt-BR «Ctrl+Shift+U», fr «Ctrl+Maj+U»,
+  de «Strg+Umschalt+U», it «Ctrl+Maiusc+U».
 - de: «Verbindungen» por «circuitos», más claro para todo el mundo que «Schaltkreise».
 
 ### Escudos: molestias, excepciones y contador
@@ -148,7 +149,7 @@ ese sitio».
 | criptomineros | cryptominers | criptomineradores | mineurs de cryptomonnaies | Krypto-Miner | cryptominer |
 | rastreadores de redes sociales | social media trackers | rastreadores de redes sociais | traqueurs de réseaux sociaux | Social-Media-Tracker | traccianti dei social media |
 | listas de filtros | filter lists | listas de filtros | listes de filtres | Filterlisten | liste di filtri |
-| contraseña principal | primary password | senha principal | mot de passe principal | Hauptpasswort | password principale | Término de Firefox (Primary Password): el mismo en todo el navegador. Sin ella no se guardan contraseñas en Aegis. |
+| contraseña principal | primary password | senha principal | mot de passe principal | Hauptpasswort | password principale | Término de Firefox (Primary Password): el mismo en todo el navegador. Es opcional para guardar contraseñas (Aegis la recomienda); es obligatoria para pasarlas, recibirlas y añadir códigos de verificación. |
 | bóveda (de contraseñas) | saved passwords | senhas salvas | mots de passe enregistrés | gespeicherte Passwörter | password salvate | Lo que se cierra y pide la contraseña principal. Solo es «bóveda» en es: en los demás idiomas **no** se usa vault, cofre, coffre, Tresor ni cassaforte, que son el nivel «Caja fuerte» de la huella digital; se dice «las contraseñas guardadas» y «bloquear» (lock, bloquear, verrouiller, sperren, bloccare). |
 | fortaleza (de una contraseña) | strength | força | robustesse | Stärke | sicurezza | Medidor del diálogo de la contraseña principal: «Fortaleza: aceptable / fuerte / muy fuerte». Como el medidor de calidad de Firefox en cada idioma; it «sicurezza» (buona, ottima). |
 | código de verificación | verification code | código de verificação | code de vérification | Bestätigungscode | codice di verifica | El de 6 u 8 cifras de la verificación en dos pasos (TOTP) que calcula Aegis. No «código OTP» ni «token». |

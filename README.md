@@ -20,8 +20,8 @@ Un navegador privado, limpio y rápido, basado en el código de Mozilla Firefox 
 - **Anonimato:** protección contra la huella digital, contenedores, proxy por espacio y una ventana
   anónima por la red Tor. Aegis anónimo **no es Tor Browser**: si tu seguridad depende de ello, usa
   Tor Browser.
-- **Contraseñas cerradas:** se guardan cifradas y no se pueden ver ni exportar en claro; solo salen a otro
-  navegador con un código de un solo uso.
+- **Contraseñas en tu equipo:** se guardan cifradas y sin exportación en claro; con contraseña principal, quien copie
+  tu perfil no puede leerlas. Solo salen a otro Aegis con un código de un solo uso.
 - **Tu nube, cifrada:** perfiles con Google, Microsoft o GitHub y sincronización cifrada de extremo a
   extremo en tu Google Drive, OneDrive o un repositorio privado de GitHub. No hay servidores de Aegis.
 - **Se actualiza solo:** las versiones nuevas llegan firmadas desde GitHub Releases; la comprobación no envía

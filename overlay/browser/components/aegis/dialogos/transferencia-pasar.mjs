@@ -98,9 +98,29 @@ function actualizar() {
 
 const ERRORES = {
   autenticacion: "aegis-pasar-error-autenticacion",
+  "sin-principal": "aegis-pasar-error-sin-principal",
   vacio: "aegis-pasar-vacio",
   escribir: "aegis-pasar-error-escribir",
 };
+
+/**
+ * Pasar exige la contraseña principal (transferencia.sys.mjs lo comprueba otra vez en verificarIdentidad y pasar).
+ * Abierto desde abrirPasar ya la hay. Si se ha abierto a mano (su dirección en una pestaña), se ofrece crearla aquí;
+ * dentro de gDialogBox no se puede (el diálogo de la contraseña quedaría en cola detrás de este) y se dice cómo.
+ *
+ * @returns {Promise<boolean>} si hay contraseña principal
+ */
+async function asegurarPrincipal() {
+  const token = Cc["@mozilla.org/security/internalkeytoken;1"].createInstance(Ci.nsIPKCS11Token);
+  if (token.hasPassword) {
+    return true;
+  }
+  if (document.documentElement.hasAttribute("subdialog")) {
+    return false;
+  }
+  const { AegisContrasenas } = ChromeUtils.importESModule("resource:///modules/aegis/contrasenas.sys.mjs");
+  return AegisContrasenas.crearPrincipal(window.browsingContext.topChromeWindow, "accion");
+}
 
 async function enviar(evento) {
   evento.preventDefault();
@@ -113,6 +133,10 @@ async function enviar(evento) {
   actualizar();
   decir(errorGeneral, null);
   try {
+    if (!(await asegurarPrincipal())) {
+      await decir(errorGeneral, ERRORES["sin-principal"]);
+      return;
+    }
     if (!(await AegisTransferencia.verificarIdentidad(window))) {
       await decir(errorGeneral, ERRORES.autenticacion);
       return;

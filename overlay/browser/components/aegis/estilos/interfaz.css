@@ -536,3 +536,178 @@ panelview:not(#unified-extensions-view) > .panel-subview-footer-button {
 :root[windowtype="navigator:browser"] :is(a[is="moz-support-link"], .popup-notification-learnmore-link) {
   display: none !important;
 }
+
+/* Perfiles del menú ☰: la subvista del perfil (Editar, Copiar, Otros perfiles, Administrar, Crear) y «Crear un perfil
+   nuevo» (sin perfiles creados). Firefox pone sus filas fuera de .panel-subview-body, directamente en la vista, con el
+   margen de 8 de sus menús y «Crear»/«Administrar» como botón del pie, así que las reglas de «Menús de los paneles» no
+   las alcanzaban: aquí, las mismas cápsulas (4 px del borde, filas pegadas, radio 8 en los extremos del grupo, la
+   línea con 8 de hueco). */
+:is(#PanelUI-profiles, #PanelUI-fxa-menu-create-profile) > .subviewbutton:not(.subviewbutton-back) {
+  min-height: 32px;
+  margin: 0 var(--aegis-s-4) !important;
+  border-radius: 0 !important;
+}
+:is(#PanelUI-profiles, #PanelUI-fxa-menu-create-profile)
+  > .subviewbutton:not(.subviewbutton-back):is(
+    :not(.subviewbutton, [hidden]) + *,
+    :not(.subviewbutton, [hidden]) + [hidden] + *,
+    :not(.subviewbutton, [hidden]) + [hidden] + [hidden] + *
+  ),
+/* «What Are Profiles?» (encima de «Copiar este perfil») se quita abajo solo con CSS. */
+#PanelUI-fxa-menu-create-profile-copy-button {
+  border-start-start-radius: var(--aegis-r-8) !important;
+  border-start-end-radius: var(--aegis-r-8) !important;
+}
+:is(#PanelUI-profiles, #PanelUI-fxa-menu-create-profile)
+  > .subviewbutton:not(.subviewbutton-back):is(
+    :nth-last-child(1 of :not([hidden])),
+    :has(+ :not(.subviewbutton, [hidden])),
+    :has(+ [hidden] + :not(.subviewbutton, [hidden])),
+    :has(+ [hidden] + [hidden] + :not(.subviewbutton, [hidden]))
+  ) {
+  border-end-start-radius: var(--aegis-r-8) !important;
+  border-end-end-radius: var(--aegis-r-8) !important;
+}
+:is(#PanelUI-profiles, #PanelUI-fxa-menu-create-profile) > .subviewbutton:nth-last-child(1 of :not([hidden])) {
+  margin-block-end: var(--aegis-s-4) !important;
+}
+:is(#PanelUI-profiles, #PanelUI-fxa-menu-create-profile) > toolbarseparator {
+  margin-block: var(--aegis-s-8) !important;
+  padding: 0 var(--aegis-s-4) !important;
+}
+/* «Otros perfiles»: el título a la altura del texto de las filas y la lista entera como una cápsula, como las listas
+   de Historial y Marcadores. */
+#profiles-subview-list-header {
+  margin: 0 var(--aegis-s-4) var(--aegis-s-4) !important;
+}
+#profiles-subview-list {
+  margin-inline: var(--aegis-s-4) !important;
+  border-radius: var(--aegis-r-8);
+  overflow: clip;
+}
+#profiles-subview-list > .subviewbutton {
+  min-height: 32px;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+/* Cabecera: sin el color del tema del perfil (Firefox lo pone en línea; en Aegis es un gris translúcido que dejaba la
+   cabecera de otro tono que el panel). */
+#PanelUI-profiles-header {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+#profiles-appmenu-back-button {
+  fill: currentColor !important;
+}
+/* El avatar del perfil: un círculo de 48 centrado, sin la franja de media altura de Firefox, cuya línea inferior
+   cruzaba el avatar (con el gris translúcido del tema de serie se veía a través de él). */
+#half-height-profile {
+  display: none !important;
+}
+#current-profile {
+  width: auto !important;
+  height: auto !important;
+  padding-block: var(--aegis-s-4) var(--aegis-s-12);
+}
+#profile-icon-image {
+  width: 48px !important;
+  height: 48px !important;
+  border: 0 !important;
+  fill: var(--aegis-control) !important;
+  stroke: var(--aegis-text) !important;
+}
+/* Avatares de 16 de las filas (el perfil en el menú principal y «Otros perfiles»): el glifo del avatar sin el disco
+   del color del tema, como los demás iconos del menú. */
+:is(#appMenu-profiles-button, .subviewbutton-iconic.profile-item) > .toolbarbutton-icon {
+  fill: transparent !important;
+  stroke: currentColor !important;
+}
+/* «Crear un perfil nuevo» sin perfiles: el estado vacío de DISENO §9 (glifo de línea de 32 en --aegis-sub, título de
+   15 px 600, una línea de 12 px y un botón secundario de 34), sin la ilustración de Firefox (el zorro con iconos de
+   color) ni «What Are Profiles?» (support.mozilla.org, docs/CONEXIONES.md). */
+#PanelUI-fxa-menu-create-profile-illustration {
+  list-style-image: url("iconos/perfiles.svg") !important;
+  width: 32px !important;
+  height: 32px !important;
+  margin: var(--aegis-s-24) auto var(--aegis-s-12) !important;
+  -moz-context-properties: fill;
+  fill: var(--aegis-sub) !important;
+}
+#PanelUI-fxa-menu-create-profile-content {
+  padding: 0 var(--aegis-s-16) var(--aegis-s-12) !important;
+  gap: var(--aegis-s-4) !important;
+}
+#PanelUI-fxa-menu-create-profile-text {
+  gap: var(--aegis-s-4) !important;
+  text-align: center;
+}
+#PanelUI-fxa-menu-create-profile-heading {
+  margin: 0 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+#PanelUI-fxa-menu-create-profile-description {
+  margin: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+  color: var(--aegis-sub) !important;
+}
+#PanelUI-fxa-menu-create-profile-confirm-button {
+  --button-background-color-primary: var(--aegis-control) !important;
+  --button-background-color-primary-hover: var(--aegis-control-hover) !important;
+  --button-background-color-primary-active: var(--aegis-control-down) !important;
+  --button-text-color-primary: var(--aegis-text) !important;
+  --button-text-color-primary-hover: var(--aegis-text) !important;
+  --button-text-color-primary-active: var(--aegis-text) !important;
+  --button-border-color-primary: transparent !important;
+  --button-border-color-primary-hover: transparent !important;
+  --button-border-color-primary-active: transparent !important;
+  --button-font-weight: 400 !important;
+  --button-min-height: 34px !important;
+  --button-border-radius: var(--aegis-r-8) !important;
+  min-width: 112px;
+  margin-block-start: var(--aegis-s-12) !important;
+}
+#PanelUI-fxa-menu-create-profile-learn-more-button {
+  display: none !important;
+}
+/* Del alto de su contenido: como submenú, Firefox la estiraba hasta el alto del menú principal y dejaba las filas del
+   pie lejos, al fondo (a la subvista del perfil ya le quita esa altura mínima). */
+.panel-viewcontainer:has(#PanelUI-fxa-menu-create-profile[visible]) {
+  min-height: 0 !important;
+}
+#PanelUI-fxa-menu-create-profile {
+  height: fit-content;
+  min-height: 0 !important;
+}
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  :is(#PanelUI-profiles, #PanelUI-fxa-menu-create-profile) > .subviewbutton:not(.subviewbutton-back, [hidden]),
+  #profiles-subview-list {
+    background-color: var(--aegis-control) !important;
+  }
+  #profiles-subview-list > .subviewbutton {
+    background-color: transparent !important;
+  }
+  :is(#PanelUI-profiles, #PanelUI-fxa-menu-create-profile) > .subviewbutton:not(.subviewbutton-back, [disabled]):hover,
+  #profiles-subview-list > .subviewbutton:not([disabled]):hover {
+    background-color: var(--aegis-control-hover) !important;
+  }
+  :is(#PanelUI-profiles, #PanelUI-fxa-menu-create-profile)
+    > .subviewbutton:not(.subviewbutton-back, [disabled]):hover:active,
+  #profiles-subview-list > .subviewbutton:not([disabled]):hover:active {
+    background-color: var(--aegis-control-down) !important;
+  }
+}
+
+/* «Eliminar grupo» (editor de un grupo de pestañas): Firefox lo pinta con el rojo de error; en Aegis una acción
+   destructiva sigue en blanco y negro y avisa el texto (DISENO §2, «Estados»). El contador «+N» de un grupo plegado,
+   que Nova escribe con el color del grupo, también en el color del texto: el color de un grupo nunca va en texto
+   (DISENO §2, «Grupos de pestañas»); su fondo, el tinte del grupo, se queda. */
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  #tabGroupEditor_deleteGroup {
+    color: var(--aegis-text);
+  }
+  #tabbrowser-tabs tab-group > .tab-group-overflow-count-container > .tab-group-overflow-count {
+    color: var(--aegis-text);
+  }
+}

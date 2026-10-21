@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Aegis · vista de lectura (about:reader). La pone el actor AegisErrores (paginas/AegisPaginasChild.sys.mjs) sin
+   comun.css: la página guarda sus colores y su letra, los de los temas que elige el usuario en ella (claro, sepia, gris,
+   oscuro). Solo cambian sus enlaces (cian en oscuro, azul en claro y magenta los visitados), el foco y la selección, al
+   color del texto de cada tema: los enlaces se distinguen por su subrayado (DISENO §2: el énfasis nunca en textos).
+   Los temas «Contraste» y «Personalizado» se quedan como están: son elección del usuario (el segundo, con sus propios
+   colores de enlace). */
+
+@media not ((forced-colors: active) or (prefers-contrast: more)) {
+  body:not(.contrast, .custom) {
+    --primary-color: var(--main-foreground) !important;
+    --link-foreground: var(--main-foreground) !important;
+    --visited-link-foreground: var(--main-foreground) !important;
+    --link-selected-foreground: var(--main-foreground) !important;
+    --selected-background: color-mix(in srgb, var(--main-foreground) 18%, transparent) !important;
+  }
+}

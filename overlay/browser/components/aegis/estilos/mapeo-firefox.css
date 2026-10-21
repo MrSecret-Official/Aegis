@@ -90,46 +90,23 @@
   --border-color-deemphasized: var(--aegis-line) !important;
   --border-color-interactive: var(--aegis-check-border) !important;
   --input-border-color: var(--aegis-field-border) !important;
-  --focus-outline-color: var(--aegis-focus) !important;
 
-  /* Botones: principal = «destacada» de Aegis; el resto, controles grises */
+  /* Botones: el resto, controles grises (el principal, abajo, con cualquier tema) */
   --button-background-color: var(--aegis-control) !important;
   --button-background-color-hover: var(--aegis-control-hover) !important;
   --button-background-color-active: var(--aegis-control-down) !important;
   --button-text-color: var(--aegis-text) !important;
-  --button-background-color-primary: var(--aegis-prim) !important;
-  --button-background-color-primary-hover: var(--aegis-prim-hover) !important;
-  --button-background-color-primary-active: var(--aegis-prim-down) !important;
-  --button-text-color-primary: var(--aegis-on-prim) !important;
-  --button-text-color-primary-hover: var(--aegis-on-prim) !important;
-  --button-text-color-primary-active: var(--aegis-on-prim) !important;
   /* Sin borde (DISENO §9): Nova pinta el secundario con un contorno del color de acento, que aquí sería blanco. */
   --button-border-color: transparent !important;
   --button-border-color-hover: transparent !important;
   --button-border-color-active: transparent !important;
   --button-border-color-selected: transparent !important;
 
-  /* Énfasis: Firefox usa violeta (Nova) en interruptores, casillas, selección y enlaces; en Aegis es el énfasis elegido
-     (DISENO §2: monocromo de serie, el blanco de la «destacada»), y los enlaces van en el color del texto. */
-  --color-accent-primary: var(--aegis-accent) !important;
-  --color-accent-primary-hover: var(--aegis-accent-hover) !important;
-  --color-accent-primary-active: var(--aegis-accent-down) !important;
-  --color-accent-primary-selected: var(--aegis-sel) !important;
-  --text-color-accent-primary-selected: var(--aegis-text) !important;
-  --icon-color-accent-primary-desaturated: var(--aegis-sub) !important;
-  --link-color: var(--aegis-text) !important;
-  --link-color-hover: var(--aegis-prim-hover) !important;
-  --link-color-active: var(--aegis-sub) !important;
-  --link-color-visited: var(--aegis-text) !important;
-
   /* Estados: los colores de Aegis (DISENO §2, con su contraste comprobado), no el verde y el naranja de Firefox. */
   --icon-color-success: var(--aegis-ok) !important;
   --icon-color-warning: var(--aegis-warn) !important;
   --icon-color-critical: var(--aegis-err-fill) !important;
   --text-color-error: var(--aegis-err) !important;
-  /* Información en gris (la barra informativa de la 158 traía el violeta): el color, solo para aviso y error. */
-  --icon-color-information: var(--aegis-text) !important;
-  --background-color-information: var(--aegis-control) !important;
 
   /* Avisos (barras de mensaje): tarjeta de la superficie con borde de línea, como los widgets de SecretOS. */
   --message-bar-background-color: var(--aegis-surface) !important;
@@ -138,6 +115,124 @@
   --message-bar-text-color: var(--aegis-text) !important;
   --message-bar-border-color: var(--aegis-line) !important;
   --message-bar-border-radius: var(--aegis-r-12) !important;
+}
+
+/* Énfasis, con cualquier tema. Un tema (Grafito, Niebla… o uno instalado: [lwtheme]) pone los colores del marco, pero
+   el énfasis es siempre el de Aegis: sin esto, con un tema volvían el violeta de Nova (interruptores, casillas, botón
+   principal) y el azul y cian que Firefox fuerza en los enlaces y el foco con un tema de fuera (browser-colors.css). */
+:root,
+:root :is(#navigator-toolbox, #tabbrowser-tabs, .tabbrowser-tab, panel, menupopup, #sidebar-box) {
+  /* Interruptores, casillas, radios, selección y foco: el énfasis elegido (DISENO §2: monocromo de serie, el blanco de
+     la «destacada»). La fila elegida de una lista, en gris (--aegis-sel), y los enlaces, en el color del texto. */
+  --color-accent-primary: var(--aegis-accent) !important;
+  --color-accent-primary-hover: var(--aegis-accent-hover) !important;
+  --color-accent-primary-active: var(--aegis-accent-down) !important;
+  --color-accent-primary-selected: var(--aegis-sel) !important;
+  --text-color-accent-primary-selected: var(--aegis-text) !important;
+  --icon-color-accent-primary-desaturated: var(--aegis-sub) !important;
+  --border-color-selected: var(--aegis-accent) !important;
+  --focus-outline-color: var(--aegis-focus) !important;
+  --link-color: var(--aegis-text) !important;
+  --link-color-hover: var(--aegis-prim-hover) !important;
+  --link-color-active: var(--aegis-sub) !important;
+  --link-color-visited: var(--aegis-text) !important;
+
+  /* Botón principal: la «destacada» de Aegis, nunca el énfasis (DISENO §2); desactivado, el mismo con la opacidad de
+     Firefox (no el violeta desaturado de Nova). */
+  --button-background-color-primary: var(--aegis-prim) !important;
+  --button-background-color-primary-hover: var(--aegis-prim-hover) !important;
+  --button-background-color-primary-active: var(--aegis-prim-down) !important;
+  --button-background-color-primary-disabled: var(--aegis-prim) !important;
+  --button-text-color-primary: var(--aegis-on-prim) !important;
+  --button-text-color-primary-hover: var(--aegis-on-prim) !important;
+  --button-text-color-primary-active: var(--aegis-on-prim) !important;
+
+  /* Información en gris (la barra informativa de la 158 traía el violeta): el color, solo para aviso y error. Las
+     tarjetas de promoción «vivas» (avisos del menú principal, moz-promo) y el campo de color, igual. */
+  --icon-color-information: var(--aegis-text) !important;
+  --background-color-information: var(--aegis-control) !important;
+  --promo-background-color-vibrant: var(--aegis-control) !important;
+  --promo-border-color-vibrant: var(--aegis-line) !important;
+  --promo-message-text-color-vibrant: var(--aegis-text) !important;
+  --panel-banner-item-info-icon-bgcolor: var(--aegis-text) !important;
+  --input-color-background-color-active: var(--aegis-control-down) !important;
+  /* Firefox View: sus enlaces («Ver todo») y acciones, del color del texto, no del azul de antes de Nova; el fondo, las
+     tarjetas y el texto, los de Aegis (en oscuro, Firefox pone su gris violáceo). */
+  --fxview-primary-action-background: var(--aegis-text) !important;
+  --newtab-background-color: var(--aegis-bg) !important;
+  --newtab-background-color-secondary: var(--aegis-surface) !important;
+  --fxview-background-color: var(--aegis-bg) !important;
+  --fxview-background-color-secondary: var(--aegis-surface) !important;
+  --fxview-element-background-hover: var(--aegis-hover) !important;
+  --fxview-element-background-active: var(--aegis-control) !important;
+  --fxview-text-primary-color: var(--aegis-text) !important;
+  --fxview-text-secondary-color: var(--aegis-sub) !important;
+  --fxview-text-color-hover: var(--aegis-text) !important;
+  --fxview-indicator-stroke-color-hover: var(--aegis-line-strong) !important;
+
+  /* Panel del sitio (el «trust panel» de la 158) y los botones de la barra de direcciones pulsados: gris, no violeta. */
+  --trustpanel-highlight-bg: var(--aegis-control) !important;
+  --trustpanel-inner-border: 1px solid var(--aegis-line) !important;
+  --urlbar-box-background-color-active: var(--aegis-control-down) !important;
+  /* Texto secundario de los resultados de la barra de direcciones (en claro, un violeta muy oscuro en Nova). */
+  --urlbarview-text-color-secondary: var(--aegis-sub) !important;
+  /* Grupos de pestañas: los nueve colores con la fórmula del énfasis (tokens.css, --aegis-grupo-*), no la paleta
+     saturada de Firefox. Encima, el texto de la acción principal; la versión «invertida» (fondo de la etiqueta del grupo
+     plegado, arrastre), un tinte del color sobre el fondo. */
+  --tab-group-blue: var(--aegis-grupo-blue) !important;
+  --tab-group-blue-hover: color-mix(in oklab, var(--aegis-grupo-blue) 85%, var(--aegis-text)) !important;
+  --tab-group-blue-invert: color-mix(in oklab, var(--aegis-grupo-blue) 25%, var(--aegis-bg)) !important;
+  --tab-group-blue-pale: color-mix(in oklab, var(--aegis-grupo-blue) 25%, var(--aegis-bg)) !important;
+  --tab-group-blue-text: var(--aegis-on-prim) !important;
+  --tab-group-blue-text-invert: var(--aegis-text) !important;
+  --tab-group-purple: var(--aegis-grupo-purple) !important;
+  --tab-group-purple-hover: color-mix(in oklab, var(--aegis-grupo-purple) 85%, var(--aegis-text)) !important;
+  --tab-group-purple-invert: color-mix(in oklab, var(--aegis-grupo-purple) 25%, var(--aegis-bg)) !important;
+  --tab-group-purple-pale: color-mix(in oklab, var(--aegis-grupo-purple) 25%, var(--aegis-bg)) !important;
+  --tab-group-purple-text: var(--aegis-on-prim) !important;
+  --tab-group-purple-text-invert: var(--aegis-text) !important;
+  --tab-group-cyan: var(--aegis-grupo-cyan) !important;
+  --tab-group-cyan-hover: color-mix(in oklab, var(--aegis-grupo-cyan) 85%, var(--aegis-text)) !important;
+  --tab-group-cyan-invert: color-mix(in oklab, var(--aegis-grupo-cyan) 25%, var(--aegis-bg)) !important;
+  --tab-group-cyan-pale: color-mix(in oklab, var(--aegis-grupo-cyan) 25%, var(--aegis-bg)) !important;
+  --tab-group-cyan-text: var(--aegis-on-prim) !important;
+  --tab-group-cyan-text-invert: var(--aegis-text) !important;
+  --tab-group-orange: var(--aegis-grupo-orange) !important;
+  --tab-group-orange-hover: color-mix(in oklab, var(--aegis-grupo-orange) 85%, var(--aegis-text)) !important;
+  --tab-group-orange-invert: color-mix(in oklab, var(--aegis-grupo-orange) 25%, var(--aegis-bg)) !important;
+  --tab-group-orange-pale: color-mix(in oklab, var(--aegis-grupo-orange) 25%, var(--aegis-bg)) !important;
+  --tab-group-orange-text: var(--aegis-on-prim) !important;
+  --tab-group-orange-text-invert: var(--aegis-text) !important;
+  --tab-group-yellow: var(--aegis-grupo-yellow) !important;
+  --tab-group-yellow-hover: color-mix(in oklab, var(--aegis-grupo-yellow) 85%, var(--aegis-text)) !important;
+  --tab-group-yellow-invert: color-mix(in oklab, var(--aegis-grupo-yellow) 25%, var(--aegis-bg)) !important;
+  --tab-group-yellow-pale: color-mix(in oklab, var(--aegis-grupo-yellow) 25%, var(--aegis-bg)) !important;
+  --tab-group-yellow-text: var(--aegis-on-prim) !important;
+  --tab-group-yellow-text-invert: var(--aegis-text) !important;
+  --tab-group-pink: var(--aegis-grupo-pink) !important;
+  --tab-group-pink-hover: color-mix(in oklab, var(--aegis-grupo-pink) 85%, var(--aegis-text)) !important;
+  --tab-group-pink-invert: color-mix(in oklab, var(--aegis-grupo-pink) 25%, var(--aegis-bg)) !important;
+  --tab-group-pink-pale: color-mix(in oklab, var(--aegis-grupo-pink) 25%, var(--aegis-bg)) !important;
+  --tab-group-pink-text: var(--aegis-on-prim) !important;
+  --tab-group-pink-text-invert: var(--aegis-text) !important;
+  --tab-group-green: var(--aegis-grupo-green) !important;
+  --tab-group-green-hover: color-mix(in oklab, var(--aegis-grupo-green) 85%, var(--aegis-text)) !important;
+  --tab-group-green-invert: color-mix(in oklab, var(--aegis-grupo-green) 25%, var(--aegis-bg)) !important;
+  --tab-group-green-pale: color-mix(in oklab, var(--aegis-grupo-green) 25%, var(--aegis-bg)) !important;
+  --tab-group-green-text: var(--aegis-on-prim) !important;
+  --tab-group-green-text-invert: var(--aegis-text) !important;
+  --tab-group-gray: var(--aegis-grupo-gray) !important;
+  --tab-group-gray-hover: color-mix(in oklab, var(--aegis-grupo-gray) 85%, var(--aegis-text)) !important;
+  --tab-group-gray-invert: color-mix(in oklab, var(--aegis-grupo-gray) 25%, var(--aegis-bg)) !important;
+  --tab-group-gray-pale: color-mix(in oklab, var(--aegis-grupo-gray) 25%, var(--aegis-bg)) !important;
+  --tab-group-gray-text: var(--aegis-on-prim) !important;
+  --tab-group-gray-text-invert: var(--aegis-text) !important;
+  --tab-group-red: var(--aegis-grupo-red) !important;
+  --tab-group-red-hover: color-mix(in oklab, var(--aegis-grupo-red) 85%, var(--aegis-text)) !important;
+  --tab-group-red-invert: color-mix(in oklab, var(--aegis-grupo-red) 25%, var(--aegis-bg)) !important;
+  --tab-group-red-pale: color-mix(in oklab, var(--aegis-grupo-red) 25%, var(--aegis-bg)) !important;
+  --tab-group-red-text: var(--aegis-on-prim) !important;
+  --tab-group-red-text-invert: var(--aegis-text) !important;
 }
 
 /* Selección de texto (barra de direcciones, campos, Ajustes): el énfasis con su encima (DISENO §2). */
