@@ -37,7 +37,7 @@
     <p class="entradilla">Aegis es un navegador que no recoge datos de quien lo usa. Esta política explica, primero en
       pocas líneas y después en detalle, qué se guarda en su equipo, con quién puede conectarse el navegador y qué
       puede decidir usted.</p>
-    <p class="vigencia">Vigente desde el 17 de octubre de 2026 · Versión 1.0</p>
+    <p class="vigencia">Vigente desde el 21 de octubre de 2026 · Versión 1.1</p>
 
     <section class="tarjeta" aria-labelledby="resumen">
       <h2 class="etiqueta" id="resumen">En pocas palabras</h2>
@@ -55,8 +55,9 @@
           (actualizaciones, listas de seguridad y de bloqueo, códecs de vídeo…) tienen su interruptor. Las que dependen de
           algo que hace usted, como instalar un complemento o permitir su ubicación a una web, se explican abajo una a
           una, con cómo apagarlas.</li>
-        <li><strong>Sus contraseñas se cifran en su equipo.</strong> Quedan en su perfil, protegidas por una contraseña
-          principal que solo usted conoce, y no se envían a ningún sitio.</li>
+        <li><strong>Sus contraseñas se quedan en su equipo.</strong> Se guardan cifradas en su perfil y no se envían a
+          ningún sitio. Sin una contraseña principal, quien copie su perfil puede leerlas; con ella, que solo usted
+          conoce, no.</li>
         <li><strong>Las webs que visita sí le ven.</strong> Como con cualquier navegador, cada web recibe su dirección IP.
           Aegis reduce lo que pueden saber de usted, pero no le hace anónimo: no es Tor Browser.</li>
       </ul>
@@ -119,9 +120,18 @@
       ajustes. Nada de eso se envía a Secret Studios ni a nadie más, y puede borrarlo cuando quiera desde los ajustes de
       privacidad del navegador.</p>
     <ul>
-      <li><strong>Contraseñas.</strong> Se guardan cifradas en el perfil. Antes de guardar la primera, Aegis le pide
-        crear una contraseña principal, sin la cual no se pueden descifrar. Nadie más tiene esa clave: si la olvida, no
-        se puede recuperar.</li>
+      <li><strong>Contraseñas.</strong> Se guardan cifradas en el perfil. La contraseña principal es
+        opcional para guardarlas, y Aegis le recomienda crearla:
+        <ul>
+          <li><strong>Sin contraseña principal,</strong> la clave que las descifra está en el mismo perfil, sin
+            proteger: quien copie su perfil (un programa malicioso, alguien con acceso a su disco) puede leerlas, y quien
+            use su sesión de Windows puede iniciar sesión en webs con ellas. Para verlas o copiarlas, Aegis pide las
+            credenciales de Windows.</li>
+          <li><strong>Con contraseña principal,</strong> la clave va cifrada con ella y sin ella no se pueden descifrar.
+            Nadie más la tiene: si la olvida, no se puede recuperar.</li>
+          <li>Pasar las contraseñas a otro Aegis, recibirlas de otro Aegis y añadir un código de verificación en dos
+            pasos exigen tenerla: si no la ha creado, Aegis le pide crearla antes de seguir.</li>
+        </ul></li>
       <li><strong>Códigos de verificación en dos pasos</strong> que usted añada: cifrados con la misma clave que las
         contraseñas.</li>
       <li><strong>Pasar las contraseñas a otro Aegis</strong> crea un archivo cifrado, donde usted elija, que solo se
@@ -433,6 +443,9 @@
       propia nube, que está prevista), actualizaremos esta política antes de publicar esa versión, cambiaremos aquí la
       fecha y el número de versión y explicaremos qué ha cambiado. Las versiones anteriores quedan en el historial del
       repositorio de esta web.</p>
+    <p><strong>Versión 1.1 (21 de octubre de 2026).</strong> Guardar contraseñas ya no exige una contraseña principal:
+      sin ella, se guardan igualmente y quien copie su perfil puede leerlas (apartado 3). Pasar y recibir
+      contraseñas de otro Aegis y añadir códigos de verificación la siguen exigiendo. No cambia lo que Aegis conecta.</p>
 
     <h2 id="contacto">13. Contacto</h2>
     <p>Secret Studios · <a href="mailto:mrsecret_official@protonmail.com">mrsecret_official@protonmail.com</a></p>
